@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bookmarksList = document.getElementById('bookmarks-list');
     const fontSizeSlider = document.getElementById('font-size-slider');
     const colorSwatches = document.getElementById('highlighter-colors');
+    const doubleSpaceToggle = document.getElementById('double-space-toggle');
 
     // --- App State ---
     const state = {
@@ -29,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fontSize: 16,
             sidebarMinimized: false,
             activeHighlightColor: 'yellow',
+            isDoubleSpaced: false,
         },
         annotations: {},
     };
@@ -64,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bookmarkBtn.addEventListener('click', () => createAnnotation('bookmark'));
         fontSizeSlider.addEventListener('input', handleFontSizeChange);
         colorSwatches.addEventListener('click', handleColorChange);
+        doubleSpaceToggle.addEventListener('click', toggleDoubleSpacing);
         contentFrame.addEventListener('load', onIframeLoad);
     }
 
@@ -91,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         themeToggle.innerHTML = state.settings.theme === 'dark' ? ICONS.sun : ICONS.moon;
         fontSizeSlider.value = state.settings.fontSize;
         sidebar.classList.toggle('minimized', state.settings.sidebarMinimized);
+        doubleSpaceToggle.classList.toggle('active', state.settings.isDoubleSpaced);
         
         document.querySelectorAll('.color-swatch').forEach(swatch => {
             swatch.classList.toggle('active', swatch.dataset.color === state.settings.activeHighlightColor);
@@ -130,6 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
         saveSettings();
     }
 
+    function toggleDoubleSpacing() {
+        state.settings.isDoubleSpaced = !state.settings.isDoubleSpaced;
+        applySettings();
+        updateIframeStyles();
+        saveSettings();
+    }
+
     // --- DYNAMIC IFRAME STYLING ---
     function updateIframeStyles() {
         const iframeDoc = contentFrame.contentDocument;
@@ -146,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const bookmarkColor = computedStyles.getPropertyValue('--bookmark');
         const textColor = computedStyles.getPropertyValue('--text-primary');
         const bodyBgColor = computedStyles.getPropertyValue('--bg-secondary');
+        const lineHeight = state.settings.isDoubleSpaced ? '2.0' : '1.6';
 
         const highlightStyles = Object.entries(HIGHLIGHT_COLORS).map(([name, cssVar]) => {
             return `.highlight-${name} { background-color: ${computedStyles.getPropertyValue(cssVar)}; color: inherit; }`;
@@ -155,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
             body {
                 color: ${textColor};
                 background-color: ${bodyBgColor};
+                line-height: ${lineHeight};
                 transition: color 0.3s ease, background-color 0.3s ease;
             }
             ${highlightStyles}

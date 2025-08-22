@@ -9,6 +9,8 @@
     --highlight-pink: rgba(255, 105, 180, 0.6);
     --highlight-green: rgba(144, 238, 144, 0.6);
     --highlight-blue: rgba(173, 216, 230, 0.6);
+    --erase-accent: #ff4d4d;
+    --erase-accent-hover: #ff1a1a;
 
     /* Light Theme */
     --bg-primary-light: #fdfaf6;
@@ -144,20 +146,27 @@ body {
     font-family: var(--font-fallback); text-transform: uppercase; letter-spacing: 0.5px;
 }
 .selection-actions { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.selection-actions button {
+.selection-actions button, #double-space-toggle {
     display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px;
     font-size: 1rem; border: 1px solid var(--border); background-color: var(--button-bg);
     color: var(--text-primary); cursor: pointer; border-radius: 6px;
     transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
 }
 .selection-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
-.selection-actions button:not(:disabled):hover { background-color: var(--button-bg-hover); }
+.selection-actions button:not(:disabled):hover, #double-space-toggle:hover { background-color: var(--button-bg-hover); }
 
-#highlight-mode-toggle.active {
+#highlight-mode-toggle.active, #double-space-toggle.active {
     background-color: var(--accent); color: var(--bg-secondary);
     border-color: var(--accent); box-shadow: 0 0 8px var(--accent);
 }
-body[data-theme='dark'] #highlight-mode-toggle.active { color: var(--bg-primary-dark); }
+body[data-theme='dark'] #highlight-mode-toggle.active, body[data-theme='dark'] #double-space-toggle.active { color: var(--bg-primary-dark); }
+
+#erase-mode-toggle.active {
+    background-color: var(--erase-accent);
+    border-color: var(--erase-accent-hover);
+    color: white;
+    box-shadow: 0 0 8px var(--erase-accent);
+}
 
 /* Color Palette */
 .color-palette { display: flex; gap: 10px; }
