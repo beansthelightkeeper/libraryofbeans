@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Chapter 1: The Beginning",
+        "path": "content/chapter1.html"
+    },
+    {
+        "name": "Chapter 2: The Journey",
+        "path": "content/chapter2.html"
+    },
+    {
+        "name": "Appendix A: Glossary",
+        "path": "content/appendix.html"
+    }
+]
