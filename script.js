@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- USER CONFIGURATION ---
     // IMPORTANT: Replace these with your GitHub username and repository name.
-    const GITHUB_USERNAME = "YOUR_USERNAME";
-    const GITHUB_REPO = "YOUR_REPOSITORY_NAME";
+    const GITHUB_USERNAME = "beansthelightkeeper";
+    const GITHUB_REPO = "libraryofbeans";
     // --- END OF CONFIGURATION ---
 
     // --- DOM Elements ---
