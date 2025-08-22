@@ -6,7 +6,7 @@
 
 /* --- THEME & VARIABLE DEFINITIONS --- */
 :root {
-    --font-main: 'Cinzel', serif;
+    --font-main: 'Nunito', sans-serif;
     --font-mono: 'Roboto Mono', monospace;
     --font-fallback: 'Inter', sans-serif;
 
