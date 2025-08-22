@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const contentFrame = document.getElementById('content-frame');
     const welcomeMessage = document.getElementById('welcome-message');
     const highlightModeToggle = document.getElementById('highlight-mode-toggle');
+    const eraseModeToggle = document.getElementById('erase-mode-toggle');
     const bookmarkBtn = document.getElementById('bookmark-btn');
     const bookmarksList = document.getElementById('bookmarks-list');
     const fontSizeSlider = document.getElementById('font-size-slider');
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const state = {
         currentFile: null,
         isHighlightModeActive: false,
+        isEraseModeActive: false,
         settings: {
             theme: 'dark',
             fontSize: 16,
@@ -58,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         minimizeToggle.addEventListener('click', toggleSidebarMinimize);
         menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
         highlightModeToggle.addEventListener('click', toggleHighlightMode);
+        eraseModeToggle.addEventListener('click', toggleEraseMode);
         bookmarkBtn.addEventListener('click', () => createAnnotation('bookmark'));
         fontSizeSlider.addEventListener('input', handleFontSizeChange);
         colorSwatches.addEventListener('click', handleColorChange);
@@ -74,10 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupIframeListeners() {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc) return;
-        // FIX: Add 'pointerup' for Apple Pencil and other stylus events
-        iframeDoc.addEventListener('mouseup', handleIframeMouseUp);
-        iframeDoc.addEventListener('touchend', handleIframeMouseUp);
-        iframeDoc.addEventListener('pointerup', handleIframeMouseUp);
+        iframeDoc.addEventListener('pointerup', handleIframeInteraction);
         iframeDoc.addEventListener('selectionchange', () => {
             const selection = iframeDoc.getSelection();
             bookmarkBtn.disabled = !selection || selection.isCollapsed;
@@ -92,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fontSizeSlider.value = state.settings.fontSize;
         sidebar.classList.toggle('minimized', state.settings.sidebarMinimized);
         
-        // Apply active color swatch
         document.querySelectorAll('.color-swatch').forEach(swatch => {
             swatch.classList.toggle('active', swatch.dataset.color === state.settings.activeHighlightColor);
         });
@@ -148,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const textColor = computedStyles.getPropertyValue('--text-primary');
         const bodyBgColor = computedStyles.getPropertyValue('--bg-secondary');
 
-        // Generate highlight styles from the color object
         const highlightStyles = Object.entries(HIGHLIGHT_COLORS).map(([name, cssVar]) => {
             return `.highlight-${name} { background-color: ${computedStyles.getPropertyValue(cssVar)}; color: inherit; }`;
         }).join('\n');
@@ -205,15 +203,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- ANNOTATION LOGIC ---
+    // --- ANNOTATION & ERASING LOGIC ---
     function toggleHighlightMode() {
         state.isHighlightModeActive = !state.isHighlightModeActive;
+        if (state.isHighlightModeActive) {
+            state.isEraseModeActive = false;
+        }
         highlightModeToggle.classList.toggle('active', state.isHighlightModeActive);
+        eraseModeToggle.classList.remove('active');
+    }
+
+    function toggleEraseMode() {
+        state.isEraseModeActive = !state.isEraseModeActive;
+        if (state.isEraseModeActive) {
+            state.isHighlightModeActive = false;
+        }
+        eraseModeToggle.classList.toggle('active', state.isEraseModeActive);
+        highlightModeToggle.classList.remove('active');
     }
     
-    function handleIframeMouseUp() {
+    function handleIframeInteraction(event) {
         if (state.isHighlightModeActive) {
-            createAnnotation('highlight');
+            // Use a small timeout to allow the selection to finalize on touch devices
+            setTimeout(() => createAnnotation('highlight'), 50);
+        } else if (state.isEraseModeActive) {
+            eraseAnnotation(event.target);
         }
     }
 
@@ -225,12 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const range = selection.getRangeAt(0);
         const annotationId = `anno-${Date.now()}`;
         const rangeData = serializeRange(range);
-        const newAnnotation = {
-            id: annotationId,
-            type,
-            text: selection.toString(),
-            rangeData
-        };
+        const newAnnotation = { id: annotationId, type, text: selection.toString(), rangeData };
 
         if (type === 'bookmark') {
             const note = prompt('Add a note for this bookmark (for citation):');
@@ -252,6 +261,24 @@ document.addEventListener('DOMContentLoaded', () => {
         saveAnnotations();
         if (type === 'bookmark') renderBookmarks();
         selection.removeAllRanges();
+    }
+
+    function eraseAnnotation(target) {
+        const mark = target.closest('mark');
+        if (!mark || !mark.id.startsWith('anno-')) return;
+
+        const annotationId = mark.id;
+        const fileAnnotations = state.annotations[state.currentFile] || [];
+        state.annotations[state.currentFile] = fileAnnotations.filter(anno => anno.id !== annotationId);
+
+        // Unwrap the mark element
+        const parent = mark.parentNode;
+        while (mark.firstChild) {
+            parent.insertBefore(mark.firstChild, mark);
+        }
+        parent.removeChild(mark);
+        
+        saveAnnotations();
     }
 
     function applyAnnotationToDOM(annotation) {
