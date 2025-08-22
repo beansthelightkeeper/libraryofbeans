@@ -1,4 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- USER CONFIGURATION ---
+    // IMPORTANT: Replace these with your GitHub username and repository name.
+    const GITHUB_USERNAME = "YOUR_USERNAME";
+    const GITHUB_REPO = "YOUR_REPOSITORY_NAME";
+    // --- END OF CONFIGURATION ---
+
     // --- DOM Elements ---
     const themeToggle = document.getElementById('theme-toggle');
     const menuToggle = document.getElementById('menu-toggle');
@@ -35,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSettings();
         loadAnnotations();
         applySettings();
-        fetchAndDisplayFileList();
+        fetchFilesFromGitHub(); // Changed from fetchAndDisplayFileList
         setupEventListeners();
     }
 
@@ -47,44 +53,29 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightModeToggle.addEventListener('click', toggleHighlightMode);
         bookmarkBtn.addEventListener('click', () => createAnnotation('bookmark'));
         fontSizeSlider.addEventListener('input', handleFontSizeChange);
-
-        // Listen for events inside the iframe once it's loaded
         contentFrame.addEventListener('load', setupIframeListeners);
     }
 
     function setupIframeListeners() {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc) return;
-
-        // For continuous highlighting
         iframeDoc.addEventListener('mouseup', handleIframeMouseUp);
-
-        // To enable/disable the manual bookmark button
         iframeDoc.addEventListener('selectionchange', () => {
             const selection = iframeDoc.getSelection();
             bookmarkBtn.disabled = !selection || selection.isCollapsed;
         });
-
-        // Apply current font size to the iframe body
         iframeDoc.body.style.fontSize = `${state.settings.fontSize}px`;
     }
 
     // --- THEME & SETTINGS ---
     function applySettings() {
-        // Apply theme
         document.body.dataset.theme = state.settings.theme;
         themeToggle.innerHTML = state.settings.theme === 'dark' ? ICONS.sun : ICONS.moon;
-        // Apply font size
         fontSizeSlider.value = state.settings.fontSize;
         if (contentFrame.contentDocument && contentFrame.contentDocument.body) {
             contentFrame.contentDocument.body.style.fontSize = `${state.settings.fontSize}px`;
         }
-        // Apply sidebar state
-        if (state.settings.sidebarMinimized) {
-            sidebar.classList.add('minimized');
-        } else {
-            sidebar.classList.remove('minimized');
-        }
+        sidebar.classList.toggle('minimized', state.settings.sidebarMinimized);
     }
 
     function toggleTheme() {
@@ -107,25 +98,35 @@ document.addEventListener('DOMContentLoaded', () => {
         saveSettings();
     }
 
-    // --- FILE HANDLING ---
-    async function fetchAndDisplayFileList() {
+    // --- FILE HANDLING (Now using GitHub API) ---
+    async function fetchFilesFromGitHub() {
+        if (GITHUB_USERNAME === "YOUR_USERNAME" || GITHUB_REPO === "YOUR_REPOSITORY_NAME") {
+            fileList.innerHTML = '<li>Please configure your GitHub username and repo in script.js</li>';
+            return;
+        }
+        const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/content`;
+        
         try {
-            const response = await fetch('files.json');
-            if (!response.ok) throw new Error('files.json not found.');
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error(`GitHub API error: ${response.statusText}`);
             const files = await response.json();
             
             fileList.innerHTML = '';
-            files.forEach(file => {
-                const li = document.createElement('li');
-                li.innerHTML = `<span class="full-text">${file.name}</span><span class="mini-text">📖</span>`;
-                li.title = file.name;
-                li.dataset.path = file.path;
-                li.addEventListener('click', () => loadFile(file.path));
-                fileList.appendChild(li);
-            });
+            files
+                .filter(file => file.type === 'file' && file.name.endsWith('.html'))
+                .forEach(file => {
+                    const li = document.createElement('li');
+                    // Clean up file name for display (remove .html)
+                    const displayName = file.name.replace(/\.html$/, '').replace(/[-_]/g, ' ');
+                    li.innerHTML = `<span class="full-text">${displayName}</span><span class="mini-text">📖</span>`;
+                    li.title = displayName;
+                    li.dataset.path = file.path; // Use the path from the API response
+                    li.addEventListener('click', () => loadFile(file.path));
+                    fileList.appendChild(li);
+                });
         } catch (error) {
-            console.error("Error loading file list:", error);
-            fileList.innerHTML = '<li>Error loading library. Make sure files.json exists.</li>';
+            console.error("Error loading file list from GitHub:", error);
+            fileList.innerHTML = '<li>Error loading library. Check console for details.</li>';
         }
     }
 
@@ -134,17 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
         welcomeMessage.style.display = 'none';
         contentFrame.src = filePath;
 
-        // Update active class in file list
         document.querySelectorAll('#file-list li').forEach(li => {
             li.classList.toggle('active', li.dataset.path === filePath);
         });
         
-        // Close sidebar on mobile after selection
         if (window.innerWidth <= 768) {
             sidebar.classList.remove('open');
         }
 
-        // The 'load' event on the iframe will trigger annotation application
         contentFrame.onload = () => {
             setupIframeListeners();
             applyAnnotations();
@@ -152,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // --- ANNOTATION LOGIC ---
+    // --- ANNOTATION LOGIC (No changes here) ---
     function toggleHighlightMode() {
         state.isHighlightModeActive = !state.isHighlightModeActive;
         highlightModeToggle.classList.toggle('active', state.isHighlightModeActive);
@@ -172,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let note = null;
         if (type === 'bookmark') {
             note = prompt('Add a note for this bookmark (for citation):');
-            if (note === null) { // User cancelled prompt
+            if (note === null) {
                 selection.removeAllRanges();
                 return;
             }
@@ -180,17 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const range = selection.getRangeAt(0);
         const annotationId = `anno-${Date.now()}`;
-
-        // Store a serializable representation of the range
         const rangeData = serializeRange(range);
 
-        const newAnnotation = {
-            id: annotationId,
-            type: type,
-            text: selection.toString(),
-            note: note,
-            rangeData: rangeData,
-        };
+        const newAnnotation = { id: annotationId, type, text: selection.toString(), note, rangeData };
 
         if (!state.annotations[state.currentFile]) {
             state.annotations[state.currentFile] = [];
@@ -200,8 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         applyAnnotationToDOM(newAnnotation);
         saveAnnotations();
         renderBookmarks();
-        
-        selection.removeAllRanges(); // Deselect text
+        selection.removeAllRanges();
     }
 
     function applyAnnotationToDOM(annotation) {
@@ -215,10 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const mark = iframeDoc.createElement('mark');
         mark.id = annotation.id;
         mark.style.backgroundColor = annotation.type === 'bookmark' ? 'var(--bookmark)' : 'var(--highlight)';
-        
-        if (annotation.type === 'bookmark') {
-            mark.title = annotation.note; // Show note on hover
-        }
+        if (annotation.type === 'bookmark') mark.title = annotation.note;
 
         try {
             range.surroundContents(mark);
@@ -282,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- UTILITY FUNCTIONS ---
+    // --- UTILITY FUNCTIONS (No changes here) ---
     function getPathTo(node) {
         if (node.nodeType === Node.TEXT_NODE) {
             let parent = node.parentNode;
