@@ -1,6 +1,4 @@
-// This is your personal configuration object from your Firebase project.
-// It tells your website how to connect to your database.
-
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDDfoBX9ZkIWOJBLgJ9v5vVvRVYC2JYV0w",
   authDomain: "gematria-3ef50.firebaseapp.com",
