@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="homepage.css">
     <link rel="stylesheet" href="gematria.css">
 </head>
-<body>
+<body data-theme="dark">
     <div class="background-glyphs"></div>
     <div class="container">
         <header class="gematria-header">
@@ -19,42 +19,60 @@
             </a>
             <h1>Gematria Database</h1>
             <p>(Type a word or number to calculate and search)</p>
+            <button id="theme-toggle" class="theme-toggle-button"></button>
         </header>
 
-        <section class="calculator-section">
-            <div class="input-area">
-                <input type="text" id="gematria-input" placeholder="e.g., Metaphysical Exploration">
-                <button id="save-button" disabled>Save</button>
-            </div>
+        <div class="main-content-grid">
+            <main class="calculator-main">
+                <section class="calculator-section">
+                    <div class="input-area">
+                        <input type="text" id="gematria-input" placeholder="e.g., Metaphysical Exploration">
+                        <button id="save-button" disabled>Save</button>
+                    </div>
+                    <div id="results-summary">
+                        <!-- Gematria value cards will be injected here -->
+                    </div>
+                    <div id="breakdown-container">
+                        <!-- Letter-by-letter breakdown will be injected here -->
+                    </div>
+                </section>
 
-            <div id="results-summary">
-                <!-- Gematria value cards will be injected here -->
-            </div>
-            
-            <div id="breakdown-container">
-                <!-- Letter-by-letter breakdown will be injected here -->
-            </div>
-        </section>
+                <section class="database-section">
+                    <h2>Matching Entries in Database</h2>
+                    <div id="db-matches-container">
+                        <!-- Dynamic match tables will be injected here -->
+                    </div>
+                </section>
+            </main>
 
-        <section class="database-section">
-            <h2>Matching Entries in Database</h2>
-            <div class="table-container">
-                <table id="db-results-table">
-                    <thead>
-                        <tr>
-                            <th>Phrase</th>
-                            <th>Jewish</th>
-                            <th>English</th>
-                            <th>Simple</th>
-                        </tr>
-                    </thead>
-                    <tbody id="db-results-body">
-                        <!-- Database matches will be injected here -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
+            <aside class="sidebar-right">
+                <div class="sidebar-widget">
+                    <h3>Cipher Settings</h3>
+                    <div id="cipher-settings" class="settings-group">
+                        <label class="cipher-group-title">Gematrix.org Ciphers</label>
+                        <label><input type="checkbox" data-cipher="Jewish" checked> Jewish</label>
+                        <label><input type="checkbox" data-cipher="English" checked> English</label>
+                        <label><input type="checkbox" data-cipher="Simple" checked> Simple</label>
+                        <label><input type="checkbox" data-cipher="ReverseJewish"> Reverse Jewish</label>
+                        <label><input type="checkbox" data-cipher="ReverseEnglish"> Reverse English</label>
+                        <label><input type="checkbox" data-cipher="ReverseSimple"> Reverse Simple</label>
+                        <label><input type="checkbox" data-cipher="Latin"> Latin</label>
+                        <label class="cipher-group-title">Traditional Ciphers</label>
+                        <label><input type="checkbox" data-cipher="TradJewish"> Jewish (Trad.)</label>
+                        <label><input type="checkbox" data-cipher="TradEnglish"> English (Trad.)</label>
+                        <label><input type="checkbox" data-cipher="TradSimple"> Simple (Trad.)</label>
+                    </div>
+                </div>
+                <div class="sidebar-widget">
+                    <h3>Recently Added</h3>
+                    <ul id="recent-list" class="sidebar-list"></ul>
+                </div>
+                <div class="sidebar-widget">
+                    <h3>Most Searched</h3>
+                    <ul id="popular-list" class="sidebar-list"></ul>
+                </div>
+            </aside>
+        </div>
     </div>
     
     <script src="firebase-config.js"></script>
