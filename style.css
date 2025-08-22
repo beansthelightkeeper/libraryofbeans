@@ -123,14 +123,15 @@ body {
 }
 .logo { font-size: 1.5rem; color: var(--accent); white-space: nowrap; overflow: hidden; }
 .main-controls { display: flex; align-items: center; gap: 8px; }
-.main-controls button {
+.main-controls button, .main-controls .home-link {
     background: none; border: none; color: var(--text-secondary); cursor: pointer;
     padding: 8px; border-radius: 50%; display: flex; align-items: center;
     justify-content: center; flex-shrink: 0;
+    width: 40px; height: 40px;
 }
-.main-controls button:hover { background-color: var(--button-bg-hover); color: var(--text-primary); }
+.main-controls button:hover, .main-controls .home-link:hover { background-color: var(--button-bg-hover); color: var(--text-primary); }
 
-#rainbow-toggle { font-family: var(--font-mono); font-weight: 700; width: 40px; height: 40px; }
+#rainbow-toggle { font-family: var(--font-mono); font-weight: 700; }
 #rainbow-toggle.active { background-color: var(--accent); color: var(--bg-secondary); border: 1px solid var(--accent); }
 body[data-theme='dark'] #rainbow-toggle.active { color: var(--bg-primary-dark); }
 #menu-toggle, #minimize-toggle { display: none; }

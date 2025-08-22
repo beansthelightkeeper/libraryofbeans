@@ -4,12 +4,13 @@ import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/1
 import { getFirestore, collection, addDoc, query, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- Firebase Configuration ---
-    // NOTE: These are special variables that will be provided by the environment.
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-gematria-app';
-
-    // --- Initialize Firebase ---
+    // --- Firebase Initialization ---
+    // The 'firebaseConfig' variable is now available globally from 'firebase-config.js'
+    if (typeof firebaseConfig === 'undefined') {
+        console.error("Firebase config is not loaded. Make sure firebase-config.js is included and correct.");
+        return;
+    }
+    
     let db;
     try {
         const app = initializeApp(firebaseConfig);
@@ -21,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     // The collection path for public data
-    const gematriaCollectionRef = collection(db, `/artifacts/${appId}/public/data/gematria`);
+    const gematriaCollectionRef = collection(db, `public/data/gematria`);
 
     // --- DOM ELEMENTS ---
     const gematriaInput = document.getElementById('gematria-input');
