@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const themeToggle = document.getElementById('theme-toggle');
     const menuToggle = document.getElementById('menu-toggle');
+    const minimizeToggle = document.getElementById('minimize-toggle');
     const sidebar = document.querySelector('.sidebar');
     const fileList = document.getElementById('file-list');
     const contentFrame = document.getElementById('content-frame');
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         settings: {
             theme: 'dark',
             fontSize: 16,
+            sidebarMinimized: false,
         },
         annotations: {}, // { 'file1.html': [{...}], 'file2.html': [{...}] }
     };
@@ -40,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- EVENT LISTENERS SETUP ---
     function setupEventListeners() {
         themeToggle.addEventListener('click', toggleTheme);
+        minimizeToggle.addEventListener('click', toggleSidebarMinimize);
         menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
         highlightModeToggle.addEventListener('click', toggleHighlightMode);
         bookmarkBtn.addEventListener('click', () => createAnnotation('bookmark'));
@@ -76,11 +79,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (contentFrame.contentDocument && contentFrame.contentDocument.body) {
             contentFrame.contentDocument.body.style.fontSize = `${state.settings.fontSize}px`;
         }
+        // Apply sidebar state
+        if (state.settings.sidebarMinimized) {
+            sidebar.classList.add('minimized');
+        } else {
+            sidebar.classList.remove('minimized');
+        }
     }
 
     function toggleTheme() {
         state.settings.theme = state.settings.theme === 'dark' ? 'light' : 'dark';
         applySettings();
+        saveSettings();
+    }
+    
+    function toggleSidebarMinimize() {
+        state.settings.sidebarMinimized = !state.settings.sidebarMinimized;
+        sidebar.classList.toggle('minimized');
         saveSettings();
     }
 
@@ -102,7 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
             fileList.innerHTML = '';
             files.forEach(file => {
                 const li = document.createElement('li');
-                li.textContent = file.name;
+                li.innerHTML = `<span class="full-text">${file.name}</span><span class="mini-text">📖</span>`;
+                li.title = file.name;
                 li.dataset.path = file.path;
                 li.addEventListener('click', () => loadFile(file.path));
                 fileList.appendChild(li);
@@ -231,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
             li.dataset.annotationId = bookmark.id;
             li.innerHTML = `
                 <div class="bookmark-note">${escapeHTML(bookmark.note || '')}</div>
-                <div class="bookmark-text">"${escapeHTML(bookmark.text)}"</div>
+                <div class="bookmark-text">${escapeHTML(bookmark.text)}</div>
             `;
             li.addEventListener('click', () => {
                 const targetElement = contentFrame.contentDocument.getElementById(bookmark.id);
@@ -245,22 +261,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- DATA PERSISTENCE (LocalStorage) ---
     function saveSettings() {
-        localStorage.setItem('aetheriumReaderSettings', JSON.stringify(state.settings));
+        localStorage.setItem('libraryOfBeansSettings', JSON.stringify(state.settings));
     }
 
     function loadSettings() {
-        const saved = localStorage.getItem('aetheriumReaderSettings');
+        const saved = localStorage.getItem('libraryOfBeansSettings');
         if (saved) {
             state.settings = { ...state.settings, ...JSON.parse(saved) };
         }
     }
 
     function saveAnnotations() {
-        localStorage.setItem('aetheriumReaderAnnotations', JSON.stringify(state.annotations));
+        localStorage.setItem('libraryOfBeansAnnotations', JSON.stringify(state.annotations));
     }
 
     function loadAnnotations() {
-        const saved = localStorage.getItem('aetheriumReaderAnnotations');
+        const saved = localStorage.getItem('libraryOfBeansAnnotations');
         if (saved) {
             state.annotations = JSON.parse(saved);
         }
@@ -269,7 +285,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- UTILITY FUNCTIONS ---
     function getPathTo(node) {
         if (node.nodeType === Node.TEXT_NODE) {
-            // For text nodes, get path to parent and the index within parent
             let parent = node.parentNode;
             let path = getPathTo(parent);
             let index = Array.prototype.indexOf.call(parent.childNodes, node);
@@ -277,11 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (node.nodeType === Node.ELEMENT_NODE) {
             let path = '';
-            while (node.nodeType === Node.ELEMENT_NODE) {
+            while (node && node.nodeType === Node.ELEMENT_NODE) {
                 let selector = node.nodeName.toLowerCase();
                 if (node.id) {
                     selector += `#${node.id}`;
-                    path = selector + path;
+                    path = selector + (path ? '>' + path : '');
                     break; 
                 } else {
                     let sib = node, nth = 1;
@@ -290,16 +305,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     selector += `:nth-of-type(${nth})`;
                 }
-                path = '>' + selector + path;
+                path = selector + (path ? '>' + path : '');
                 node = node.parentNode;
             }
-            return path.substring(1);
+            return path;
         }
+        return '';
     }
 
     function getNodeByPath(path, doc) {
         try {
-            // For text nodes, we need to handle it differently
             if (path.includes('/text()')) {
                 const parts = path.split('/text()');
                 const elementPath = parts[0];
