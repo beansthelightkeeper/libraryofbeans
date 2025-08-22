@@ -10,9 +10,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
-    // This special variable is provided by some hosting environments. We create a fallback for GitHub Pages.
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'gematria-public';
-    
     let db;
     try {
         const app = initializeApp(firebaseConfig);
@@ -23,8 +20,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("Firebase initialization failed:", error);
     }
     
-    // The CORRECT collection path for public data.
-    const gematriaCollectionRef = collection(db, `/artifacts/${appId}/public/data/gematria-entries`);
+    // The CORRECT and SIMPLIFIED collection path for public data.
+    const gematriaCollectionRef = collection(db, "gematria-entries");
 
     // --- DOM ELEMENTS ---
     const gematriaInput = document.getElementById('gematria-input');
@@ -64,9 +61,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- CALCULATOR & DATABASE FUNCTIONS ---
     function calculateGematria() {
         const rawText = gematriaInput.value;
-        const text = rawText.toUpperCase().replace(/[^A-Z]/g, '');
+        const text = rawText.toUpperCase().replace(/[^A-Z\s]/g, ''); // Allow spaces for breakdown
 
-        if (!text) {
+        if (!text.replace(/\s/g, '')) { // Check if only whitespace
             resultsSummary.innerHTML = '';
             breakdownContainer.innerHTML = '';
             dbResultsBody.innerHTML = '';
@@ -78,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const values = { Simple: 0, English: 0, Jewish: 0 };
         const breakdowns = { Simple: '', English: '', Jewish: '' };
 
-        for (const char of rawText.toUpperCase()) {
+        for (const char of text) {
             if (CIPHERS.Simple[char]) {
                 values.Simple += CIPHERS.Simple[char];
                 values.English += CIPHERS.English[char];
@@ -87,6 +84,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 breakdowns.Simple += `<div class="letter-value"><span class="letter">${char}</span><span class="value">${CIPHERS.Simple[char]}</span></div>`;
                 breakdowns.English += `<div class="letter-value"><span class="letter">${char}</span><span class="value">${CIPHERS.English[char]}</span></div>`;
                 breakdowns.Jewish += `<div class="letter-value"><span class="letter">${char}</span><span class="value">${CIPHERS.Jewish[char]}</span></div>`;
+            } else if (char === ' ') {
+                 breakdowns.Simple += `<div class="letter-value"><span class="letter">_</span></div>`;
+                 breakdowns.English += `<div class="letter-value"><span class="letter">_</span></div>`;
+                 breakdowns.Jewish += `<div class="letter-value"><span class="letter">_</span></div>`;
             }
         }
 
