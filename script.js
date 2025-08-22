@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveSettings();
     }
 
-    // --- HIGHLIGHT FIX: Function to inject/update styles inside the iframe ---
+    // --- DYNAMIC IFRAME STYLING ---
     function updateIframeStyles() {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc || !iframeDoc.head) return;
@@ -123,8 +123,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const computedStyles = getComputedStyle(document.body);
         const highlightColor = computedStyles.getPropertyValue('--highlight');
         const bookmarkColor = computedStyles.getPropertyValue('--bookmark');
+        
+        // FIX: Add text color based on the current theme
+        const textColor = computedStyles.getPropertyValue('--text-primary');
+        const bodyBgColor = computedStyles.getPropertyValue('--bg-secondary');
 
         style.innerHTML = `
+            body {
+                color: ${textColor};
+                background-color: ${bodyBgColor};
+                transition: color 0.3s ease, background-color 0.3s ease;
+            }
             .highlight { background-color: ${highlightColor}; color: inherit; }
             .bookmark { background-color: ${bookmarkColor}; color: inherit; }
         `;
