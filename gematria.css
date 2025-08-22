@@ -1,0 +1,220 @@
+/* --- GEMATRIA PAGE SPECIFIC STYLES --- */
+body {
+    align-items: flex-start;
+    padding-top: 2rem;
+}
+
+.container {
+    width: 100%;
+    max-width: 900px;
+}
+
+.gematria-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.gematria-header .home-link {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    color: #8b949e;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.gematria-header .home-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.gematria-header h1 {
+    font-size: 2.5rem;
+    color: #00ffff;
+    text-shadow: 0 0 5px #00ffff;
+    margin: 0;
+}
+
+.gematria-header p {
+    font-family: 'Roboto Mono', monospace;
+    color: #8b949e;
+    margin-top: 0.5rem;
+}
+
+.calculator-section {
+    background-color: rgba(22, 27, 34, 0.85);
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(8px);
+}
+
+.input-area {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+#gematria-input {
+    flex-grow: 1;
+    padding: 0.8rem 1rem;
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 5px;
+    color: #c9d1d9;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.2rem;
+}
+
+#save-button {
+    padding: 0.7rem 1.5rem;
+    background-color: #00ffff;
+    color: #0d1117;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s, opacity 0.3s;
+}
+
+#save-button:hover {
+    background-color: #33ffff;
+    box-shadow: 0 0 10px #00ffff;
+}
+
+#save-button:disabled {
+    background-color: #30363d;
+    color: #8b949e;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+#results-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.result-card {
+    background-color: #0d1117;
+    padding: 1rem;
+    border-radius: 5px;
+    border-left: 3px solid #00ffff;
+    text-align: center;
+}
+
+.result-card h3 {
+    font-size: 1rem;
+    color: #8b949e;
+    margin: 0 0 0.5rem 0;
+}
+
+.result-card p {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 2rem;
+    color: #c9d1d9;
+    margin: 0;
+}
+
+#breakdown-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.9rem;
+}
+
+.breakdown {
+    background-color: #0d1117;
+    padding: 1rem;
+    border-radius: 5px;
+}
+
+.breakdown-title {
+    color: #00ffff;
+    margin-bottom: 0.5rem;
+}
+
+.breakdown-letters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.letter-value {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #21262d;
+    border-radius: 3px;
+    padding: 2px 5px;
+}
+
+.letter-value .letter {
+    color: #c9d1d9;
+}
+
+.letter-value .value {
+    font-size: 0.8em;
+    color: #8b949e;
+}
+
+.database-section {
+    background-color: rgba(22, 27, 34, 0.85);
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 2rem;
+    backdrop-filter: blur(8px);
+}
+
+.database-section h2 {
+    color: #00ffff;
+    text-shadow: 0 0 5px #00ffff;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+#db-results-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#db-results-table th, #db-results-table td {
+    padding: 0.8rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #30363d;
+}
+
+#db-results-table th {
+    font-family: 'Roboto Mono', monospace;
+    color: #8b949e;
+}
+
+#db-results-table td {
+    font-family: 'Nunito', sans-serif;
+    color: #c9d1d9;
+}
+
+#db-results-table td:not(:first-child) {
+    font-family: 'Roboto Mono', monospace;
+    text-align: center;
+}
+
+#db-results-body tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}

@@ -5,14 +5,10 @@ import { getFirestore, collection, addDoc, query, where, getDocs, limit } from "
 
 document.addEventListener('DOMContentLoaded', async () => {
     // --- Firebase Initialization ---
-    // The 'firebaseConfig' variable is now available globally from 'firebase-config.js'
     if (typeof firebaseConfig === 'undefined') {
         console.error("Firebase config is not loaded. Make sure firebase-config.js is included and correct.");
         return;
     }
-    
-    // This special variable is provided by the hosting environment.
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-gematria-app';
     
     let db;
     try {
@@ -24,14 +20,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("Firebase initialization failed:", error);
     }
     
-    // The collection path for public data, now with the correct structure.
-    const gematriaCollectionRef = collection(db, `/artifacts/${appId}/public/data/gematria`);
+    // The collection path for public data.
+    const gematriaCollectionRef = collection(db, `gematria-entries`);
 
     // --- DOM ELEMENTS ---
     const gematriaInput = document.getElementById('gematria-input');
-    const gematriaResults = document.getElementById('gematria-results');
+    const resultsSummary = document.getElementById('results-summary');
+    const breakdownContainer = document.getElementById('breakdown-container');
     const saveButton = document.getElementById('save-button');
-    const dbMatchesContainer = document.getElementById('db-matches');
+    const dbResultsBody = document.getElementById('db-results-body');
 
     // --- GEMATRIA TABLES ---
     const CIPHERS = { Simple: {}, English: {}, Jewish: {} };
@@ -58,7 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function handleInputChange() {
         calculateGematria();
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(findMatchesInDB, 500); // Wait 500ms after user stops typing
+        debounceTimer = setTimeout(findMatchesInDB, 500);
     }
 
     // --- CALCULATOR & DATABASE FUNCTIONS ---
@@ -67,18 +64,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         const text = rawText.toUpperCase().replace(/[^A-Z]/g, '');
 
         if (!text) {
-            gematriaResults.innerHTML = '';
+            resultsSummary.innerHTML = '';
+            breakdownContainer.innerHTML = '';
+            dbResultsBody.innerHTML = '';
             saveButton.disabled = true;
             currentValues = null;
-            dbMatchesContainer.innerHTML = '';
             return;
         }
 
         const values = { Simple: 0, English: 0, Jewish: 0 };
-        for (const char of text) {
-            values.Simple += CIPHERS.Simple[char] || 0;
-            values.English += CIPHERS.English[char] || 0;
-            values.Jewish += CIPHERS.Jewish[char] || 0;
+        const breakdowns = { Simple: '', English: '', Jewish: '' };
+
+        for (const char of rawText.toUpperCase()) {
+            if (CIPHERS.Simple[char]) {
+                values.Simple += CIPHERS.Simple[char];
+                values.English += CIPHERS.English[char];
+                values.Jewish += CIPHERS.Jewish[char];
+                
+                breakdowns.Simple += `<div class="letter-value"><span class="letter">${char}</span><span class="value">${CIPHERS.Simple[char]}</span></div>`;
+                breakdowns.English += `<div class="letter-value"><span class="letter">${char}</span><span class="value">${CIPHERS.English[char]}</span></div>`;
+                breakdowns.Jewish += `<div class="letter-value"><span class="letter">${char}</span><span class="value">${CIPHERS.Jewish[char]}</span></div>`;
+            }
         }
 
         currentValues = {
@@ -88,11 +94,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             jewishValue: values.Jewish,
         };
 
-        gematriaResults.innerHTML = `
+        resultsSummary.innerHTML = `
             <div class="result-card"><h3>Simple</h3><p>${values.Simple}</p></div>
             <div class="result-card"><h3>English</h3><p>${values.English}</p></div>
             <div class="result-card"><h3>Jewish</h3><p>${values.Jewish}</p></div>
         `;
+        
+        breakdownContainer.innerHTML = `
+            <div class="breakdown"><div class="breakdown-title">Simple Breakdown</div><div class="breakdown-letters">${breakdowns.Simple}</div></div>
+            <div class="breakdown"><div class="breakdown-title">English Breakdown</div><div class="breakdown-letters">${breakdowns.English}</div></div>
+            <div class="breakdown"><div class="breakdown-title">Jewish Breakdown</div><div class="breakdown-letters">${breakdowns.Jewish}</div></div>
+        `;
+        
         saveButton.disabled = false;
     }
 
@@ -101,18 +114,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         saveButton.disabled = true;
         saveButton.textContent = 'Saving...';
         try {
-            await addDoc(gematriaCollectionRef, {
-                ...currentValues,
-                createdAt: new Date()
-            });
-            saveButton.textContent = 'Saved!';
+            // Check if the exact phrase already exists
+            const q = query(gematriaCollectionRef, where("phrase", "==", currentValues.phrase));
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+                 saveButton.textContent = 'Already Saved';
+            } else {
+                await addDoc(gematriaCollectionRef, {
+                    ...currentValues,
+                    createdAt: new Date()
+                });
+                saveButton.textContent = 'Saved!';
+            }
         } catch (error) {
             console.error("Error writing document: ", error);
             saveButton.textContent = 'Error!';
         } finally {
             setTimeout(() => {
-                saveButton.textContent = 'Save to Database';
-                // No need to re-enable, it's disabled until next input change
+                saveButton.textContent = 'Save';
             }, 2000);
         }
     }
@@ -120,44 +139,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function findMatchesInDB() {
         if (!currentValues || !db) return;
 
-        dbMatchesContainer.innerHTML = '<p>Searching for matches...</p>';
+        dbResultsBody.innerHTML = '<tr><td colspan="4">Searching...</td></tr>';
 
-        const queries = {
-            'Simple': where('simpleValue', '==', currentValues.simpleValue),
-            'English': where('englishValue', '==', currentValues.englishValue),
-            'Jewish': where('jewishValue', '==', currentValues.jewishValue),
-        };
+        const queries = [
+            where('simpleValue', '==', currentValues.simpleValue),
+            where('englishValue', '==', currentValues.englishValue),
+            where('jewishValue', '==', currentValues.jewishValue),
+        ];
 
-        let resultsHtml = '';
-        for (const cipherName in queries) {
-            const q = query(gematriaCollectionRef, queries[cipherName], limit(20));
+        const allMatches = new Map();
+
+        for (const qWhere of queries) {
+            const q = query(gematriaCollectionRef, qWhere, limit(50));
             const querySnapshot = await getDocs(q);
-            
-            const matches = [];
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                // Don't show the exact same phrase as a match for itself
                 if (data.phrase.toLowerCase() !== currentValues.phrase.toLowerCase()) {
-                    matches.push(data.phrase);
+                    allMatches.set(data.phrase, data);
                 }
             });
-
-            if (matches.length > 0) {
-                resultsHtml += `
-                    <div class="match-category">
-                        <h3>Matches for ${cipherName} (${currentValues[cipherName.toLowerCase() + 'Value']})</h3>
-                        <div class="match-list">
-                            ${matches.map(phrase => `<span class="match-item">${escapeHTML(phrase)}</span>`).join('')}
-                        </div>
-                    </div>
-                `;
-            }
         }
 
-        if (resultsHtml === '') {
-            dbMatchesContainer.innerHTML = '<p>No other entries found in the database with these values.</p>';
+        if (allMatches.size === 0) {
+            dbResultsBody.innerHTML = '<tr><td colspan="4">No other entries found in the database.</td></tr>';
         } else {
-            dbMatchesContainer.innerHTML = resultsHtml;
+            let resultsHtml = '';
+            for (const [phrase, values] of allMatches) {
+                resultsHtml += `
+                    <tr>
+                        <td>${escapeHTML(phrase)}</td>
+                        <td>${values.jewishValue}</td>
+                        <td>${values.englishValue}</td>
+                        <td>${values.simpleValue}</td>
+                    </tr>
+                `;
+            }
+            dbResultsBody.innerHTML = resultsHtml;
         }
     }
     
@@ -167,6 +184,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         return p.innerHTML;
     }
 
-    // Initial calculation for any pre-filled values
     calculateGematria();
 });
