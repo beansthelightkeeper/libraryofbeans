@@ -3,14 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
+    <title>Gematria Database - Home of Beans</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="homepage.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="homepage.css"> <!-- Re-using homepage styles for consistency -->
     <style>
-        .container {
-            max-width: 600px;
+        /* Additional styles specific to the gematria page */
+        .calculator-section {
+            background-color: rgba(22, 27, 34, 0.8);
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(5px);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .calculator-section h2 {
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+            margin-bottom: 1.5rem;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-family: 'Roboto Mono', monospace;
+            color: #8b949e;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            color: #c9d1d9;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.1rem;
+        }
+        #save-button {
+            margin-top: 1rem;
+            padding: 0.7rem 1.5rem;
+            background-color: #00ffff;
+            color: #0d1117;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        #save-button:hover {
+            background-color: #33ffff;
+            box-shadow: 0 0 10px #00ffff;
+        }
+        #save-button:disabled {
+            background-color: #30363d;
+            color: #8b949e;
+            cursor: not-allowed;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        .result-card {
+            background-color: #0d1117;
+            padding: 1rem;
+            border-radius: 5px;
+            border-left: 3px solid #00ffff;
+        }
+        .result-card h3 {
+            font-size: 1rem;
+            color: #8b949e;
+            margin: 0 0 0.5rem 0;
+        }
+        .result-card p {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.5rem;
+            color: #c9d1d9;
+            margin: 0;
+        }
+        #db-matches {
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+        .match-category {
+            margin-bottom: 1.5rem;
+        }
+        .match-category h3 {
+            color: #00ffff;
+            font-family: 'Roboto Mono', monospace;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .match-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .match-item {
+            background-color: #0d1117;
+            padding: 0.3rem 0.7rem;
+            border-radius: 15px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
         }
         .back-link {
             display: inline-block;
@@ -33,10 +136,30 @@
     <div class="background-glyphs"></div>
     <div class="container">
         <header class="main-header">
-            <h1>Coming Soon</h1>
-            <p>This section of the archives is currently under construction.</p>
-            <a href="index.html" class="back-link">Return to Archives</a>
+            <h1>Gematria Database</h1>
+            <p>Calculate and explore numerical values.</p>
         </header>
+
+        <!-- Standard Gematria Calculator -->
+        <section class="calculator-section">
+            <h2>Gematria Calculator</h2>
+            <div class="input-group">
+                <label for="gematria-input">Enter Word or Phrase</label>
+                <input type="text" id="gematria-input" placeholder="e.g., Wisdom">
+            </div>
+            <div id="gematria-results" class="results-grid">
+                <!-- Results will be injected here -->
+            </div>
+            <button id="save-button" disabled>Save to Database</button>
+
+            <div id="db-matches">
+                <!-- Matching results from the database will appear here -->
+            </div>
+        </section>
+
+        <a href="index.html" class="back-link">Return to Archives</a>
     </div>
+
+    <script type="module" src="gematria.js"></script>
 </body>
 </html>
