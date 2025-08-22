@@ -15,25 +15,26 @@
     <div class="container">
         <header class="gematria-header">
             <a href="index.html" class="home-link" title="Return to Archives">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </a>
-            <img src="icon.png" alt="BeansCodex Icon" class="header-icon">
+            <!-- Icons for light and dark mode -->
+            <img src="icon.png" alt="BeansCodex Icon" class="header-icon header-icon-light">
+            <img src="icondark.png" alt="BeansCodex Icon" class="header-icon header-icon-dark">
             <h1>Gematria Database</h1>
             <p>(Type a word or number to calculate and search)</p>
             <button id="theme-toggle" class="theme-toggle-button"></button>
         </header>
 
         <main class="calculator-main">
-            <!-- Search and Cipher Settings are now at the top -->
             <section class="search-container">
                 <div class="input-area">
-                    <input type="text" id="gematria-input" placeholder="e.g., Metaphysical Exploration">
+                    <input type="text" id="gematria-input" placeholder="e.g., Metaphysical Exploration or 444">
                     <button id="save-button" disabled>Save</button>
                 </div>
                 <details class="cipher-settings-collapsible">
                     <summary>Cipher Settings</summary>
                     <div class="collapsible-content">
-                        <p class="settings-info">Select up to 3 ciphers to display.</p>
+                        <p class="settings-info">Select up to 4 ciphers to display.</p>
                         <div id="cipher-settings" class="settings-group">
                             <label class="cipher-group-title">Gematrix.org Ciphers</label>
                             <label><input type="checkbox" data-cipher="Jewish" checked> Jewish</label>
@@ -47,12 +48,15 @@
                             <label><input type="checkbox" data-cipher="TradJewish"> Jewish (Trad.)</label>
                             <label><input type="checkbox" data-cipher="TradEnglish"> English (Trad.)</label>
                             <label><input type="checkbox" data-cipher="TradSimple"> Simple (Trad.)</label>
+                            <!-- New Ciphers from Python Script -->
+                            <label class="cipher-group-title">LLM Ciphers</label>
+                            <label><input type="checkbox" data-cipher="ALW"> ALW</label>
+                            <label><input type="checkbox" data-cipher="Chaldean" checked> Chaldean</label>
                         </div>
                     </div>
                 </details>
             </section>
 
-            <!-- Results and Database Matches -->
             <section class="calculator-section">
                 <div id="results-summary">
                     <!-- Gematria value cards will be injected here -->
