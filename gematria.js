@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Firebase Initialization ---
     if (typeof firebaseConfig === 'undefined') {
         console.error("Firebase config is not loaded. Make sure firebase-config.js is included and correct.");
+        alert("Firebase configuration is missing. The app cannot connect to the database.");
         return;
     }
     
@@ -16,8 +17,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const auth = getAuth(app);
         await signInAnonymously(auth);
         db = getFirestore(app);
-    } catch (error) {
+        console.log("Firebase initialized and connected successfully.");
+    } catch (error)
+    {
         console.error("Firebase initialization failed:", error);
+        alert("Could not connect to the database. Please check the console for errors.");
     }
     
     // The CORRECT and SIMPLIFIED collection path for public data.
@@ -114,7 +118,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function saveToDatabase() {
-        if (!currentValues || !db) return;
+        if (!currentValues || !db) {
+            console.error("Database not available or no values to save.");
+            return;
+        }
         saveButton.disabled = true;
         saveButton.textContent = 'Saving...';
         try {
@@ -133,9 +140,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             console.error("Error writing document: ", error);
             saveButton.textContent = 'Error!';
+            alert("Could not save to database. Check the console for errors and make sure your Firestore security rules are set to test mode.");
         } finally {
             setTimeout(() => {
                 saveButton.textContent = 'Save';
+                 // Re-enable if there's still text in the input
+                if (gematriaInput.value) {
+                    saveButton.disabled = false;
+                }
             }, 2000);
         }
     }
@@ -153,16 +165,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const allMatches = new Map();
 
-        for (const qWhere of queries) {
-            const q = query(gematriaCollectionRef, qWhere, limit(50));
-            const querySnapshot = await getDocs(q);
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                if (data.phrase.toLowerCase() !== currentValues.phrase.toLowerCase()) {
-                    allMatches.set(data.phrase, data);
-                }
-            });
+        try {
+            for (const qWhere of queries) {
+                const q = query(gematriaCollectionRef, qWhere, limit(50));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.phrase.toLowerCase() !== currentValues.phrase.toLowerCase()) {
+                        allMatches.set(data.phrase, data);
+                    }
+                });
+            }
+        } catch(error) {
+            console.error("Error querying database: ", error);
+            dbResultsBody.innerHTML = '<tr><td colspan="4">Error querying database. Check security rules.</td></tr>';
+            return;
         }
+
 
         if (allMatches.size === 0) {
             dbResultsBody.innerHTML = '<tr><td colspan="4">No other entries found in the database.</td></tr>';
