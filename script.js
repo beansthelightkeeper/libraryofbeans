@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
     const menuToggle = document.getElementById('menu-toggle');
     const minimizeToggle = document.getElementById('minimize-toggle');
+    const rainbowToggle = document.getElementById('rainbow-toggle');
     const sidebar = document.querySelector('.sidebar');
     const fileList = document.getElementById('file-list');
     const contentFrame = document.getElementById('content-frame');
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sidebarMinimized: false,
             activeHighlightColor: 'yellow',
             isDoubleSpaced: false,
+            isRainbowFxOn: true,
         },
         annotations: {},
     };
@@ -41,10 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
         moon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
     };
     const HIGHLIGHT_COLORS = {
-        yellow: 'var(--highlight-yellow)',
-        pink: 'var(--highlight-pink)',
-        green: 'var(--highlight-green)',
-        blue: 'var(--highlight-blue)',
+        yellow: '--highlight-yellow',
+        pink: '--highlight-pink',
+        green: '--highlight-green',
+        blue: '--highlight-blue',
     };
 
     // --- INITIALIZATION ---
@@ -60,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupEventListeners() {
         themeToggle.addEventListener('click', toggleTheme);
         minimizeToggle.addEventListener('click', toggleSidebarMinimize);
+        rainbowToggle.addEventListener('click', toggleRainbowFx);
         menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
         highlightModeToggle.addEventListener('click', toggleHighlightMode);
         eraseModeToggle.addEventListener('click', toggleEraseMode);
@@ -95,6 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fontSizeSlider.value = state.settings.fontSize;
         sidebar.classList.toggle('minimized', state.settings.sidebarMinimized);
         doubleSpaceToggle.classList.toggle('active', state.settings.isDoubleSpaced);
+        rainbowToggle.classList.toggle('active', state.settings.isRainbowFxOn);
+        document.body.classList.toggle('no-fx', !state.settings.isRainbowFxOn);
         
         document.querySelectorAll('.color-swatch').forEach(swatch => {
             swatch.classList.toggle('active', swatch.dataset.color === state.settings.activeHighlightColor);
@@ -115,6 +120,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleSidebarMinimize() {
         state.settings.sidebarMinimized = !state.settings.sidebarMinimized;
         sidebar.classList.toggle('minimized');
+        saveSettings();
+    }
+
+    function toggleRainbowFx() {
+        state.settings.isRainbowFxOn = !state.settings.isRainbowFxOn;
+        applySettings();
         saveSettings();
     }
 
