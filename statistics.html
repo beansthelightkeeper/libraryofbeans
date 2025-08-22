@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics - Gematria Database</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="gematria.css">
+</head>
+<body data-theme="dark">
+    <div class="background-glyphs"></div>
+    <div class="container">
+        <header class="gematria-header">
+            <a href="gematria.html" class="home-link" title="Return to Calculator">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M12 8v1"/><path d="M12 15v1"/><path d="M8 12h1"/><path d="M15 12h1"/></svg>
+            </a>
+            <img src="icon.png" alt="BeansCodex Icon" class="header-icon">
+            <h1>Database Statistics</h1>
+            <p>Most searched and recently added entries.</p>
+            <button id="theme-toggle" class="theme-toggle-button"></button>
+        </header>
+
+        <main class="statistics-main">
+            <div class="stats-grid">
+                <div class="sidebar-widget">
+                    <h3>Recently Added</h3>
+                    <div class="collapsible-content" style="display: block;">
+                        <table class="sidebar-table" id="recent-table">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="sidebar-widget">
+                    <h3>Most Searched</h3>
+                    <div class="collapsible-content" style="display: block;">
+                        <table class="sidebar-table" id="popular-table">
+                             <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <div class="footer-links">
+                <a href="statistics.html">Statistics</a>
+                <details class="admin-collapsible">
+                    <summary>Admin Panel</summary>
+                    <div id="admin-panel" class="collapsible-content">
+                        <p class="settings-info">This panel is managed on the main page.</p>
+                    </div>
+                </details>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="firebase-config.js"></script>
+    <script type="module" src="gematria.js"></script>
+</body>
+</html>
