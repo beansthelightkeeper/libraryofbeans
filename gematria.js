@@ -71,19 +71,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateActiveCiphers();
     fetchSidebarLists();
 
+    // --- HASHING FUNCTION for Admin Password ---
+    async function sha256(message) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex;
+    }
+
     // --- ADMIN & SECURITY ---
-    function handleAdminClick() {
+    async function handleAdminClick() {
         if (sessionStorage.getItem('isAdmin') === 'true') {
             adminHeader.classList.toggle('open');
             const content = adminHeader.nextElementSibling;
             content.style.display = content.style.display === 'block' ? 'none' : 'block';
         } else {
             const password = prompt("Enter Admin Password:");
-            if (password === "beans") { // You can change this password!
-                sessionStorage.setItem('isAdmin', 'true');
-                checkAdminStatus();
-            } else if (password) {
-                alert("Incorrect password.");
+            if (password) {
+                const hashedInput = await sha256(password);
+                const storedHash = "2c9388231319582ae82b2811289c0324883d2919c9155c82d08808928a38520c";
+                
+                if (hashedInput === storedHash) {
+                    sessionStorage.setItem('isAdmin', 'true');
+                    checkAdminStatus();
+                    adminHeader.classList.add('open');
+                    adminHeader.nextElementSibling.style.display = 'block';
+                } else {
+                    alert("Incorrect password.");
+                }
             }
         }
     }
