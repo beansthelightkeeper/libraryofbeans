@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
+    // This special variable is provided by some hosting environments. We create a fallback for GitHub Pages.
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'gematria-public';
+    
     let db;
     try {
         const app = initializeApp(firebaseConfig);
@@ -20,8 +23,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("Firebase initialization failed:", error);
     }
     
-    // The collection path for public data.
-    const gematriaCollectionRef = collection(db, `gematria-entries`);
+    // The CORRECT collection path for public data.
+    const gematriaCollectionRef = collection(db, `/artifacts/${appId}/public/data/gematria-entries`);
 
     // --- DOM ELEMENTS ---
     const gematriaInput = document.getElementById('gematria-input');
