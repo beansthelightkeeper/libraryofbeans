@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- USER CONFIGURATION ---
     // IMPORTANT: Replace these with your GitHub username and repository name.
-    const GITHUB_USERNAME = "beansthelightkeeper";
-    const GITHUB_REPO = "libraryofbeans";
+    const GITHUB_USERNAME = "YOUR_USERNAME";
+    const GITHUB_REPO = "YOUR_REPOSITORY_NAME";
     // --- END OF CONFIGURATION ---
 
     // --- DOM Elements ---
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSettings();
         loadAnnotations();
         applySettings();
-        fetchFilesFromGitHub(); // Changed from fetchAndDisplayFileList
+        fetchFilesFromGitHub();
         setupEventListeners();
     }
 
@@ -53,7 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightModeToggle.addEventListener('click', toggleHighlightMode);
         bookmarkBtn.addEventListener('click', () => createAnnotation('bookmark'));
         fontSizeSlider.addEventListener('input', handleFontSizeChange);
-        contentFrame.addEventListener('load', setupIframeListeners);
+        contentFrame.addEventListener('load', onIframeLoad);
+    }
+
+    function onIframeLoad() {
+        updateIframeStyles();
+        setupIframeListeners();
+        applyAnnotations();
+        renderBookmarks();
     }
 
     function setupIframeListeners() {
@@ -81,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleTheme() {
         state.settings.theme = state.settings.theme === 'dark' ? 'light' : 'dark';
         applySettings();
+        updateIframeStyles(); // Update iframe styles on theme change
         saveSettings();
     }
     
@@ -96,6 +104,28 @@ document.addEventListener('DOMContentLoaded', () => {
             contentFrame.contentDocument.body.style.fontSize = `${state.settings.fontSize}px`;
         }
         saveSettings();
+    }
+
+    // --- HIGHLIGHT FIX: Function to inject/update styles inside the iframe ---
+    function updateIframeStyles() {
+        const iframeDoc = contentFrame.contentDocument;
+        if (!iframeDoc || !iframeDoc.head) return;
+
+        let style = iframeDoc.getElementById('dynamic-reader-styles');
+        if (!style) {
+            style = iframeDoc.createElement('style');
+            style.id = 'dynamic-reader-styles';
+            iframeDoc.head.appendChild(style);
+        }
+
+        const computedStyles = getComputedStyle(document.body);
+        const highlightColor = computedStyles.getPropertyValue('--highlight');
+        const bookmarkColor = computedStyles.getPropertyValue('--bookmark');
+
+        style.innerHTML = `
+            .highlight { background-color: ${highlightColor}; color: inherit; }
+            .bookmark { background-color: ${bookmarkColor}; color: inherit; }
+        `;
     }
 
     // --- FILE HANDLING (Now using GitHub API) ---
@@ -116,11 +146,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 .filter(file => file.type === 'file' && file.name.endsWith('.html'))
                 .forEach(file => {
                     const li = document.createElement('li');
-                    // Clean up file name for display (remove .html)
                     const displayName = file.name.replace(/\.html$/, '').replace(/[-_]/g, ' ');
                     li.innerHTML = `<span class="full-text">${displayName}</span><span class="mini-text">📖</span>`;
                     li.title = displayName;
-                    li.dataset.path = file.path; // Use the path from the API response
+                    li.dataset.path = file.path;
                     li.addEventListener('click', () => loadFile(file.path));
                     fileList.appendChild(li);
                 });
@@ -142,15 +171,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.innerWidth <= 768) {
             sidebar.classList.remove('open');
         }
-
-        contentFrame.onload = () => {
-            setupIframeListeners();
-            applyAnnotations();
-            renderBookmarks();
-        };
+        // The 'load' event on the iframe will trigger onIframeLoad()
     }
 
-    // --- ANNOTATION LOGIC (No changes here) ---
+    // --- ANNOTATION LOGIC ---
     function toggleHighlightMode() {
         state.isHighlightModeActive = !state.isHighlightModeActive;
         highlightModeToggle.classList.toggle('active', state.isHighlightModeActive);
@@ -203,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const mark = iframeDoc.createElement('mark');
         mark.id = annotation.id;
-        mark.style.backgroundColor = annotation.type === 'bookmark' ? 'var(--bookmark)' : 'var(--highlight)';
+        mark.className = annotation.type; // Use class instead of inline style
         if (annotation.type === 'bookmark') mark.title = annotation.note;
 
         try {
