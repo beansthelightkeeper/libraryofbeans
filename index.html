@@ -35,13 +35,13 @@
                 </div>
             </header>
 
-            <!-- New wrapper for scrollable content -->
+            <!-- Wrapper for scrollable content -->
             <div class="sidebar-content">
                 <nav id="file-navigation" class="file-navigation">
                     <h2><span class="full-text">Library</span><span class="mini-text">📖</span></h2>
-                    <ul id="file-list">
-                        <!-- File list will be dynamically populated here -->
-                    </ul>
+                    <div id="file-list-container">
+                        <!-- Organized file list will be dynamically populated here -->
+                    </div>
                 </nav>
 
                 <div class="reader-tools">
@@ -69,6 +69,19 @@
                              <button class="color-swatch" data-color="green" title="Green"></button>
                              <button class="color-swatch" data-color="blue" title="Blue"></button>
                          </div>
+                     </div>
+
+                     <div class="tool-group">
+                        <label class="full-text">Layout</label>
+                        <div class="layout-controls">
+                            <div class="slider-container">
+                                <span>Margins</span>
+                                <input type="range" id="margin-slider" min="0" max="40" value="20" step="1">
+                            </div>
+                            <button id="bookmark-gutter-toggle" title="Toggle Bookmark Gutter">
+                                <span class="full-text">Bookmark Gutter</span>
+                            </button>
+                        </div>
                      </div>
 
                      <div class="tool-group font-controls">
@@ -99,6 +112,7 @@
 
         <!-- Main content area to display the loaded HTML file -->
         <main class="content-viewer">
+            <div id="bookmark-gutter"></div>
             <div id="welcome-message">
                 <div class="logo-graphic">
                     <div class="triangle"></div>
