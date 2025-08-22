@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- USER CONFIGURATION ---
     // IMPORTANT: Replace these with your GitHub username and repository name.
-    const GITHUB_USERNAME = "beansthelightkeeper";
-    const GITHUB_REPO = "libraryofbeans";
+    const GITHUB_USERNAME = "YOUR_USERNAME";
+    const GITHUB_REPO = "YOUR_REPOSITORY_NAME";
     // --- END OF CONFIGURATION ---
 
     // --- DOM Elements ---
@@ -66,7 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupIframeListeners() {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc) return;
+        // Listen for mouse up (for desktop) and touch end (for mobile/tablet)
         iframeDoc.addEventListener('mouseup', handleIframeMouseUp);
+        iframeDoc.addEventListener('touchend', handleIframeMouseUp); 
         iframeDoc.addEventListener('selectionchange', () => {
             const selection = iframeDoc.getSelection();
             bookmarkBtn.disabled = !selection || selection.isCollapsed;
