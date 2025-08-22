@@ -190,56 +190,72 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error(`GitHub API error: ${response.statusText}`);
             const files = await response.json();
-            const organized = {};
+            
+            // This object will hold both organized folders and uncategorized files
+            const fileTree = { _files: [] }; // _files is a special key for uncategorized items
+
             files.filter(file => file.type === 'file' && file.name.endsWith('.html')).forEach(file => {
-                const parts = file.name.replace(/\.html$/, '').split('/');
-                if (parts.length !== 3) return; // Expects Subject/Author/Title.html
-                const [subject, author, title] = parts;
-                if (!organized[subject]) organized[subject] = {};
-                if (!organized[subject][author]) organized[subject][author] = [];
-                organized[subject][author].push({ name: title, path: file.path });
+                const cleanName = file.name.replace(/\.html$/, '');
+                const parts = cleanName.split('/');
+                
+                if (parts.length === 3) { // Organized: Subject/Author/Title
+                    const [subject, author, title] = parts;
+                    if (!fileTree[subject]) fileTree[subject] = {};
+                    if (!fileTree[subject][author]) fileTree[subject][author] = [];
+                    fileTree[subject][author].push({ name: title, path: file.path });
+                } else { // Uncategorized
+                    fileTree._files.push({ name: cleanName, path: file.path });
+                }
             });
-            renderFileTree(organized);
+            renderFileTree(fileTree);
         } catch (error) {
             console.error("Error loading file list:", error);
             fileListContainer.innerHTML = '<li>Error loading library.</li>';
         }
     }
     function renderFileTree(data) {
-        const createBranch = (obj, isTopLevel = false) => {
+        const createBranch = (obj) => {
             const ul = document.createElement('ul');
-            if (isTopLevel) ul.classList.add('top-level');
+            // Render uncategorized files first if they exist
+            if (obj._files && obj._files.length > 0) {
+                obj._files.forEach(file => {
+                    const li = createFileElement(file);
+                    ul.appendChild(li);
+                });
+            }
+            // Then render folders
             for (const key in obj) {
+                if (key === '_files') continue; // Skip our special key
                 const li = document.createElement('li');
-                if (Array.isArray(obj[key])) { // It's an array of files
-                    const file = obj[key][0];
-                    li.textContent = file.name;
-                    li.className = 'file-item';
-                    li.dataset.path = file.path;
-                    li.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        loadFile(file.path);
-                        document.querySelectorAll('.file-item.active').forEach(el => el.classList.remove('active'));
-                        li.classList.add('active');
-                    });
-                } else { // It's a folder
-                    li.textContent = key;
-                    li.className = 'folder';
-                    const childrenUl = createBranch(obj[key]);
-                    childrenUl.style.display = 'none';
-                    li.appendChild(childrenUl);
-                    li.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        li.classList.toggle('open');
-                        childrenUl.style.display = childrenUl.style.display === 'none' ? 'block' : 'none';
-                    });
-                }
+                li.textContent = key;
+                li.className = 'folder';
+                const childrenUl = createBranch(obj[key]);
+                childrenUl.style.display = 'none';
+                li.appendChild(childrenUl);
+                li.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    li.classList.toggle('open');
+                    childrenUl.style.display = childrenUl.style.display === 'none' ? 'block' : 'none';
+                });
                 ul.appendChild(li);
             }
             return ul;
         };
+        const createFileElement = (file) => {
+            const li = document.createElement('li');
+            li.textContent = file.name;
+            li.className = 'file-item';
+            li.dataset.path = file.path;
+            li.addEventListener('click', (e) => {
+                e.stopPropagation();
+                loadFile(file.path);
+                document.querySelectorAll('.file-item.active').forEach(el => el.classList.remove('active'));
+                li.classList.add('active');
+            });
+            return li;
+        };
         fileListContainer.innerHTML = '';
-        fileListContainer.appendChild(createBranch(data, true));
+        fileListContainer.appendChild(createBranch(data));
     }
     function loadFile(filePath) {
         state.currentFile = filePath;
