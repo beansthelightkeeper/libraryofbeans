@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
+    // This special variable is provided by the hosting environment.
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-gematria-app';
+    
     let db;
     try {
         const app = initializeApp(firebaseConfig);
@@ -21,8 +24,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("Firebase initialization failed:", error);
     }
     
-    // The collection path for public data
-    const gematriaCollectionRef = collection(db, `public/data/gematria`);
+    // The collection path for public data, now with the correct structure.
+    const gematriaCollectionRef = collection(db, `/artifacts/${appId}/public/data/gematria`);
 
     // --- DOM ELEMENTS ---
     const gematriaInput = document.getElementById('gematria-input');
