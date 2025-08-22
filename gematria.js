@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const auth = getAuth(app);
         await signInAnonymously(auth);
         db = getFirestore(app);
+        console.log("Firebase initialized successfully.");
     } catch (error) { console.error("Firebase initialization failed:", error); }
     
     const gematriaCollectionRef = collection(db, "gematria-entries");
