@@ -7,11 +7,32 @@ import { getFirestore, collection, addDoc, query, where, getDocs, limit, orderBy
 const CIPHERS = {};
 const ALL_CIPHER_KEYS = [
     'Jewish', 'English', 'Simple', 
-    'ReverseJewish', 'ReverseEnglish', 'ReverseSimple', 
-    'Latin', 
-    'TradJewish', 'TradEnglish', 'TradSimple',
-    'ALW', 'Chaldean' // <-- New Ciphers
+    'ReverseSimple', 
+    'ALW', 'Chaldean',
+    // Newly added ciphers
+    'ReverseOrdinal', 'QWERTY', 'Reduction', 'Trigrammaton', 'Baconian', 
+    'PhoneKeypad', 'Solfège', 'Zodiac', 'Fibonacci', 'PrimePosition'
 ];
+
+// --- Helper function for new ciphers ---
+function isPrime(n) {
+    if (n <= 1) return false;
+    if (n <= 3) return true;
+    if (n % 2 === 0 || n % 3 === 0) return false;
+    for (let i = 5; i * i <= n; i = i + 6) {
+        if (n % i === 0 || n % (i + 2) === 0) return false;
+    }
+    return true;
+}
+
+function recursiveDigitSum(n) {
+    let num = Math.abs(n);
+    while (num > 9) {
+        num = String(num).split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0);
+    }
+    return num;
+}
+
 
 function buildGematriaTables() {
     const a = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -25,49 +46,88 @@ function buildGematriaTables() {
         CIPHERS.English[l] = (i + 1) * 6;
     });
 
-    // Jewish & Traditional
+    // Jewish
     const jewishValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800];
     CIPHERS.Jewish = {};
     a.forEach((l, i) => CIPHERS.Jewish[l] = jewishValues[i]);
 
-    CIPHERS.TradSimple = { ...CIPHERS.Simple };
-    CIPHERS.TradEnglish = { ...CIPHERS.English };
-    CIPHERS.TradJewish = { ...CIPHERS.Jewish };
-
-    // Latin
-    const latinOrder = 'abcdefghiklmnopqrstvxyz'.split('');
-    const latinValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500];
-    CIPHERS.Latin = {};
-    latinOrder.forEach((l, i) => CIPHERS.Latin[l] = latinValues[i]);
-    CIPHERS.Latin['j'] = CIPHERS.Latin['i'];
-    CIPHERS.Latin['u'] = CIPHERS.Latin['v'];
-    CIPHERS.Latin['w'] = CIPHERS.Latin['v'] * 2;
-
-    // Reverse
+    // Reverse Simple
     CIPHERS.ReverseSimple = {};
-    CIPHERS.ReverseEnglish = {};
-    CIPHERS.ReverseJewish = {};
     a.slice().reverse().forEach((l, i) => {
         CIPHERS.ReverseSimple[l] = i + 1;
-        CIPHERS.ReverseEnglish[l] = (i + 1) * 6;
-        CIPHERS.ReverseJewish[l] = jewishValues[i];
     });
 
-    // --- NEW CIPHERS from Python Script ---
+    // --- Ciphers from Python Scripts ---
     const ALW_MAP = {'A': 1, 'B': 20, 'C': 13, 'D': 6, 'E': 25, 'F': 18, 'G': 11, 'H': 4, 'I': 23, 'J': 16, 'K': 9, 'L': 2, 'M': 21, 'N': 14, 'O': 7, 'P': 26, 'Q': 19, 'R': 12, 'S': 5, 'T': 24, 'U': 17, 'V': 10, 'W': 3, 'X': 22, 'Y': 15, 'Z': 8};
     const CHALDEAN_MAP = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 8, 'G': 3, 'H': 5, 'I': 1, 'J': 1, 'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 7, 'P': 8, 'Q': 1, 'R': 2, 'S': 3, 'T': 4, 'U': 6, 'V': 6, 'W': 6, 'X': 5, 'Y': 1, 'Z': 7};
+    const REVERSE_ORDINAL_MAP = {'A': 26, 'B': 25, 'C': 24, 'D': 23, 'E': 22, 'F': 21, 'G': 20, 'H': 19, 'I': 18, 'J': 17, 'K': 16, 'L': 15, 'M': 14, 'N': 13, 'O': 12, 'P': 11, 'Q': 10, 'R': 9, 'S': 8, 'T': 7, 'U': 6, 'V': 5, 'W': 4, 'X': 3, 'Y': 2, 'Z': 1};
+    const QWERTY_MAP = {'Q':1, 'W':2, 'E':3, 'R':4, 'T':5, 'Y':6, 'U':7, 'I':8, 'O':9, 'P':10, 'A':11, 'S':12, 'D':13, 'F':14, 'G':15, 'H':16, 'J':17, 'K':18, 'L':19, 'Z':20, 'X':21, 'C':22, 'V':23, 'B':24, 'N':25, 'M':26};
+    const TRIGRAM_MAP = {'A': 5, 'B': 20, 'C': 2, 'D': 23, 'E': 13, 'F': 12, 'G': 11, 'H': 3, 'I': 0, 'J': 7, 'K': 17, 'L': 1, 'M': 21, 'N': 24, 'O': 10, 'P': 4, 'Q': 16, 'R': 14, 'S': 15, 'T': 9, 'U': 25, 'V': 22, 'W': 8, 'X': 6, 'Y': 18, 'Z': 19};
+    const BACON_MAP = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5, 'G': 6, 'H': 7, 'I': 8, 'J': 8, 'K': 9, 'L': 10, 'M': 11, 'N': 12, 'O': 13, 'P': 14, 'Q': 15, 'R': 16, 'S': 17, 'T': 18, 'U': 19, 'V': 19, 'W': 20, 'X': 21, 'Y': 22, 'Z': 23};
+    const PHONE_MAP = {'A': 2, 'B': 2, 'C': 2, 'D': 3, 'E': 3, 'F': 3, 'G': 4, 'H': 4, 'I': 4, 'J': 5, 'K': 5, 'L': 5, 'M': 6, 'N': 6, 'O': 6, 'P': 7, 'Q': 7, 'R': 7, 'S': 8, 'T': 8, 'U': 8, 'V': 9, 'W': 9, 'X': 9, 'Y': 9, 'Z': 9};
+    const SOLFEGE_MAP = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 1, 'I': 2, 'J': 3, 'K': 4, 'L': 5, 'M': 6, 'N': 7, 'O': 1, 'P': 2, 'Q': 3, 'R': 4, 'S': 5, 'T': 6, 'U': 7, 'V': 1, 'W': 2, 'X': 3, 'Y': 4, 'Z': 5};
+    const ZODIAC_MAP = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 'J': 10, 'K': 11, 'L': 12, 'M': 1, 'N': 2, 'O': 3, 'P': 4, 'Q': 5, 'R': 6, 'S': 7, 'T': 8, 'U': 9, 'V': 10, 'W': 11, 'X': 12, 'Y': 1, 'Z': 2};
+    
+    // Fibonacci and Prime Maps
+    const fibSequence = [0, 1];
+    while(fibSequence.length < 27) fibSequence.push(fibSequence[fibSequence.length - 1] + fibSequence[fibSequence.length - 2]);
+    const FIB_MAP = {};
+    A.forEach((L, i) => FIB_MAP[L] = fibSequence[i+1]);
+
+    const primeList = [];
+    let num = 2;
+    while(primeList.length < 26) {
+        if(isPrime(num)) primeList.push(num);
+        num++;
+    }
+    const PRIME_MAP = {};
+    A.forEach((L, i) => PRIME_MAP[L] = primeList[i]);
+
+    // Assign maps to CIPHERS object
     CIPHERS.ALW = {};
     CIPHERS.Chaldean = {};
+    CIPHERS.ReverseOrdinal = {};
+    CIPHERS.QWERTY = {};
+    CIPHERS.Trigrammaton = {};
+    CIPHERS.Baconian = {};
+    CIPHERS.PhoneKeypad = {};
+    CIPHERS.Solfège = {};
+    CIPHERS.Zodiac = {};
+    CIPHERS.Fibonacci = {};
+    CIPHERS.PrimePosition = {};
+
     A.forEach(L => {
         CIPHERS.ALW[L] = ALW_MAP[L] || 0;
         CIPHERS.Chaldean[L] = CHALDEAN_MAP[L] || 0;
+        CIPHERS.ReverseOrdinal[L] = REVERSE_ORDINAL_MAP[L] || 0;
+        CIPHERS.QWERTY[L] = QWERTY_MAP[L] || 0;
+        CIPHERS.Trigrammaton[L] = TRIGRAM_MAP[L] || 0;
+        CIPHERS.Baconian[L] = BACON_MAP[L] || 0;
+        CIPHERS.PhoneKeypad[L] = PHONE_MAP[L] || 0;
+        CIPHERS.Solfège[L] = SOLFEGE_MAP[L] || 0;
+        CIPHERS.Zodiac[L] = ZODIAC_MAP[L] || 0;
+        CIPHERS.Fibonacci[L] = FIB_MAP[L] || 0;
+        CIPHERS.PrimePosition[L] = PRIME_MAP[L] || 0;
     });
+
+    // Special case for Reduction
+    CIPHERS.Reduction = (text) => {
+        const simpleValue = text.split('').reduce((sum, char) => sum + (CIPHERS.Simple[char.toLowerCase()] || 0), 0);
+        if (simpleValue === 0) return 0;
+        let val = simpleValue;
+        while (val > 9 && val !== 11 && val !== 22) {
+            val = String(val).split('').reduce((s, d) => s + parseInt(d, 10), 0);
+        }
+        return val;
+    };
     
     // Case Insensitivity for all ciphers
     A.forEach(L => {
         const l = L.toLowerCase();
         Object.keys(CIPHERS).forEach(key => {
-            if(CIPHERS[key][L]) CIPHERS[key][l] = CIPHERS[key][L];
+            if (typeof CIPHERS[key] === 'object' && CIPHERS[key][L]) {
+                CIPHERS[key][l] = CIPHERS[key][L];
+            }
         });
     });
 }
@@ -119,15 +179,12 @@ function initCalculatorPage(db) {
     const saveButton = document.getElementById('save-button');
     const dbMatchesContainer = document.getElementById('db-matches-container');
     const cipherSettings = document.getElementById('cipher-settings');
-    const bulkUploadInput = document.getElementById('bulk-upload-input');
-    const bulkUploadButton = document.getElementById('bulk-upload-button');
-    const bulkUploadProgress = document.getElementById('bulk-upload-progress');
-    const adminPanel = document.querySelector('.admin-collapsible');
+    // ... other elements
 
     // State
     let currentValues = null;
     let activeCiphers = ['Jewish', 'English', 'Simple', 'Chaldean'];
-    const MAX_ACTIVE_CIPHERS = 4;
+    const MAX_ACTIVE_CIPHERS = 6; // Increased limit
 
     // --- CORE INPUT HANDLING ---
     const handleInputChange = () => {
@@ -139,7 +196,7 @@ function initCalculatorPage(db) {
 
         if (isNumberSearch) {
             findMatchesByNumber(parseInt(input, 10));
-            saveButton.disabled = true; // Can't save a number
+            saveButton.disabled = true;
         } else {
             calculateGematriaForText(input);
             saveButton.disabled = false;
@@ -160,18 +217,27 @@ function initCalculatorPage(db) {
     function calculateGematriaForText(text) {
         currentValues = {};
         for (const cipher of ALL_CIPHER_KEYS) {
-            let total = 0;
+            let total;
             const breakdown = [];
-            for (const char of text) {
-                const value = CIPHERS[cipher][char] || 0;
-                if (value > 0) breakdown.push({ letter: char, value });
-                total += value;
+            // Handle functional ciphers vs. map-based ciphers
+            if (typeof CIPHERS[cipher] === 'function') {
+                total = CIPHERS[cipher](text);
+                // Breakdown not applicable for functional ciphers like Reduction
+            } else {
+                total = 0;
+                for (const char of text) {
+                    const value = CIPHERS[cipher][char] || 0;
+                    if (value > 0) breakdown.push({ letter: char, value });
+                    total += value;
+                }
             }
             currentValues[cipher] = total;
 
             if (activeCiphers.includes(cipher)) {
                 displayResultCard(cipher, total);
-                displayBreakdown(cipher, breakdown);
+                if (breakdown.length > 0) { // Only show breakdown if it exists
+                    displayBreakdown(cipher, breakdown);
+                }
             }
         }
         findMatchesByText();
@@ -187,7 +253,6 @@ function initCalculatorPage(db) {
             const querySnapshot = await getDocs(q);
             if (!querySnapshot.empty) {
                 displayMatchTable(cipher, value, querySnapshot.docs);
-                // Increment search count for the original phrase
                 const originalPhrase = gematriaInput.value.trim();
                 querySnapshot.docs.forEach(doc => {
                     if (doc.data().phrase.toLowerCase() === originalPhrase.toLowerCase()) {
@@ -258,28 +323,31 @@ function initCalculatorPage(db) {
             cb.disabled = activeCiphers.length >= MAX_ACTIVE_CIPHERS && !cb.checked;
             label.classList.toggle('disabled', cb.disabled);
         });
-        handleInputChange(); // Recalculate/research when ciphers change
+        handleInputChange();
     }
 
     async function saveToDatabase() {
         const phrase = gematriaInput.value.trim();
         if (!phrase || !currentValues) return;
         try {
-            await addDoc(gematriaCollectionRef, { phrase, createdAt: new Date(), searchCount: 0, ...currentValues });
+            const dataToSave = { phrase, createdAt: new Date(), searchCount: 0 };
+            for(const key in currentValues) {
+                // Ensure functions aren't saved to Firestore
+                if (typeof currentValues[key] !== 'function') {
+                    dataToSave[key] = currentValues[key];
+                }
+            }
+            await addDoc(gematriaCollectionRef, dataToSave);
             saveButton.textContent = 'Saved!';
             setTimeout(() => { saveButton.textContent = 'Save'; }, 2000);
-            findMatchesByText(); // Refresh matches
+            findMatchesByText();
         } catch (error) { console.error("Error adding document: ", error); }
     }
-    
-    // Other functions (bulk upload, admin) remain the same...
-    // ...
     
     // Event Listeners
     gematriaInput.addEventListener('input', debouncedHandler);
     saveButton.addEventListener('click', saveToDatabase);
     cipherSettings.addEventListener('change', updateActiveCiphers);
-    // ... other listeners
 
     // Initialization
     updateActiveCiphers();
