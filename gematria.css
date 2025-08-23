@@ -8,6 +8,11 @@
     --border-color: #333;
     --accent-color: #00b300;
     --accent-hover: #00ff00;
+    /* Filter Colors */
+    --prime-color: #ffcc00;
+    --square-color: #cc66ff;
+    --palindrome-color: #00ccff;
+    --composite-color: #ff6666;
 }
 
 body {
@@ -141,10 +146,16 @@ a:hover {
     font-weight: bold;
     color: var(--text-secondary);
 }
-.settings-group {
-    padding: 1rem;
+.main-settings-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: 3fr 1fr;
+    gap: 1rem;
+    padding: 0 1rem 1rem 1rem;
+}
+.settings-group {
+    padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
     gap: 0.5rem;
     font-size: 0.9rem;
 }
@@ -154,10 +165,13 @@ a:hover {
     gap: 0.5rem;
     cursor: pointer;
 }
-.settings-group label.disabled {
-    color: #555;
-    cursor: not-allowed;
+.settings-info {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-weight: bold;
 }
+
 
 /* --- MATCH TABLES --- */
 #db-matches-container {
@@ -176,6 +190,14 @@ a:hover {
     cursor: pointer;
     color: var(--accent-color);
 }
+.match-table-container summary .value {
+    font-weight: bold;
+}
+.match-table-container summary .value.prime { color: var(--prime-color); }
+.match-table-container summary .value.square { color: var(--square-color); }
+.match-table-container summary .value.palindrome { color: var(--palindrome-color); }
+.match-table-container summary .value.composite { color: var(--composite-color); }
+
 .match-table-container summary:hover {
     background-color: #2a2a2a;
 }

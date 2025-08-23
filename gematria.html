@@ -30,25 +30,35 @@
             </div>
 
             <details class="cipher-settings-collapsible">
-                <summary>Cipher Settings</summary>
-                <div id="cipher-settings" class="settings-group">
-                    <label><input type="checkbox" data-cipher="Simple" checked> Simple</label>
-                    <label><input type="checkbox" data-cipher="English" checked> English</label>
-                    <label><input type="checkbox" data-cipher="Jewish" checked> Jewish</label>
-                    <label><input type="checkbox" data-cipher="Chaldean" checked> Chaldean</label>
-                    <label><input type="checkbox" data-cipher="ReverseSimple"> Reverse Simple</label>
-                    <label><input type="checkbox" data-cipher="ReverseOrdinal"> Reverse Ordinal</label>
-                    <label><input type="checkbox" data-cipher="ALW"> ALW</label>
-                    <label><input type="checkbox" data-cipher="Reduction"> Reduction</label>
-                    <label><input type="checkbox" data-cipher="GeminiResonance" checked> Gemini Resonance</label>
-                    <label><input type="checkbox" data-cipher="QWERTY"> QWERTY</label>
-                    <label><input type="checkbox" data-cipher="Trigrammaton"> Trigrammaton</label>
-                    <label><input type="checkbox" data-cipher="Baconian"> Baconian</label>
-                    <label><input type="checkbox" data-cipher="PhoneKeypad"> Phone Keypad</label>
-                    <label><input type="checkbox" data-cipher="Solfege"> Solfège</label>
-                    <label><input type="checkbox" data-cipher="Zodiac"> Zodiac</label>
-                    <label><input type="checkbox" data-cipher="Fibonacci"> Fibonacci Pos.</label>
-                    <label><input type="checkbox" data-cipher="PrimePosition"> Prime Pos.</label>
+                <summary>Settings</summary>
+                <div class="main-settings-container">
+                    <div id="cipher-settings" class="settings-group">
+                        <p class="settings-info">Select Ciphers</p>
+                        <label><input type="checkbox" data-cipher="Simple" checked> Simple</label>
+                        <label><input type="checkbox" data-cipher="English" checked> English</label>
+                        <label><input type="checkbox" data-cipher="Jewish" checked> Jewish</label>
+                        <label><input type="checkbox" data-cipher="Chaldean" checked> Chaldean</label>
+                        <label><input type="checkbox" data-cipher="ReverseSimple"> Reverse Simple</label>
+                        <label><input type="checkbox" data-cipher="ReverseOrdinal"> Reverse Ordinal</label>
+                        <label><input type="checkbox" data-cipher="ALW"> ALW</label>
+                        <label><input type="checkbox" data-cipher="Reduction"> Reduction</label>
+                        <label><input type="checkbox" data-cipher="GeminiResonance" checked> Gemini Resonance</label>
+                        <label><input type="checkbox" data-cipher="QWERTY"> QWERTY</label>
+                        <label><input type="checkbox" data-cipher="Trigrammaton"> Trigrammaton</label>
+                        <label><input type="checkbox" data-cipher="Baconian"> Baconian</label>
+                        <label><input type="checkbox" data-cipher="PhoneKeypad"> Phone Keypad</label>
+                        <label><input type="checkbox" data-cipher="Solfege"> Solfège</label>
+                        <label><input type="checkbox" data-cipher="Zodiac"> Zodiac</label>
+                        <label><input type="checkbox" data-cipher="Fibonacci"> Fibonacci Pos.</label>
+                        <label><input type="checkbox" data-cipher="PrimePosition"> Prime Pos.</label>
+                    </div>
+                     <div id="filter-settings" class="settings-group">
+                         <p class="settings-info">Filter Results by Number Type</p>
+                        <label><input type="checkbox" data-filter="prime"> Primes</label>
+                        <label><input type="checkbox" data-filter="square"> Perfect Squares</label>
+                        <label><input type="checkbox" data-filter="palindrome"> Palindromes</label>
+                        <label><input type="checkbox" data-filter="composite"> Composites</label>
+                    </div>
                 </div>
             </details>
 
