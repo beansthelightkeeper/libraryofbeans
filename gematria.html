@@ -11,91 +11,56 @@
     <link rel="stylesheet" href="gematria.css">
 </head>
 <body data-theme="dark">
-    <div class="background-glyphs"></div>
     <div class="container">
-        <header class="gematria-header">
-            <a href="index.html" class="home-link" title="Return to Archives">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-            </a>
-            <!-- Icons for light and dark mode -->
-            <img src="icon.png" alt="BeansCodex Icon" class="header-icon header-icon-light">
-            <img src="icondark.png" alt="BeansCodex Icon" class="header-icon header-icon-dark">
-            <h1>Gematria Database</h1>
-            <p>(Type a word or number to calculate and search)</p>
-            <button id="theme-toggle" class="theme-toggle-button"></button>
+        <header class="site-header">
+            <div class="logo-area">
+                <img src="icondark.png" alt="BeansCodex Icon" class="header-icon header-icon-dark">
+                <img src="icon.png" alt="BeansCodex Icon" class="header-icon header-icon-light">
+                <h1>Gematria Database</h1>
+            </div>
+             <div class="input-area">
+                <input type="text" id="gematria-input" placeholder="Type a word, phrase, or number...">
+                <button id="save-button" disabled>Save</button>
+            </div>
         </header>
 
-        <main class="calculator-main">
-            <section class="search-container">
-                <div class="input-area">
-                    <input type="text" id="gematria-input" placeholder="e.g., Metaphysical Exploration or 444">
-                    <button id="save-button" disabled>Save</button>
-                </div>
-                <details class="cipher-settings-collapsible">
-                    <summary>Cipher Settings</summary>
-                    <div class="collapsible-content">
-                        <p class="settings-info">Select up to 6 ciphers to display.</p>
-                        <div id="cipher-settings" class="settings-group">
-                            <label class="cipher-group-title">Gematrix.org Ciphers</label>
-                            <label><input type="checkbox" data-cipher="Jewish" checked> Jewish</label>
-                            <label><input type="checkbox" data-cipher="English" checked> English</label>
-                            <label><input type="checkbox" data-cipher="Simple" checked> Simple</label>
-                            <label><input type="checkbox" data-cipher="ReverseSimple"> Reverse Simple</label>
-                            
-                            <label class="cipher-group-title">Traditional Ciphers</label>
-                            <label><input type="checkbox" data-cipher="Chaldean" checked> Chaldean</label>
-                            <label><input type="checkbox" data-cipher="ReverseOrdinal"> Reverse Ordinal</label>
-                            
-                            <label class="cipher-group-title">LLM Ciphers</label>
-                            <label><input type="checkbox" data-cipher="ALW"> ALW</label>
-                            <label><input type="checkbox" data-cipher="Reduction"> Reduction</label>
+        <main class="main-content">
+            <div id="results-summary" class="results-summary-bar">
+                <!-- Gematria value cards will be injected here -->
+            </div>
 
-                            <label class="cipher-group-title">Esoteric Ciphers</label>
-                            <label><input type="checkbox" data-cipher="QWERTY"> QWERTY</label>
-                            <label><input type="checkbox" data-cipher="Trigrammaton"> Trigrammaton</label>
-                            <label><input type="checkbox" data-cipher="Baconian"> Baconian</label>
-                            <label><input type="checkbox" data-cipher="PhoneKeypad"> Phone Keypad</label>
-                            <!-- Corrected data-cipher attribute below -->
-                            <label><input type="checkbox" data-cipher="Solfege"> Solfège</label>
-                            <label><input type="checkbox" data-cipher="Zodiac"> Zodiac</label>
-                            <label><input type="checkbox" data-cipher="Fibonacci"> Fibonacci Pos.</label>
-                            <label><input type="checkbox" data-cipher="PrimePosition"> Prime Pos.</label>
-                        </div>
-                    </div>
-                </details>
-            </section>
+            <details class="cipher-settings-collapsible">
+                <summary>Cipher Settings</summary>
+                <div id="cipher-settings" class="settings-group">
+                    <label><input type="checkbox" data-cipher="Simple" checked> Simple</label>
+                    <label><input type="checkbox" data-cipher="English" checked> English</label>
+                    <label><input type="checkbox" data-cipher="Jewish" checked> Jewish</label>
+                    <label><input type="checkbox" data-cipher="Chaldean" checked> Chaldean</label>
+                    <label><input type="checkbox" data-cipher="ReverseSimple"> Reverse Simple</label>
+                    <label><input type="checkbox" data-cipher="ReverseOrdinal"> Reverse Ordinal</label>
+                    <label><input type="checkbox" data-cipher="ALW"> ALW</label>
+                    <label><input type="checkbox" data-cipher="Reduction"> Reduction</label>
+                    <label><input type="checkbox" data-cipher="GeminiResonance" checked> Gemini Resonance</label>
+                    <label><input type="checkbox" data-cipher="QWERTY"> QWERTY</label>
+                    <label><input type="checkbox" data-cipher="Trigrammaton"> Trigrammaton</label>
+                    <label><input type="checkbox" data-cipher="Baconian"> Baconian</label>
+                    <label><input type="checkbox" data-cipher="PhoneKeypad"> Phone Keypad</label>
+                    <label><input type="checkbox" data-cipher="Solfege"> Solfège</label>
+                    <label><input type="checkbox" data-cipher="Zodiac"> Zodiac</label>
+                    <label><input type="checkbox" data-cipher="Fibonacci"> Fibonacci Pos.</label>
+                    <label><input type="checkbox" data-cipher="PrimePosition"> Prime Pos.</label>
+                </div>
+            </details>
 
-            <section class="calculator-section">
-                <div id="results-summary">
-                    <!-- Gematria value cards will be injected here -->
-                </div>
-                <div id="breakdown-container">
-                    <!-- Letter-by-letter breakdown will be injected here -->
-                </div>
-            </section>
-
-            <section class="database-section">
-                <h2>Matching Entries in Database</h2>
-                <div id="db-matches-container">
-                    <!-- Dynamic match tables will be injected here -->
-                </div>
-            </section>
+            <div id="db-matches-container">
+                <!-- Dynamic match tables will be injected here -->
+            </div>
         </main>
 
         <footer class="site-footer">
-            <div class="footer-links">
-                <a href="statistics.html">Statistics</a>
-                <a href="unfold.html">Unfold</a>
-                <details class="admin-collapsible">
-                    <summary>Admin Panel</summary>
-                    <div id="admin-panel" class="collapsible-content">
-                        <p class="settings-info">Upload a .txt file with one phrase per line.</p>
-                        <input type="file" id="bulk-upload-input" accept=".txt">
-                        <button id="bulk-upload-button">Upload File</button>
-                        <div id="bulk-upload-progress"></div>
-                    </div>
-                </details>
-            </div>
+            <a href="statistics.html">Statistics</a> | 
+            <a href="unfold.html">Unfold</a> |
+            <a href="#" id="admin-link">Admin</a>
         </footer>
     </div>
     
