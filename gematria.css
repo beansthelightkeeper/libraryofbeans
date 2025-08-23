@@ -89,7 +89,7 @@ body[data-theme='light'] .header-icon-light {
     margin-bottom: 2rem;
 }
 .input-area { display: flex; gap: 1rem; margin-bottom: 1rem; }
-#gematria-input {
+#gematria-input, #unfold-input {
     flex-grow: 1; padding: 0.8rem 1rem; background-color: var(--bg-input);
     border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-primary);
     font-family: 'Nunito', sans-serif; font-size: 1.2rem;
@@ -159,6 +159,52 @@ body[data-theme='light'] .header-icon-light {
 .sidebar-table .phrase-col { cursor: pointer; transition: color 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
 .sidebar-table .phrase-col:hover { color: var(--accent-color); }
 .sidebar-table .value-col { text-align: right; color: var(--text-secondary); padding-right: 0.5rem; }
+
+
+/* --- UNFOLD PAGE --- */
+#unfold-results-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+.unfold-card {
+    background-color: var(--bg-content);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+.unfold-card h3 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    color: var(--accent-color);
+}
+.unfold-card p, .unfold-card li {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    word-wrap: break-word;
+}
+.unfold-card .value {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+.unfold-card ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+.resonance-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.resonance-list .phrase {
+    background-color: var(--bg-input);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
 
 /* --- SETTINGS & FOOTER --- */
 .settings-group { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unfold Analysis - Gematria Database</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="gematria.css">
+</head>
+<body data-theme="dark">
+    <div class="background-glyphs"></div>
+    <div class="container">
+        <header class="gematria-header">
+            <a href="gematria.html" class="home-link" title="Return to Calculator">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </a>
+            <img src="icon.png" alt="BeansCodex Icon" class="header-icon header-icon-light">
+            <img src="icondark.png" alt="BeansCodex Icon" class="header-icon header-icon-dark">
+            <h1>Unfold Analysis</h1>
+            <p>Analyze word distances and cosmic resonance</p>
+            <button id="theme-toggle" class="theme-toggle-button"></button>
+        </header>
+
+        <main class="unfold-main">
+            <section class="search-container">
+                <div class="input-area">
+                    <input type="text" id="unfold-input" placeholder="e.g., Divine Matrix">
+                </div>
+            </section>
+
+            <div id="unfold-results-container">
+                <!-- Results will be injected here by JavaScript -->
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <div class="footer-links">
+                <a href="statistics.html">Statistics</a>
+                <a href="unfold.html">Unfold</a>
+                <details class="admin-collapsible">
+                    <summary>Admin Panel</summary>
+                    <div id="admin-panel" class="collapsible-content">
+                        <p class="settings-info">This panel is managed on the main page.</p>
+                    </div>
+                </details>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="firebase-config.js"></script>
+    <script type="module" src="gematria.js"></script>
+</body>
+</html>
