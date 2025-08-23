@@ -154,6 +154,38 @@ a:hover {
     font-weight: bold;
 }
 
+/* --- BREAKDOWN --- */
+.breakdown-container {
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    font-family: 'Roboto Mono', monospace;
+}
+.breakdown-line {
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+.breakdown-line b {
+    color: var(--text-primary);
+    margin-right: 0.5rem;
+}
+.breakdown-letter {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 0.2rem;
+    padding: 0.1rem 0.3rem;
+    background-color: var(--bg-content);
+    border-radius: 3px;
+}
+.breakdown-letter .char {
+    font-size: 0.9em;
+}
+.breakdown-letter .val {
+    font-size: 0.7em;
+    color: var(--text-secondary);
+}
+
+
 /* --- CIPHER SETTINGS --- */
 .cipher-settings-collapsible {
     border: 1px solid var(--border-color);
