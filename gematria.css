@@ -272,6 +272,13 @@ a:hover {
     font-family: 'Inter', sans-serif;
     color: var(--text-primary);
 }
+.match-table .phrase-col {
+    width: 60%;
+}
+.match-table .number-col {
+    text-align: right;
+    font-family: 'Roboto Mono', monospace;
+}
 .match-table tr:hover {
     background-color: #2a2a2a;
 }

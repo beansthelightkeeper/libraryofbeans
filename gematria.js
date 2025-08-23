@@ -158,7 +158,8 @@ function initCalculatorPage(db) {
             } else {
                 total = 0;
                 for (const char of text) {
-                    if (CIPHERS[cipher][char]) {
+                    // Ensure the cipher map exists before trying to access it
+                    if (CIPHERS[cipher] && CIPHERS[cipher][char]) {
                         const value = CIPHERS[cipher][char];
                         total += value;
                         breakdown.push({ char, value });
@@ -205,20 +206,20 @@ function initCalculatorPage(db) {
             }
 
             if (snapshot && !snapshot.empty) {
-                const phrases = snapshot.docs.map(doc => doc.data().phrase);
-                allMatchesData[cipher] = { phrases, value };
+                const phrasesData = snapshot.docs.map(doc => doc.data());
+                allMatchesData[cipher] = { phrasesData, value };
                 renderTable(cipher, 1);
             }
         });
     }
 
     function renderTable(cipher, page) {
-        const { phrases, value } = allMatchesData[cipher];
+        const { phrasesData, value } = allMatchesData[cipher];
         const pageSize = 20;
-        const totalPages = Math.ceil(phrases.length / pageSize);
+        const totalPages = Math.ceil(phrasesData.length / pageSize);
         const start = (page - 1) * pageSize;
         const end = start + pageSize;
-        const paginatedPhrases = phrases.slice(start, end);
+        const paginatedData = phrasesData.slice(start, end);
 
         const tableId = `table-${cipher}`;
         let container = document.getElementById(tableId);
@@ -227,8 +228,23 @@ function initCalculatorPage(db) {
             container.id = tableId;
             dbMatchesContainer.appendChild(container);
         }
+        
+        const headerCiphers = activeCiphers.filter(c => typeof CIPHERS[c] !== 'function');
+        const tableHeader = `
+            <thead>
+                <tr>
+                    <th class="phrase-col">Phrase</th>
+                    ${headerCiphers.map(c => `<th class="number-col">${escapeHTML(c.substring(0, 4))}</th>`).join('')}
+                    <th class="number-col">Searches</th>
+                </tr>
+            </thead>`;
 
-        const tableRows = paginatedPhrases.map(p => `<tr><td>${escapeHTML(p)}</td></tr>`).join('');
+        const tableRows = paginatedData.map(data => `
+            <tr>
+                <td>${escapeHTML(data.phrase)}</td>
+                ${headerCiphers.map(c => `<td class="number-col">${data[c] || 0}</td>`).join('')}
+                <td class="number-col">${data.searchCount || 0}</td>
+            </tr>`).join('');
         
         const valueClasses = ['value'];
         if (isPrime(value)) valueClasses.push('prime');
@@ -238,9 +254,9 @@ function initCalculatorPage(db) {
 
         container.innerHTML = `
             <details class="match-table-container" open>
-                <summary>${escapeHTML(cipher)} = <span class="${valueClasses.join(' ')}">${value}</span> (${phrases.length} matches)</summary>
+                <summary>${escapeHTML(cipher)} = <span class="${valueClasses.join(' ')}">${value}</span> (${phrasesData.length} matches)</summary>
                 <table class="match-table">
-                    <thead><tr><th>Phrase</th></tr></thead>
+                    ${tableHeader}
                     <tbody>${tableRows}</tbody>
                 </table>
                 <div class="pagination" data-cipher="${cipher}">${renderPagination(page, totalPages)}</div>
