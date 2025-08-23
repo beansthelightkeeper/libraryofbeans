@@ -31,6 +31,28 @@
                 </div>
             </section>
 
+            <details class="cipher-settings-collapsible">
+                <summary>Unfold Settings</summary>
+                <div class="unfold-settings-container">
+                    <div id="unfold-cipher-settings" class="settings-group">
+                        <p class="settings-info">Select 3 ciphers to generate the Initial Number.</p>
+                        <label><input type="checkbox" data-cipher="Simple" checked> Simple</label>
+                        <label><input type="checkbox" data-cipher="English" checked> English</label>
+                        <label><input type="checkbox" data-cipher="Jewish" checked> Jewish</label>
+                        <label><input type="checkbox" data-cipher="Chaldean"> Chaldean</label>
+                        <label><input type="checkbox" data-cipher="ALW"> ALW</label>
+                        <label><input type="checkbox" data-cipher="GeminiResonance"> Gemini Res.</label>
+                    </div>
+                    <div id="unfold-filter-settings" class="settings-group">
+                         <p class="settings-info">Filter the final resonance sequence.</p>
+                        <label><input type="checkbox" data-filter="prime"> Primes</label>
+                        <label><input type="checkbox" data-filter="square"> Perfect Squares</label>
+                        <label><input type="checkbox" data-filter="palindrome"> Palindromes</label>
+                        <label><input type="checkbox" data-filter="composite"> Composites</label>
+                    </div>
+                </div>
+            </details>
+
             <div id="unfold-results-container">
                 <!-- Results will be injected here by JavaScript -->
             </div>
@@ -38,14 +60,9 @@
 
         <footer class="site-footer">
             <div class="footer-links">
-                <a href="statistics.html">Statistics</a>
+                <a href="gematria.html">Calculator</a> |
+                <a href="statistics.html">Statistics</a> |
                 <a href="unfold.html">Unfold</a>
-                <details class="admin-collapsible">
-                    <summary>Admin Panel</summary>
-                    <div id="admin-panel" class="collapsible-content">
-                        <p class="settings-info">This panel is managed on the main page.</p>
-                    </div>
-                </details>
             </div>
         </footer>
     </div>
