@@ -130,13 +130,53 @@ function initCalculatorPage(db) {
     let activeCiphers = ['Jewish', 'English', 'Simple', 'Chaldean'];
     const MAX_ACTIVE_CIPHERS = 6;
 
+    // --- Unified Database Search Function ---
+    async function findDbMatches(isNumberSearch, valueOrNumber) {
+        dbMatchesContainer.innerHTML = '';
+        if (activeCiphers.length === 0) return;
+
+        const queryConstraints = activeCiphers
+            .filter(cipher => typeof CIPHERS[cipher] !== 'function')
+            .map(cipher => {
+                const value = isNumberSearch ? valueOrNumber : (currentValues ? currentValues[cipher] : 0);
+                if (value) {
+                    return where(cipher, "==", value);
+                }
+                return null;
+            }).filter(Boolean); // Filter out nulls if value was 0
+
+        if (queryConstraints.length === 0) return;
+
+        try {
+            const q = query(gematriaCollectionRef, or(...queryConstraints), limit(50));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const header = isNumberSearch ? `Matches for ${valueOrNumber}` : 'Matching Phrases';
+                displayMatchTable(header, '...', querySnapshot.docs);
+
+                if (!isNumberSearch) {
+                    const originalPhrase = gematriaInput.value.trim().toLowerCase();
+                    querySnapshot.docs.forEach(doc => {
+                        if (doc.data().phrase.toLowerCase() === originalPhrase) {
+                            updateDoc(doc.ref, { searchCount: increment(1) });
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error("Error executing Firestore query: ", error);
+            dbMatchesContainer.innerHTML = `<p class="error">Error searching database. Check console for details.</p>`;
+        }
+    }
+
     const handleInputChange = () => {
         const input = gematriaInput.value.trim();
         clearResults();
         if (!input) return;
         const isNumberSearch = /^\d+$/.test(input);
         if (isNumberSearch) {
-            findMatchesByNumber(parseInt(input, 10));
+            findDbMatches(true, parseInt(input, 10));
             saveButton.disabled = true;
         } else {
             calculateGematriaForText(input);
@@ -171,40 +211,7 @@ function initCalculatorPage(db) {
                 if (breakdown.length > 0) displayBreakdown(cipher, breakdown);
             }
         }
-        findMatchesByText();
-    }
-
-    async function findMatchesByText() {
-        if (!currentValues) return;
-        for (const cipher of activeCiphers) {
-            const value = currentValues[cipher];
-            if (value === 0 || typeof CIPHERS[cipher] === 'function') continue; // Don't search functional ciphers
-            const q = query(gematriaCollectionRef, where(cipher, "==", value), limit(50));
-            const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-                displayMatchTable(cipher, value, querySnapshot.docs);
-                const originalPhrase = gematriaInput.value.trim();
-                querySnapshot.docs.forEach(doc => {
-                    if (doc.data().phrase.toLowerCase() === originalPhrase.toLowerCase()) {
-                        updateDoc(doc.ref, { searchCount: increment(1) });
-                    }
-                });
-            }
-        }
-    }
-
-    async function findMatchesByNumber(number) {
-        dbMatchesContainer.innerHTML = '';
-        if (activeCiphers.length === 0) return;
-        const queryConstraints = activeCiphers
-            .filter(cipher => typeof CIPHERS[cipher] !== 'function')
-            .map(cipher => where(cipher, "==", number));
-        if (queryConstraints.length === 0) return;
-        const q = query(gematriaCollectionRef, or(...queryConstraints), limit(50));
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-            displayMatchTable(`Matches for ${number}`, number, querySnapshot.docs);
-        }
+        findDbMatches(false, null);
     }
 
     function displayResultCard(cipher, value) {
@@ -222,14 +229,15 @@ function initCalculatorPage(db) {
         breakdownContainer.appendChild(container);
     }
 
-    function displayMatchTable(cipher, value, docs) {
+    function displayMatchTable(title, value, docs) {
         const container = document.createElement('div');
         container.className = 'match-table-container';
         let rows = docs.map(doc => {
             const data = doc.data();
             return `<tr><td>${escapeHTML(data.phrase)}</td>${activeCiphers.map(c => `<td>${data[c] || 0}</td>`).join('')}</tr>`;
         }).join('');
-        container.innerHTML = `<h3>${escapeHTML(cipher)} = ${value}</h3><div class="table-container"><table class="match-table"><thead><tr><th>Phrase</th>${activeCiphers.map(c => `<th>${escapeHTML(c)}</th>`).join('')}</tr></thead><tbody class="match-table-body">${rows}</tbody></table></div>`;
+        const headerText = value === '...' ? title : `${title} = ${value}`;
+        container.innerHTML = `<h3>${escapeHTML(headerText)}</h3><div class="table-container"><table class="match-table"><thead><tr><th>Phrase</th>${activeCiphers.map(c => `<th>${escapeHTML(c)}</th>`).join('')}</tr></thead><tbody class="match-table-body">${rows}</tbody></table></div>`;
         dbMatchesContainer.appendChild(container);
     }
     
