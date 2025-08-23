@@ -1,0 +1,126 @@
+/* --- BOTTOM TOOLBAR STYLES --- */
+.bottom-toolbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 16px;
+    z-index: 1000;
+    transform: translateY(100%); /* Start hidden */
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Show toolbar only when a file is loaded */
+body.file-loaded .bottom-toolbar {
+    transform: translateY(0);
+}
+
+.bottom-toolbar .tool-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bottom-toolbar .tool-group:first-child {
+    margin-right: 24px;
+}
+
+.bottom-toolbar button {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+    padding: 6px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.bottom-toolbar button:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+}
+
+.bottom-toolbar button.active {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.bottom-toolbar button:disabled {
+    color: var(--disabled);
+    cursor: not-allowed;
+}
+
+.bottom-toolbar .color-palette {
+    display: flex;
+}
+
+/* --- COLLAPSIBLE LIBRARY SECTION --- */
+.collapsible-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding-right: 10px; /* Space for the button */
+}
+
+.collapsible-section .section-header h2 {
+    margin: 1rem 0;
+}
+
+.collapsible-section .collapse-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.3s ease;
+}
+
+.collapsible-section.collapsed .collapse-btn {
+    transform: rotate(-90deg);
+}
+
+.collapsible-section.collapsed #file-navigation {
+    display: none;
+}
+
+/* --- UNIFIED ANNOTATIONS LIST --- */
+.annotations-section {
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+#annotations-list li {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color-light);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#annotations-list li:hover {
+    background-color: var(--bg-secondary);
+}
+
+.annotation-note {
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+    font-style: italic;
+}
+
+.annotation-text {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    /* Truncate long text */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     
-    <!-- Full Screen App tags for Mobile -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
@@ -14,10 +13,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="custom-styles.css"> 
 </head>
 <body>
     <div class="container">
-        <!-- Sidebar for controls, file list, and bookmarks -->
         <aside class="sidebar">
             <header class="sidebar-header">
                 <h1 class="logo">Library of Beans</h1>
@@ -30,50 +29,29 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
                     </button>
                     <button id="theme-toggle" title="Toggle Theme">
-                        <!-- Sun and Moon Icons will be injected by JS -->
-                    </button>
+                        </button>
                     <button id="menu-toggle" title="Toggle File List">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
                 </div>
             </header>
 
-            <!-- Wrapper for scrollable content -->
             <div class="sidebar-content">
-                <nav id="file-navigation" class="file-navigation">
-                    <h2><span class="full-text">Library</span><span class="mini-text">📖</span></h2>
-                    <div id="file-list-container">
-                        <!-- Organized file list will be dynamically populated here -->
+                <div class="collapsible-section">
+                    <div class="section-header" id="library-section-header">
+                        <h2><span class="full-text">Library</span><span class="mini-text">📖</span></h2>
+                        <button class="collapse-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
                     </div>
-                </nav>
+                    <nav id="file-navigation" class="file-navigation">
+                        <div id="file-list-container">
+                            </div>
+                    </nav>
+                </div>
 
                 <div class="reader-tools">
                      <h2><span class="full-text">Tools</span><span class="mini-text">🛠️</span></h2>
-                     <div class="tool-group selection-actions">
-                        <button id="highlight-mode-toggle" title="Toggle Continuous Highlighting">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                            <span class="full-text">Highlight Mode</span>
-                        </button>
-                        <button id="erase-mode-toggle" title="Toggle Erase Mode">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5v6h6M21.5 21.5v-6h-6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.2"/></svg>
-                            <span class="full-text">Erase Mode</span>
-                        </button>
-                        <button id="bookmark-btn" disabled title="Bookmark Selection">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
-                            <span class="full-text">Bookmark</span>
-                        </button>
-                     </div>
-
-                     <div class="tool-group">
-                         <label class="full-text">Highlighter Colors</label>
-                         <div id="highlighter-colors" class="color-palette">
-                             <button class="color-swatch" data-color="yellow" title="Yellow"></button>
-                             <button class="color-swatch" data-color="pink" title="Pink"></button>
-                             <button class="color-swatch" data-color="green" title="Green"></button>
-                             <button class="color-swatch" data-color="blue" title="Blue"></button>
-                         </div>
-                     </div>
-
                      <div class="tool-group">
                         <label class="full-text">Layout</label>
                         <div class="layout-controls">
@@ -104,16 +82,13 @@
                      </div>
                 </div>
 
-                <div class="bookmarks-section">
-                    <h2><span class="full-text">Bookmarks</span><span class="mini-text">🔖</span></h2>
-                    <ul id="bookmarks-list">
-                        <!-- Bookmarks will be dynamically added here -->
-                    </ul>
+                <div class="annotations-section">
+                    <h2><span class="full-text">Annotations</span><span class="mini-text">🔖</span></h2>
+                    <ul id="annotations-list">
+                        </ul>
                 </div>
-            </div> <!-- end sidebar-content -->
-        </aside>
+            </div> </aside>
 
-        <!-- Main content area to display the loaded HTML file -->
         <main class="content-viewer">
             <div id="bookmark-gutter"></div>
             <div id="welcome-message">
@@ -127,6 +102,29 @@
             </div>
             <iframe id="content-frame" title="Loaded HTML Content"></iframe>
         </main>
+    </div>
+
+    <div class="bottom-toolbar">
+        <div class="tool-group">
+            <button id="highlight-mode-toggle" title="Toggle Continuous Highlighting">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            </button>
+            <button id="erase-mode-toggle" title="Toggle Erase Mode">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5v6h6M21.5 21.5v-6h-6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.2"/></svg>
+            </button>
+            <button id="add-note-btn" disabled title="Add Note to Selection">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
+                <span>Add Note</span>
+            </button>
+        </div>
+        <div class="tool-group">
+             <div id="highlighter-colors" class="color-palette">
+                 <button class="color-swatch" data-color="yellow" title="Yellow"></button>
+                 <button class="color-swatch" data-color="pink" title="Pink"></button>
+                 <button class="color-swatch" data-color="green" title="Green"></button>
+                 <button class="color-swatch" data-color="blue" title="Blue"></button>
+             </div>
+         </div>
     </div>
 
     <script src="script.js"></script>

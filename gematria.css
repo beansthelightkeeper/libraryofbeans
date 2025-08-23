@@ -40,10 +40,19 @@ a:hover {
 }
 
 /* --- HEADER --- */
-.site-header {
+.site-header, .gematria-header {
     text-align: center;
     margin-bottom: 1.5rem;
+    position: relative;
 }
+.gematria-header .home-link {
+    position: absolute; top: 50%; left: 0; transform: translateY(-50%);
+    color: var(--text-secondary); text-decoration: none; display: flex;
+    align-items: center; justify-content: center; width: 40px; height: 40px;
+    border-radius: 50%; transition: background-color 0.3s, color 0.3s;
+}
+.gematria-header .home-link:hover { background-color: rgba(128, 128, 128, 0.1); color: var(--text-primary); }
+
 
 .logo-area {
     display: flex;
@@ -60,18 +69,30 @@ a:hover {
 .header-icon-dark { display: block; }
 .header-icon-light { display: none; } /* Assuming dark is default */
 
-.site-header h1 {
+.site-header h1, .gematria-header h1 {
     font-size: 1.5rem;
     color: var(--text-primary);
     margin: 0;
 }
+.gematria-header p {
+    font-family: 'Roboto Mono', monospace;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+.gematria-header .theme-toggle-button {
+    position: absolute; top: 50%; right: 0; transform: translateY(-50%);
+    background: none; border: 1px solid var(--border-color); color: var(--text-secondary);
+    width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+
 
 .input-area {
     display: flex;
     gap: 0.5rem;
 }
 
-#gematria-input {
+#gematria-input, #unfold-input {
     flex-grow: 1;
     padding: 0.75rem;
     background-color: var(--bg-input);
@@ -80,7 +101,7 @@ a:hover {
     color: var(--text-primary);
     font-size: 1rem;
 }
-#gematria-input:focus {
+#gematria-input:focus, #unfold-input:focus {
     outline: none;
     border-color: var(--accent-color);
 }
@@ -255,6 +276,108 @@ a:hover {
     font-weight: bold;
     border-color: var(--accent-color);
 }
+
+/* --- DELTA PAGE --- */
+.delta-input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+#delta-input-1, #delta-input-2 {
+    width: 100%;
+    height: 100px;
+    padding: 0.75rem;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    resize: vertical;
+}
+#delta-results-container {
+    background-color: var(--bg-content);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 1rem;
+}
+.delta-results-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.delta-results-table th, .delta-results-table td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+.delta-results-table th { font-family: 'Roboto Mono', monospace; color: var(--text-secondary); }
+.delta-results-table td { font-family: 'Roboto Mono', monospace; }
+.delta-results-table .delta-value { font-weight: bold; color: var(--accent-color); }
+.delta-results-table .match-phrase { color: var(--text-primary); font-style: italic; }
+
+/* --- ELS PAGE --- */
+.els-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+#els-source-text {
+    width: 100%;
+    height: 200px;
+    padding: 0.75rem;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    resize: vertical;
+}
+.els-controls {
+    display: flex;
+    gap: 1rem;
+}
+#els-target-word, #els-max-skip {
+    padding: 0.75rem;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+#els-target-word { flex-grow: 1; }
+#els-search-button {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--accent-color);
+    color: #111;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+#els-results-container {
+    background-color: var(--bg-content);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 1rem;
+}
+.els-result-card {
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 0;
+}
+.els-result-card:last-child { border-bottom: none; }
+.els-result-card p { margin: 0.25rem 0; font-family: 'Roboto Mono', monospace; }
+.els-result-card .context {
+    font-family: 'Roboto Mono', monospace;
+    color: var(--text-secondary);
+    word-break: break-all;
+    margin-top: 0.5rem;
+}
+.els-result-card .context .highlight {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
 
 /* --- FOOTER --- */
 .site-footer {

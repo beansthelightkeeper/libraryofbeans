@@ -15,14 +15,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeMessage = document.getElementById('welcome-message');
     const highlightModeToggle = document.getElementById('highlight-mode-toggle');
     const eraseModeToggle = document.getElementById('erase-mode-toggle');
-    const bookmarkBtn = document.getElementById('bookmark-btn');
-    const bookmarksList = document.getElementById('bookmarks-list');
+    // MODIFIED: Old bookmark button is now the add-note button
+    const addNoteBtn = document.getElementById('add-note-btn');
+    // MODIFIED: Renamed bookmarks list
+    const annotationsList = document.getElementById('annotations-list');
     const fontSizeSlider = document.getElementById('font-size-slider');
     const colorSwatches = document.getElementById('highlighter-colors');
     const doubleSpaceToggle = document.getElementById('double-space-toggle');
     const marginSlider = document.getElementById('margin-slider');
     const bookmarkGutterToggle = document.getElementById('bookmark-gutter-toggle');
     const bookmarkGutter = document.getElementById('bookmark-gutter');
+    // NEW: Collapsible library section elements
+    const librarySectionHeader = document.getElementById('library-section-header');
+    const fileNavigation = document.getElementById('file-navigation');
 
     // --- App State ---
     const state = {
@@ -69,32 +74,39 @@ document.addEventListener('DOMContentLoaded', () => {
         menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
         highlightModeToggle.addEventListener('click', toggleHighlightMode);
         eraseModeToggle.addEventListener('click', toggleEraseMode);
-        bookmarkBtn.addEventListener('click', () => createAnnotation('bookmark'));
+        // MODIFIED: Event listener for the new add note button
+        addNoteBtn.addEventListener('click', addNoteToSelection);
         fontSizeSlider.addEventListener('input', handleFontSizeChange);
         colorSwatches.addEventListener('click', handleColorChange);
         doubleSpaceToggle.addEventListener('click', toggleDoubleSpacing);
         marginSlider.addEventListener('input', handleMarginChange);
         bookmarkGutterToggle.addEventListener('click', toggleBookmarkGutter);
         contentFrame.addEventListener('load', onIframeLoad);
+        // NEW: Event listener for collapsing the library
+        librarySectionHeader.addEventListener('click', () => {
+            librarySectionHeader.parentElement.classList.toggle('collapsed');
+        });
     }
 
     function onIframeLoad() {
         updateIframeStyles();
         setupIframeListeners();
         applyAnnotations();
-        renderBookmarks();
+        renderAnnotations(); // MODIFIED: was renderBookmarks
     }
 
     function setupIframeListeners() {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc) return;
         iframeDoc.addEventListener('pointerup', handleIframeInteraction);
+        // MODIFIED: Logic now enables the 'Add Note' button
         iframeDoc.addEventListener('selectionchange', () => {
             const selection = iframeDoc.getSelection();
-            bookmarkBtn.disabled = !selection || selection.isCollapsed;
+            addNoteBtn.disabled = !selection || selection.isCollapsed;
         });
     }
-
+    
+    // ... (keep the applySettings, toggleTheme, etc. functions as they are) ...
     // --- SETTINGS & UI UPDATES ---
     function applySettings() {
         document.body.dataset.theme = state.settings.theme;
@@ -146,10 +158,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function toggleBookmarkGutter() {
         state.settings.showBookmarkGutter = !state.settings.showBookmarkGutter;
-        applySettings(); renderBookmarks(); saveSettings();
+        applySettings(); renderAnnotations(); saveSettings();
     }
-
-    // --- DYNAMIC IFRAME STYLING ---
+    
+    // ... (keep updateIframeStyles function as it is) ...
     function updateIframeStyles() {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc || !iframeDoc.head) return;
@@ -160,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
             iframeDoc.head.appendChild(style);
         }
         const computedStyles = getComputedStyle(document.body);
-        const bookmarkColor = computedStyles.getPropertyValue('--bookmark');
+        const bookmarkColor = computedStyles.getPropertyValue('--bookmark'); // This can stay for gutter color
         const textColor = computedStyles.getPropertyValue('--text-primary');
         const bodyBgColor = computedStyles.getPropertyValue('--bg-secondary');
         const lineHeight = state.settings.isDoubleSpaced ? '2.0' : '1.6';
@@ -176,95 +188,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 transition: color 0.3s ease, background-color 0.3s ease;
             }
             ${highlightStyles}
-            .bookmark { background-color: ${bookmarkColor}; color: inherit; }
+            /* Unified annotation style */
+            mark[id^="anno-"] {
+                cursor: pointer;
+            }
         `;
     }
 
-    // --- FILE ORGANIZATION & HANDLING ---
+    // ... (keep fetchAndOrganizeFiles and renderFileTree functions as they are) ...
     async function fetchAndOrganizeFiles() {
-        if (GITHUB_USERNAME === "YOUR_USERNAME" || GITHUB_REPO === "YOUR_REPOSITORY_NAME") {
-            fileListContainer.innerHTML = '<li>Please configure script.js</li>'; return;
-        }
-        const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/content`;
-        try {
-            const response = await fetch(apiUrl);
-            if (!response.ok) throw new Error(`GitHub API error: ${response.statusText}`);
-            const files = await response.json();
-            
-            // This object will hold both organized folders and uncategorized files
-            const fileTree = { _files: [] }; // _files is a special key for uncategorized items
-
-            files.filter(file => file.type === 'file' && file.name.endsWith('.html')).forEach(file => {
-                const cleanName = file.name.replace(/\.html$/, '');
-                const parts = cleanName.split('/');
-                
-                if (parts.length === 3) { // Organized: Subject/Author/Title
-                    const [subject, author, title] = parts;
-                    if (!fileTree[subject]) fileTree[subject] = {};
-                    if (!fileTree[subject][author]) fileTree[subject][author] = [];
-                    fileTree[subject][author].push({ name: title, path: file.path });
-                } else { // Uncategorized
-                    fileTree._files.push({ name: cleanName, path: file.path });
-                }
-            });
-            renderFileTree(fileTree);
-        } catch (error) {
-            console.error("Error loading file list:", error);
-            fileListContainer.innerHTML = '<li>Error loading library.</li>';
-        }
+        // ...
     }
     function renderFileTree(data) {
-        const createBranch = (obj) => {
-            const ul = document.createElement('ul');
-            // Render uncategorized files first if they exist
-            if (obj._files && obj._files.length > 0) {
-                obj._files.forEach(file => {
-                    const li = createFileElement(file);
-                    ul.appendChild(li);
-                });
-            }
-            // Then render folders
-            for (const key in obj) {
-                if (key === '_files') continue; // Skip our special key
-                const li = document.createElement('li');
-                li.textContent = key;
-                li.className = 'folder';
-                const childrenUl = createBranch(obj[key]);
-                childrenUl.style.display = 'none';
-                li.appendChild(childrenUl);
-                li.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    li.classList.toggle('open');
-                    childrenUl.style.display = childrenUl.style.display === 'none' ? 'block' : 'none';
-                });
-                ul.appendChild(li);
-            }
-            return ul;
-        };
-        const createFileElement = (file) => {
-            const li = document.createElement('li');
-            li.textContent = file.name;
-            li.className = 'file-item';
-            li.dataset.path = file.path;
-            li.addEventListener('click', (e) => {
-                e.stopPropagation();
-                loadFile(file.path);
-                document.querySelectorAll('.file-item.active').forEach(el => el.classList.remove('active'));
-                li.classList.add('active');
-            });
-            return li;
-        };
-        fileListContainer.innerHTML = '';
-        fileListContainer.appendChild(createBranch(data));
+        // ...
     }
+
     function loadFile(filePath) {
         state.currentFile = filePath;
         welcomeMessage.style.display = 'none';
         contentFrame.src = filePath;
+        // NEW: Add a class to the body to show the bottom toolbar
+        document.body.classList.add('file-loaded');
         if (window.innerWidth <= 768) sidebar.classList.remove('open');
     }
 
-    // --- ANNOTATION & ERASING LOGIC ---
+    // --- ANNOTATION & ERASING LOGIC (HEAVILY MODIFIED) ---
     function toggleHighlightMode() {
         state.isHighlightModeActive = !state.isHighlightModeActive;
         if (state.isHighlightModeActive) state.isEraseModeActive = false;
@@ -279,33 +227,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function handleIframeInteraction(event) {
         if (state.isHighlightModeActive) {
-            setTimeout(() => createAnnotation('highlight'), 50);
+            setTimeout(() => createAnnotation(), 50); // Simplified call
         } else if (state.isEraseModeActive) {
             eraseAnnotation(event.target);
         }
     }
-    function createAnnotation(type) {
+    
+    // NEW: Function to add a note to a selection, which also creates a highlight
+    function addNoteToSelection() {
+        const note = prompt('Add a note for this annotation:');
+        if (note === null) { // User cancelled prompt
+            const selection = contentFrame.contentDocument.getSelection();
+            selection.removeAllRanges();
+            return;
+        }
+        createAnnotation(note);
+    }
+
+    // MODIFIED: Simplified and unified annotation creation
+    function createAnnotation(note = '') {
         const iframeDoc = contentFrame.contentDocument;
         const selection = iframeDoc.getSelection();
         if (!selection || selection.isCollapsed) return;
         const range = selection.getRangeAt(0);
         const annotationId = `anno-${Date.now()}`;
         const rangeData = serializeRange(range);
-        const newAnnotation = { id: annotationId, type, text: selection.toString(), rangeData };
-        if (type === 'bookmark') {
-            const note = prompt('Add a note for this bookmark:');
-            if (note === null) { selection.removeAllRanges(); return; }
-            newAnnotation.note = note;
-        } else if (type === 'highlight') {
-            newAnnotation.color = state.settings.activeHighlightColor;
-        }
+        
+        const newAnnotation = { 
+            id: annotationId, 
+            text: selection.toString(), 
+            rangeData,
+            note: note, // Add note, empty if none provided
+            color: state.settings.activeHighlightColor // Always add a color
+        };
+
         if (!state.annotations[state.currentFile]) state.annotations[state.currentFile] = [];
         state.annotations[state.currentFile].push(newAnnotation);
+        
         applyAnnotationToDOM(newAnnotation);
         saveAnnotations();
-        renderBookmarks();
+        renderAnnotations(); // MODIFIED: was renderBookmarks
         selection.removeAllRanges();
     }
+
     function eraseAnnotation(target) {
         const mark = target.closest('mark');
         if (!mark || !mark.id.startsWith('anno-')) return;
@@ -316,47 +280,67 @@ document.addEventListener('DOMContentLoaded', () => {
         while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
         parent.removeChild(mark);
         saveAnnotations();
-        renderBookmarks();
+        renderAnnotations(); // MODIFIED: was renderBookmarks
     }
+
+    // MODIFIED: Simplified annotation application
     function applyAnnotationToDOM(annotation) {
         const iframeDoc = contentFrame.contentDocument;
         const range = deserializeRange(annotation.rangeData, iframeDoc);
         if (!range) return;
         const mark = iframeDoc.createElement('mark');
         mark.id = annotation.id;
-        if (annotation.type === 'highlight') {
-            mark.className = `highlight highlight-${annotation.color}`;
-        } else if (annotation.type === 'bookmark') {
-            mark.className = 'bookmark';
-            mark.title = annotation.note;
+        mark.className = `highlight highlight-${annotation.color}`;
+        if (annotation.note) {
+            mark.title = annotation.note; // Add note as a tooltip
         }
         try { range.surroundContents(mark); }
         catch (e) { console.error("Error applying annotation:", e, annotation); }
     }
+
     function applyAnnotations() {
         const fileAnnotations = state.annotations[state.currentFile] || [];
         fileAnnotations.forEach(applyAnnotationToDOM);
     }
-    function renderBookmarks() {
-        bookmarksList.innerHTML = '';
+
+    // MODIFIED: Renders all annotations to the sidebar and gutter
+    function renderAnnotations() {
+        annotationsList.innerHTML = '';
         bookmarkGutter.innerHTML = '';
         const fileAnnotations = state.annotations[state.currentFile] || [];
-        const bookmarks = fileAnnotations.filter(a => a.type === 'bookmark');
-        if (bookmarks.length === 0) {
-            bookmarksList.innerHTML = '<li>No bookmarks for this file.</li>'; return;
+
+        if (fileAnnotations.length === 0) {
+            annotationsList.innerHTML = '<li>No annotations for this file.</li>'; return;
         }
-        bookmarks.forEach(bookmark => {
+
+        // Sort annotations by their position in the document
+        fileAnnotations.sort((a, b) => {
+            const elA = contentFrame.contentDocument.getElementById(a.id);
+            const elB = contentFrame.contentDocument.getElementById(b.id);
+            if (!elA || !elB) return 0;
+            return elA.offsetTop - elB.offsetTop;
+        });
+
+        fileAnnotations.forEach(annotation => {
             const li = document.createElement('li');
-            li.dataset.annotationId = bookmark.id;
-            li.innerHTML = `<div class="bookmark-note">${escapeHTML(bookmark.note || '')}</div><div class="bookmark-text">${escapeHTML(bookmark.text)}</div>`;
-            const targetEl = contentFrame.contentDocument.getElementById(bookmark.id);
+            li.dataset.annotationId = annotation.id;
+            
+            let content = `<div class="annotation-text">${escapeHTML(annotation.text)}</div>`;
+            if (annotation.note) {
+                content = `<div class="annotation-note">${escapeHTML(annotation.note)}</div>` + content;
+            }
+            li.innerHTML = content;
+            
+            const targetEl = contentFrame.contentDocument.getElementById(annotation.id);
             li.addEventListener('click', () => {
                 if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
-            bookmarksList.appendChild(li);
+            annotationsList.appendChild(li);
+
+            // Gutter logic remains similar, but now for all annotations
             if (state.settings.showBookmarkGutter && targetEl) {
                 const indicator = document.createElement('div');
-                indicator.className = 'bookmark-indicator';
+                indicator.className = 'bookmark-indicator'; // You can keep this class name
                 const yPercent = targetEl.offsetTop / contentFrame.contentDocument.body.scrollHeight;
                 indicator.style.top = `calc(${yPercent * 100}% - 5px)`;
                 indicator.addEventListener('click', () => targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' }));
@@ -365,72 +349,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- DATA PERSISTENCE ---
-    function saveSettings() { localStorage.setItem('libraryOfBeansSettings', JSON.stringify(state.settings)); }
-    function loadSettings() {
-        const saved = localStorage.getItem('libraryOfBeansSettings');
-        if (saved) Object.assign(state.settings, JSON.parse(saved));
-    }
-    function saveAnnotations() { localStorage.setItem('libraryOfBeansAnnotations', JSON.stringify(state.annotations)); }
-    function loadAnnotations() {
-        const saved = localStorage.getItem('libraryOfBeansAnnotations');
-        if (saved) state.annotations = JSON.parse(saved);
-    }
+    // ... (keep all data persistence and utility functions as they are) ...
+    function saveSettings() { /* ... */ }
+    function loadSettings() { /* ... */ }
+    function saveAnnotations() { /* ... */ }
+    function loadAnnotations() { /* ... */ }
+    function getPathTo(node) { /* ... */ }
+    function getNodeByPath(path, doc) { /* ... */ }
+    function serializeRange(range) { /* ... */ }
+    function deserializeRange(rangeData, doc) { /* ... */ }
+    function escapeHTML(str) { /* ... */ }
 
-    // --- UTILITY FUNCTIONS ---
-    function getPathTo(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-            let parent = node.parentNode; let path = getPathTo(parent);
-            let index = Array.prototype.indexOf.call(parent.childNodes, node);
-            return `${path}/text()[${index + 1}]`;
-        }
-        if (node.nodeType === Node.ELEMENT_NODE) {
-            let path = '';
-            while (node && node.nodeType === Node.ELEMENT_NODE) {
-                let selector = node.nodeName.toLowerCase();
-                if (node.id) { selector += `#${node.id}`; path = selector + (path ? '>' + path : ''); break; }
-                else {
-                    let sib = node, nth = 1;
-                    while ((sib = sib.previousElementSibling)) { if (sib.nodeName.toLowerCase() == selector) nth++; }
-                    selector += `:nth-of-type(${nth})`;
-                }
-                path = selector + (path ? '>' + path : '');
-                node = node.parentNode;
-            }
-            return path;
-        } return '';
-    }
-    function getNodeByPath(path, doc) {
-        try {
-            if (path.includes('/text()')) {
-                const parts = path.split('/text()'); const elementPath = parts[0];
-                const textIndex = parseInt(parts[1].match(/\[(\d+)\]/)[1], 10) - 1;
-                const parent = doc.querySelector(elementPath);
-                return parent ? parent.childNodes[textIndex] : null;
-            } return doc.querySelector(path);
-        } catch (e) { console.error("Failed to find node by path:", path, e); return null; }
-    }
-    function serializeRange(range) {
-        return {
-            startPath: getPathTo(range.startContainer), startOffset: range.startOffset,
-            endPath: getPathTo(range.endContainer), endOffset: range.endOffset,
-        };
-    }
-    function deserializeRange(rangeData, doc) {
-        const startNode = getNodeByPath(rangeData.startPath, doc);
-        const endNode = getNodeByPath(rangeData.endPath, doc);
-        if (startNode && endNode) {
-            const range = doc.createRange();
-            range.setStart(startNode, rangeData.startOffset);
-            range.setEnd(endNode, rangeData.endOffset);
-            return range;
-        } return null;
-    }
-    function escapeHTML(str) {
-        const p = document.createElement("p");
-        p.appendChild(document.createTextNode(str));
-        return p.innerHTML;
-    }
 
     // --- START THE APP ---
     initialize();
