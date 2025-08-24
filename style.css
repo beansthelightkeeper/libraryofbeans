@@ -147,12 +147,6 @@ body[data-theme='dark'] #rainbow-toggle.active { color: var(--bg-primary-dark); 
 .file-navigation { flex-shrink: 0; }
 #file-list-container ul { list-style: none; padding-left: 15px; }
 #file-list-container > ul { padding-left: 0; }
-.folder { cursor: pointer; padding: 10px 16px; font-weight: 700; position: relative; }
-.folder::before { content: '▶'; position: absolute; left: 0; transition: transform 0.2s; }
-.folder.open::before { transform: rotate(90deg); }
-.file-item { padding: 10px 16px; cursor: pointer; border-left: 3px solid transparent; }
-.file-item:hover { background-color: var(--button-bg); }
-.file-item.active { background-color: var(--button-bg-hover); border-left-color: var(--accent); }
 
 /* Reader Tools */
 .reader-tools { padding: 0 16px 16px 16px; }
@@ -267,3 +261,166 @@ body.gutter-visible #bookmark-gutter { display: block; }
     .content-viewer { width: 100vw; }
 }
 @media (min-width: 769px) { #minimize-toggle { display: flex; } }
+
+
+/* --- NEW STYLES PROVIDED BY USER (INTEGRATED AND FIXED) --- */
+
+/* --- GOOGLE FONT IMPORT (for Papyrus theme) --- */
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&display=swap');
+
+/* --- BOTTOM TOOLBAR STYLES --- */
+.bottom-toolbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--bg-primary);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 16px;
+    z-index: 1000;
+    transform: translateY(100%); /* Start hidden */
+    transition: transform 0.3s ease-in-out;
+}
+
+body.file-loaded .bottom-toolbar {
+    transform: translateY(0);
+}
+
+.bottom-toolbar .tool-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bottom-toolbar .tool-group:first-child {
+    margin-right: 24px;
+}
+
+.bottom-toolbar button {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+    padding: 6px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.bottom-toolbar button:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+}
+
+.bottom-toolbar button.active {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.bottom-toolbar button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.bottom-toolbar .color-palette {
+    display: flex;
+}
+
+/* --- COLLAPSIBLE LIBRARY SECTION --- */
+.collapsible-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding-right: 10px;
+}
+
+.collapsible-section .section-header h2 {
+    margin: 1rem 0;
+}
+
+.collapsible-section .collapse-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.3s ease;
+}
+
+.collapsible-section.collapsed .collapse-btn {
+    transform: rotate(-90deg);
+}
+
+.collapsible-section.collapsed #file-navigation {
+    display: none;
+}
+
+/* --- UNIFIED ANNOTATIONS LIST --- */
+.annotations-section {
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+#annotations-list li {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#annotations-list li:hover {
+    background-color: var(--bg-secondary);
+}
+
+.annotation-note {
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+    font-style: italic;
+}
+
+.annotation-text {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- NEW: PAPYRUS THEME FOR FILE LIST --- */
+#file-list-container ul {
+    list-style: none;
+    padding: 0 16px;
+}
+
+#file-list-container li a {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    display: block;
+    padding: 8px 10px;
+    border-radius: 4px;
+    transition: all 0.2s ease-in-out;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#file-list-container li a:hover {
+    background-color: var(--bg-secondary);
+    color: var(--accent);
+}
+
+/* Style for the currently selected file */
+#file-list-container li.active a {
+    color: var(--accent);
+    background-color: var(--button-bg-hover);
+    font-weight: bold;
+}
