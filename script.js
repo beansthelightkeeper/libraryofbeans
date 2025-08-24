@@ -193,62 +193,67 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             const organizedFiles = {};
-            const bookFolders = new Map(); // Use a Map to store folder data
+            const bookFolders = new Map();
 
-            // First pass: Identify all folders that contain at least one HTML file
+            // First pass: Identify all folders that contain at least one HTML file.
             for (const item of data.tree) {
                 if (item.type === 'blob' && item.path.endsWith('.html')) {
                     const parts = item.path.split('/');
-                    const fileName = parts.pop();
-                    const folderPath = parts.join('/');
-
-                    if (folderPath) { // If the file is in a folder
+                    if (parts.length > 1) { // It's in at least one folder
+                        parts.pop(); // Remove the file name to get the folder path
+                        const folderPath = parts.join('/');
                         if (!bookFolders.has(folderPath)) {
                             bookFolders.set(folderPath, { htmlFiles: [] });
                         }
-                        bookFolders.get(folderPath).htmlFiles.push(fileName);
+                        bookFolders.get(folderPath).htmlFiles.push(item.path); // Store full path
                     }
                 }
             }
 
-            // Second pass: Build the final organized structure for rendering
-            for (const item of data.tree) {
-                const path = item.path;
+            // Create a set of all files that are part of a "book" to avoid duplicating them.
+            const filesInBooks = new Set();
+            bookFolders.forEach(book => {
+                book.htmlFiles.forEach(file => filesInBooks.add(file));
+            });
+            
+            // Build the final nested object for rendering
+            const fileTree = {};
+
+            // Add all book folders to the tree
+            bookFolders.forEach((bookData, path) => {
+                // Determine the main file to load for this book
+                const mainFile = bookData.htmlFiles.find(f => f.endsWith('index.html')) || bookData.htmlFiles[0];
+                let currentLevel = fileTree;
                 const parts = path.split('/');
-                let currentLevel = organizedFiles;
+                parts.forEach((part, index) => {
+                    if (!currentLevel[part]) currentLevel[part] = {};
+                    if (index === parts.length - 1) {
+                        // This is the book folder itself, add the file entry
+                        if (!currentLevel[part].files) currentLevel[part].files = [];
+                        currentLevel[part].files.push({
+                            name: part,
+                            path: mainFile,
+                            type: 'book'
+                        });
+                    }
+                    currentLevel = currentLevel[part];
+                });
+            });
 
-                if (item.type === 'blob' && path.endsWith('.html') && parts.length === 1) {
-                    // Handle standalone HTML files in the root
-                     if (!currentLevel.files) currentLevel.files = [];
-                     currentLevel.files.push({ name: path, path: path, type: 'file' });
-
-                } else if (bookFolders.has(path)) {
-                     // This item is a folder that we've identified as a "book"
-                    parts.forEach((part, index) => {
-                        const isLastPart = index === parts.length - 1;
-                        if (isLastPart) {
-                            // Find the main HTML file for this book folder
-                            const folderInfo = bookFolders.get(path);
-                            const mainHtmlFile = folderInfo.htmlFiles.includes('index.html') 
-                                ? 'index.html' 
-                                : folderInfo.htmlFiles[0];
-                            const fullPath = `${path}/${mainHtmlFile}`;
-
-                            if (!currentLevel.files) currentLevel.files = [];
-                            // Store it as a file but with the folder's name and the full path to its content
-                            currentLevel.files.push({ name: part, path: fullPath, type: 'book' });
-
-                        } else {
-                            // Traverse or create the folder structure
-                            if (!currentLevel[part]) currentLevel[part] = {};
-                            currentLevel = currentLevel[part];
-                        }
-                    });
+            // Add all standalone files that are NOT part of a book folder
+            if (!fileTree.files) fileTree.files = [];
+            for (const item of data.tree) {
+                if (item.type === 'blob' && item.path.endsWith('.html') && !filesInBooks.has(item.path)) {
+                     fileTree.files.push({
+                         name: item.path,
+                         path: item.path,
+                         type: 'file'
+                     });
                 }
             }
-            
-            fileListContainer.innerHTML = ''; // Clear previous content before rendering
-            renderFileTree({ children: organizedFiles, element: fileListContainer });
+
+            fileListContainer.innerHTML = ''; // Clear previous content
+            renderFileTree({ children: fileTree, element: fileListContainer });
 
         } catch (error) {
             console.error("Failed to fetch and organize files:", error);
@@ -259,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderFileTree({ children, element }) {
         const ul = document.createElement('ul');
 
-        // Process folders first
+        // Process sub-folders first
         Object.keys(children).filter(key => key !== 'files').sort().forEach(key => {
             const li = document.createElement('li');
             li.classList.add('folder');
@@ -268,15 +273,18 @@ document.addEventListener('DOMContentLoaded', () => {
             ul.appendChild(li);
         });
 
-        // Then process files/books
+        // Then process files/books at this level
         if (children.files) {
             children.files.sort((a, b) => a.name.localeCompare(b.name)).forEach(file => {
                 const li = document.createElement('li');
                 const a = document.createElement('a');
                 a.href = '#';
                 a.dataset.path = file.path;
-                // Use a book emoji for items identified as books (folders)
-                a.textContent = `${file.type === 'book' ? '📖' : ''} ${file.name.replace('.html', '').replace(/_/g, ' ')}`;
+                
+                // Clean up the name for display
+                const displayName = file.name.split('/').pop().replace('.html', '').replace(/_/g, ' ');
+                
+                a.textContent = `${file.type === 'book' ? '📖' : ''} ${displayName}`;
                 a.onclick = (e) => {
                     e.preventDefault();
                     loadFile(file.path);
@@ -287,21 +295,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         element.appendChild(ul);
     }
-
+    
+    // ** THIS FUNCTION IS THE FIX FOR THE GARBLED TEXT **
     function loadFile(filePath) {
-        // For annotations, we want to key them by the folder path if it's a book,
-        // or the file path if it's a standalone file.
+        // For annotations, we key them by the folder path if it's a book
         if (filePath.includes('/')) {
             const parts = filePath.split('/');
             parts.pop(); // remove filename
-            state.currentFile = parts.join('/'); // The "book" is the folder path
+            state.currentFile = parts.join('/');
         } else {
-            state.currentFile = filePath; // Standalone file
+            state.currentFile = filePath;
         }
         
         welcomeMessage.style.display = 'none';
-        // Construct the full URL to the raw file on GitHub
-        // IMPORTANT: We must use a service like jsDelivr to serve HTML with the correct Content-Type
+        
+        // **IMPORTANT FIX:** Use jsDelivr CDN to serve files with the correct 'text/html' content type.
+        // This stops the browser from displaying the HTML code as plain text.
         contentFrame.src = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${filePath}`;
         
         document.body.classList.add('file-loaded');
@@ -333,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const note = prompt('Add a note for this annotation:');
         if (note === null) {
             const selection = contentFrame.contentDocument.getSelection();
-            selection.removeAllRanges();
+            if(selection) selection.removeAllRanges();
             return;
         }
         createAnnotation(note);
@@ -392,6 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function applyAnnotations() {
+        if (!state.currentFile) return;
         const fileAnnotations = state.annotations[state.currentFile] || [];
         fileAnnotations.forEach(applyAnnotationToDOM);
     }
@@ -407,10 +417,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         fileAnnotations.sort((a, b) => {
-            const elA = contentFrame.contentDocument.getElementById(a.id);
-            const elB = contentFrame.contentDocument.getElementById(b.id);
-            if (!elA || !elB) return 0;
-            return elA.offsetTop - elB.offsetTop;
+             const elA = contentFrame.contentDocument.getElementById(a.id);
+             const elB = contentFrame.contentDocument.getElementById(b.id);
+             if (!elA || !elB) return 0;
+             // Compare vertical position
+             return elA.offsetTop - elB.offsetTop;
         });
 
         fileAnnotations.forEach(annotation => {
@@ -465,17 +476,23 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function getPathTo(node) {
         if (node.id) return `id("${node.id}")`;
-        if (node === document.body) return node.tagName;
+        if (node === document.body) return node.tagName.toLowerCase();
         let ix = 0;
         const siblings = node.parentNode.childNodes;
         for (let i = 0; i < siblings.length; i++) {
             const sibling = siblings[i];
-            if (sibling === node) return `${getPathTo(node.parentNode)}/${node.tagName}[${ix + 1}]`;
+            if (sibling === node) return `${getPathTo(node.parentNode)}/${node.tagName.toLowerCase()}[${ix + 1}]`;
             if (sibling.nodeType === 1 && sibling.tagName === node.tagName) ix++;
         }
+        return ''; // Should not happen
     }
     function getNodeByPath(path, doc) {
-        return doc.evaluate(path, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+         try {
+            return doc.evaluate(path, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        } catch(e){
+            console.error("XPath evaluation failed for path:", path, e);
+            return null;
+        }
     }
     function serializeRange(range) {
         return {
@@ -489,6 +506,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const startContainer = getNodeByPath(rangeData.startContainerPath, doc);
             const endContainer = getNodeByPath(rangeData.endContainerPath, doc);
+            if (!startContainer || !endContainer) {
+                 console.error("Could not find start or end container for range", rangeData);
+                 return null;
+            }
             const range = doc.createRange();
             range.setStart(startContainer, rangeData.startOffset);
             range.setEnd(endContainer, rangeData.endOffset);
