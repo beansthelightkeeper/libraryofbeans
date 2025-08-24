@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- USER CONFIGURATION ---
     const GITHUB_USERNAME = "beansthelightkeeper";
     const GITHUB_REPO = "libraryofbeans";
-    // NEW: Set the root folder for your library. Leave empty ('') to use the whole repository.
     const LIBRARY_ROOT = 'content/'; 
     // --- END OF CONFIGURATION ---
 
@@ -60,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSettings();
         loadAnnotations();
         applySettings();
-        fetchAndOrganizeFiles();
+        fetchAndOrganizeFiles(); // This function is now updated
         setupEventListeners();
     }
 
@@ -84,20 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ** THIS FUNCTION CONTAINS THE ROBUST FORMATTING FIX **
     function onIframeLoad() {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc || !state.currentFile) return;
-
-        // **FIX**: Inject a <base> tag to fix broken relative paths for images and CSS.
         const base = iframeDoc.createElement('base');
         const pathParts = state.currentFile.split('/');
-        pathParts.pop(); // Remove the filename
+        pathParts.pop(); 
         const directoryPath = pathParts.join('/') + '/';
         base.href = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${directoryPath}`;
         iframeDoc.head.prepend(base);
-        
-        // Now apply our custom styles and listeners
         updateIframeStyles();
         setupIframeListeners();
         applyAnnotations();
@@ -207,63 +201,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
             const data = await response.json();
             
-            const fileTree = {};
-            const bookFolders = new Map();
+            const flatFileList = [];
 
             for (const item of data.tree) {
-                // **FIX**: Only process files inside the defined LIBRARY_ROOT
-                if (!item.path.startsWith(LIBRARY_ROOT)) continue;
+                if (item.type === 'blob' && item.path.startsWith(LIBRARY_ROOT) && item.path.endsWith('.html')) {
+                    const relativePath = item.path.substring(LIBRARY_ROOT.length);
+                    if (relativePath === '') continue;
 
-                // Get path relative to the library root
-                const relativePath = item.path.substring(LIBRARY_ROOT.length);
-                if (relativePath === '') continue; // Skip the root folder itself
+                    const displayName = relativePath
+                        .replace(/\.html$/, '')
+                        .replace(/_/g, ' ')
+                        .replace(/\//g, ' / ');
 
-                if (item.type === 'blob' && relativePath.endsWith('.html')) {
-                    const parts = relativePath.split('/');
-                    if (parts.length > 1) { // It's in a sub-folder
-                        parts.pop(); // Get folder path
-                        const folderPath = parts.join('/');
-                        if (!bookFolders.has(folderPath)) {
-                            bookFolders.set(folderPath, { htmlFiles: [] });
-                        }
-                        bookFolders.get(folderPath).htmlFiles.push(item.path);
-                    }
+                    flatFileList.push({ name: displayName, path: item.path });
                 }
             }
-
-            const filesInBooks = new Set();
-            bookFolders.forEach(book => book.htmlFiles.forEach(file => filesInBooks.add(file)));
-
-            // Add book folders to the tree structure
-            bookFolders.forEach((bookData, relativeFolderPath) => {
-                const mainFile = bookData.htmlFiles.find(f => f.endsWith('index.html')) || bookData.htmlFiles[0];
-                let currentLevel = fileTree;
-                relativeFolderPath.split('/').forEach((part, index, arr) => {
-                    if (!currentLevel[part]) currentLevel[part] = {};
-                    if (index === arr.length - 1) {
-                        if (!currentLevel[part].files) currentLevel[part].files = [];
-                        currentLevel[part].files.push({ name: part, path: mainFile, type: 'book' });
-                    }
-                    currentLevel = currentLevel[part];
-                });
-            });
-
-            // Add standalone files to the tree structure
-            for (const item of data.tree) {
-                if (!item.path.startsWith(LIBRARY_ROOT) || filesInBooks.has(item.path)) continue;
-                
-                const relativePath = item.path.substring(LIBRARY_ROOT.length);
-                if (relativePath === '' || !relativePath.endsWith('.html')) continue;
-
-                const parts = relativePath.split('/');
-                if (parts.length === 1) { // It's a standalone file in the root
-                    if (!fileTree.files) fileTree.files = [];
-                    fileTree.files.push({ name: relativePath, path: item.path, type: 'file' });
-                }
-            }
-
-            fileListContainer.innerHTML = '';
-            renderFileTree({ children: fileTree, element: fileListContainer });
+            
+            flatFileList.sort((a, b) => a.name.localeCompare(b.name));
+            renderFileList(flatFileList);
 
         } catch (error) {
             console.error("Failed to fetch files:", error);
@@ -271,50 +226,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function renderFileTree({ children, element }) {
+    function renderFileList(files) {
+        fileListContainer.innerHTML = '';
         const ul = document.createElement('ul');
 
-        // Process sub-folders first
-        Object.keys(children).filter(key => key !== 'files').sort().forEach(key => {
-            const li = document.createElement('li');
-            li.classList.add('folder');
-            li.innerHTML = `<span>${key.replace(/_/g, ' ')}</span>`;
-            renderFileTree({ children: children[key], element: li });
-            ul.appendChild(li);
-        });
-
-        // Then process files/books at this level
-        if (children.files) {
-            children.files.sort((a, b) => a.name.localeCompare(b.name)).forEach(file => {
+        if (files.length === 0) {
+            ul.innerHTML = '<li>No HTML files found.</li>';
+        } else {
+            files.forEach(file => {
                 const li = document.createElement('li');
                 const a = document.createElement('a');
                 a.href = '#';
                 a.dataset.path = file.path;
+                a.textContent = file.name;
                 
-                const displayName = file.name.split('/').pop().replace('.html', '').replace(/_/g, ' ');
-                a.textContent = `${file.type === 'book' ? '📖' : ''} ${displayName}`;
                 a.onclick = (e) => {
                     e.preventDefault();
+                    const currentActive = document.querySelector('#file-list-container li.active');
+                    if (currentActive) {
+                        currentActive.classList.remove('active');
+                    }
+                    li.classList.add('active');
                     loadFile(file.path);
                 };
                 li.appendChild(a);
                 ul.appendChild(li);
             });
         }
-        element.appendChild(ul);
+        fileListContainer.appendChild(ul);
     }
     
     function loadFile(fullPath) {
-        state.currentFile = fullPath; // Use the full path for state
-        
+        state.currentFile = fullPath;
         welcomeMessage.style.display = 'none';
         contentFrame.src = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${fullPath}`;
-        
         document.body.classList.add('file-loaded');
         if (window.innerWidth <= 768) sidebar.classList.remove('open');
     }
 
-    // --- ANNOTATION & ERASING LOGIC (No changes needed here) ---
+    // --- ANNOTATION & ERASING LOGIC ---
     function toggleHighlightMode() {
         state.isHighlightModeActive = !state.isHighlightModeActive;
         if (state.isHighlightModeActive) state.isEraseModeActive = false;

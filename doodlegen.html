@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Doodle Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Simple spinner animation */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #4f46e5;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Style for the image container to show transparency */
+        .checkerboard {
+            background-image:
+                linear-gradient(45deg, #eee 25%, transparent 25%),
+                linear-gradient(-45deg, #eee 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #eee 75%),
+                linear-gradient(-45deg, transparent 75%, #eee 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-3xl">
+        <!-- Controls Panel -->
+        <div class="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-gray-200">
+            <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">AI Doodle Generator</h1>
+            <div class="space-y-4">
+                <!-- Prompt Input Area -->
+                <textarea id="promptInput" rows="2" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="What doodle do you want to create? e.g., 'a happy robot'"></textarea>
+                
+                <!-- Checkbox Options -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center p-2 border border-gray-200 rounded-lg">
+                    <div class="flex items-center justify-center space-x-2">
+                        <input type="checkbox" id="complexModeCheckbox" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                        <label for="complexModeCheckbox" class="font-medium text-gray-700 select-none cursor-pointer">Complex ✨</label>
+                    </div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <input type="checkbox" id="invertColorsCheckbox" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer style-checkbox">
+                        <label for="invertColorsCheckbox" class="font-medium text-gray-700 select-none cursor-pointer">Black on White 🔄</label>
+                    </div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <input type="checkbox" id="whiteOnBlackCheckbox" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer style-checkbox">
+                        <label for="whiteOnBlackCheckbox" class="font-medium text-gray-700 select-none cursor-pointer">White on Black 🎨</label>
+                    </div>
+                     <div class="flex items-center justify-center space-x-2">
+                        <input type="checkbox" id="rainbowLinesCheckbox" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer style-checkbox">
+                        <label for="rainbowLinesCheckbox" class="font-medium text-gray-700 select-none cursor-pointer">Rainbow Lines 🌈</label>
+                    </div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <input type="checkbox" id="whiteOnRainbowCheckbox" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer style-checkbox">
+                        <label for="whiteOnRainbowCheckbox" class="font-medium text-gray-700 select-none cursor-pointer">White on Rainbow 🎨</label>
+                    </div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <input type="checkbox" id="blackOnRainbowCheckbox" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer style-checkbox">
+                        <label for="blackOnRainbowCheckbox" class="font-medium text-gray-700 select-none cursor-pointer">Black on Rainbow 🎨</label>
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <button id="generateButton" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span id="generateIcon" class="mr-2">🚀</span>
+                    <span id="generateButtonText">Generate Doodle</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Image Display Area -->
+        <div id="imageContainer" class="mt-6 bg-white p-4 rounded-xl shadow-lg border border-gray-200 min-h-[300px] flex items-center justify-center checkerboard transition-colors duration-300">
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="hidden flex-col items-center text-gray-500">
+                <div class="spinner mb-4"></div>
+                <p>Doodling your idea...</p>
+            </div>
+            <!-- Generated Image will be placed here -->
+            <img id="generatedImage" src="https://placehold.co/512x512/e2e8f0/64748b?text=Your+Doodle+Will+Appear+Here" alt="AI Generated Doodle" class="rounded-lg max-w-full h-auto">
+             <!-- Error Message -->
+            <p id="errorMessage" class="hidden text-red-500"></p>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const promptInput = document.getElementById('promptInput');
+        const complexModeCheckbox = document.getElementById('complexModeCheckbox');
+        const invertColorsCheckbox = document.getElementById('invertColorsCheckbox');
+        const whiteOnBlackCheckbox = document.getElementById('whiteOnBlackCheckbox');
+        const rainbowLinesCheckbox = document.getElementById('rainbowLinesCheckbox');
+        const whiteOnRainbowCheckbox = document.getElementById('whiteOnRainbowCheckbox');
+        const blackOnRainbowCheckbox = document.getElementById('blackOnRainbowCheckbox');
+        const generateButton = document.getElementById('generateButton');
+        const generateButtonText = document.getElementById('generateButtonText');
+        const generateIcon = document.getElementById('generateIcon');
+        const imageContainer = document.getElementById('imageContainer');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const generatedImage = document.getElementById('generatedImage');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        const styleCheckboxes = document.querySelectorAll('.style-checkbox');
+
+        // --- Function to update background based on checkboxes ---
+        function updateBackground() {
+            if (whiteOnBlackCheckbox.checked) {
+                imageContainer.classList.remove('checkerboard', 'bg-white');
+                imageContainer.classList.add('bg-black');
+            } else if (invertColorsCheckbox.checked) {
+                imageContainer.classList.remove('checkerboard', 'bg-black');
+                imageContainer.classList.add('bg-white');
+            } else {
+                imageContainer.classList.remove('bg-white', 'bg-black');
+                imageContainer.classList.add('checkerboard');
+            }
+        }
+
+        // --- Gemini API Image Generation ---
+        async function generateImage() {
+            const userPrompt = promptInput.value;
+            if (!userPrompt) {
+                errorMessage.textContent = "Please enter a description for the doodle.";
+                errorMessage.classList.remove('hidden');
+                setTimeout(() => errorMessage.classList.add('hidden'), 3000);
+                return;
+            }
+
+            // --- 1. Construct the final prompt based on user input and checkboxes ---
+            const isComplex = complexModeCheckbox.checked;
+            
+            let style = isComplex 
+                ? `A detailed, intricate, hand-drawn illustration of ${userPrompt}` 
+                : `Ultra-minimalist, single continuous line drawing of ${userPrompt}`;
+            
+            let color;
+            let background;
+
+            if (whiteOnRainbowCheckbox.checked) {
+                color = 'with clean white lines';
+                background = 'on a background of vibrant, colorful, geometric fractals';
+            } else if (blackOnRainbowCheckbox.checked) {
+                 color = 'with clean black lines';
+                background = 'on a background of vibrant, colorful, geometric fractals';
+            } else if (whiteOnBlackCheckbox.checked) {
+                color = 'with clean white lines';
+                background = 'on a solid black background';
+            } else if (rainbowLinesCheckbox.checked) {
+                color = 'with vibrant, colorful rainbow lines';
+                background = invertColorsCheckbox.checked ? 'on a solid clean white background' : 'with a transparent background';
+            } else { // Default or Black on White case
+                color = 'as a simple black and white sketch';
+                background = invertColorsCheckbox.checked ? 'on a solid clean white background' : 'with a transparent background';
+            }
+
+            const finalPrompt = `${style}, ${color}, ${background}.`;
+            console.log("Final Prompt:", finalPrompt); // For debugging
+
+            // --- 2. Update UI to loading state ---
+            generateButton.disabled = true;
+            generateButtonText.textContent = 'Generating...';
+            generateIcon.textContent = '🧠';
+            loadingIndicator.classList.remove('hidden');
+            loadingIndicator.classList.add('flex');
+            generatedImage.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+
+            try {
+                // --- 3. Prepare the API request ---
+                const payload = { 
+                    instances: [{ prompt: finalPrompt }],
+                    parameters: { "sampleCount": 1 } 
+                };
+                const apiKey = ""; // API key is handled by the environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+                // --- 4. Make the API call ---
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                // --- 5. Process the response ---
+                if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                    const base64Data = result.predictions[0].bytesBase64Encoded;
+                    const imageUrl = `data:image/png;base64,${base64Data}`;
+                    generatedImage.src = imageUrl;
+                    generatedImage.classList.remove('hidden');
+                } else {
+                    throw new Error("Invalid response structure from API.");
+                }
+
+            } catch (error) {
+                console.error("Error generating image:", error);
+                errorMessage.textContent = "Sorry, something went wrong. Please try again.";
+                errorMessage.classList.remove('hidden');
+                generatedImage.src = 'https://placehold.co/512x512/e2e8f0/64748b?text=Generation+Failed';
+                generatedImage.classList.remove('hidden');
+
+            } finally {
+                // --- 6. Reset UI from loading state ---
+                generateButton.disabled = false;
+                generateButtonText.textContent = 'Generate Doodle';
+                generateIcon.textContent = '🚀';
+                loadingIndicator.classList.add('hidden');
+                loadingIndicator.classList.remove('flex');
+            }
+        }
+
+        // --- Event Listener for mutual exclusivity ---
+        function handleStyleSelection(e) {
+            // If the checkbox was just checked
+            if (e.target.checked) {
+                // Uncheck all other style checkboxes
+                styleCheckboxes.forEach(checkbox => {
+                    if (checkbox !== e.target) {
+                        checkbox.checked = false;
+                    }
+                });
+            }
+            updateBackground();
+        }
+
+        styleCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', handleStyleSelection);
+        });
+
+        generateButton.addEventListener('click', generateImage);
+
+        // Initial background check on load
+        updateBackground();
+    </script>
+</body>
+</html>
