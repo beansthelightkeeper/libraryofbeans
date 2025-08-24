@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSettings();
         loadAnnotations();
         applySettings();
-        fetchAndOrganizeFiles(); // This function is now updated
+        fetchAndOrganizeFiles();
         setupEventListeners();
     }
 
@@ -185,13 +185,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 line-height: ${lineHeight}; font-size: ${state.settings.fontSize}px;
                 padding: 2% ${margin};
                 transition: color 0.3s ease, background-color 0.3s ease;
+                margin: 0 auto; /* This helps with centering */
+                max-width: 80ch; /* Good for readability */
             }
             ${highlightStyles}
             mark[id^="anno-"] { cursor: pointer; }
         `;
     }
 
-    // --- GITHUB FILE FETCHING & RENDERING (UPDATED) ---
+    // --- GITHUB FILE FETCHING & RENDERING ---
     async function fetchAndOrganizeFiles() {
         const branch = 'main';
         const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/git/trees/${branch}?recursive=1`;
@@ -256,12 +258,32 @@ document.addEventListener('DOMContentLoaded', () => {
         fileListContainer.appendChild(ul);
     }
     
-    function loadFile(fullPath) {
+    // ** THIS IS THE UPDATED FUNCTION THAT FIXES EVERYTHING **
+    async function loadFile(fullPath) {
         state.currentFile = fullPath;
         welcomeMessage.style.display = 'none';
-        contentFrame.src = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${fullPath}`;
         document.body.classList.add('file-loaded');
-        if (window.innerWidth <= 768) sidebar.classList.remove('open');
+
+        try {
+            const url = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${fullPath}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const htmlContent = await response.text();
+            
+            // By setting srcdoc, we make the iframe's content have the same origin
+            // as the parent page, which allows our scripts to modify it.
+            contentFrame.srcdoc = htmlContent;
+
+        } catch (error) {
+            console.error("Failed to load file content:", error);
+            contentFrame.srcdoc = `<html><body><h2>Failed to load content</h2><p>${error}</p></body></html>`;
+        }
+        
+        if (window.innerWidth <= 768) {
+            sidebar.classList.remove('open');
+        }
     }
 
     // --- ANNOTATION & ERASING LOGIC ---
@@ -428,6 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function getPathTo(node) {
+        if (!node || !node.parentNode) return '';
         if (node.id) return `id("${node.id}")`;
         if (node === document.body) return node.tagName.toLowerCase();
         let ix = 0;
