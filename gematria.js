@@ -1,7 +1,7 @@
 // --- Firebase Imports ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, getDocs, limit, orderBy, doc, updateDoc, increment, writeBatch, or } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // --- GLOBAL STATE & CONSTANTS ---
 const CIPHERS = {};
@@ -33,7 +33,6 @@ function recursiveDigitSum(n) {
 // --- GEMATRIA CIPHER DEFINITIONS ---
 function buildGematriaCiphers() {
     const a = 'abcdefghijklmnopqrstuvwxyz';
-    const A = a.toUpperCase();
     const simpleMap = {};
     a.split('').forEach((l, i) => { simpleMap[l] = i + 1; });
 
@@ -42,21 +41,14 @@ function buildGematriaCiphers() {
     a.split('').forEach((l, i) => { jewishMap[l] = jewishValues[i]; });
 
     const chaldeanMap = {a:1,b:2,c:3,d:4,e:5,f:8,g:3,h:5,i:1,j:1,k:2,l:3,m:4,n:5,o:7,p:8,q:1,r:2,s:3,t:4,u:6,v:6,w:6,x:5,y:1,z:7};
-    
     const alwMap = {a:1,l:2,w:3,h:4,s:5,d:6,o:7,z:8,k:9,v:10,g:11,r:12,c:13,n:14,y:15,j:16,u:17,f:18,q:19,b:20,m:21,x:22,i:23,t:24,e:25,p:26};
-
     const trigrammatonMap = {l:1,c:2,h:3,p:4,a:5,x:6,j:7,w:8,t:9,o:10,g:11,f:12,e:13,r:14,s:15,q:16,k:17,y:18,z:19,b:20,m:21,v:22,d:23,n:24,u:25,i:0};
-    
     const baconianMap = {a:0,b:1,c:2,d:3,e:4,f:5,g:6,h:7,i:8,j:8,k:9,l:10,m:11,n:12,o:13,p:14,q:15,r:16,s:17,t:18,u:19,v:19,w:20,x:21,y:22,z:23};
-
     const sumerianMap = {};
     a.split('').forEach((l, i) => { sumerianMap[l] = 6 * (i + 1); });
-
     const phoneMap = {a:2,b:2,c:2,d:3,e:3,f:3,g:4,h:4,i:4,j:5,k:5,l:5,m:6,n:6,o:6,p:7,q:7,r:7,s:7,t:8,u:8,v:8,w:9,x:9,y:9,z:9};
-
     const qwertyMap = {q:1,w:2,e:3,r:4,t:5,y:6,u:7,i:8,o:9,p:10,a:11,s:12,d:13,f:14,g:15,h:16,j:17,k:18,l:19,z:20,x:21,c:22,v:23,b:24,n:25,m:26};
 
-    // Helper for map-based ciphers
     const calculateWithMap = (text, map) => text.toLowerCase().split('').reduce((sum, char) => sum + (map[char] || 0), 0);
     
     // --- CORE CIPHERS ---
@@ -72,8 +64,6 @@ function buildGematriaCiphers() {
     CIPHERS['QWERTY'] = (text) => calculateWithMap(text, qwertyMap);
     CIPHERS['ASCII'] = (text) => text.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
     CIPHERS['BinarySum'] = (text) => text.split('').reduce((sum, char) => sum + char.charCodeAt(0).toString(2).split('1').length - 1, 0);
-
-    // --- REDUCTION & POSITIONAL ---
     CIPHERS['Reduction'] = (text) => recursiveDigitSum(CIPHERS.Simple(text));
     CIPHERS['SyllableResonance'] = (text) => {
         const cleaned = text.toLowerCase().replace(/[^a-z]/g, '');
@@ -123,8 +113,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         await signInAnonymously(auth);
         db = getFirestore(app);
     } catch (error) { console.error("Firebase initialization failed:", error); return; }
-
-    if (document.getElementById('gematria-input')) initCalculatorPage(db);
+    
+    const page = window.location.pathname.split("/").pop();
+    if (page === 'gematria.html' || page === '') initCalculatorPage(db);
+    // Add initializers for other pages here if they exist
 });
 
 
@@ -144,12 +136,11 @@ function initCalculatorPage(db) {
     const modalClose = modal.querySelector('.modal-close-button');
 
     let currentValues = null;
-    let activeCiphers = Object.keys(CIPHERS); // Default to all ciphers for report
     let activeFilters = [];
 
     // Dynamically populate cipher settings
     cipherSettings.innerHTML = '<p class="settings-info">Select Ciphers for Resonance Report</p>';
-    Object.keys(CIPHERS).forEach(key => {
+    Object.keys(CIPHERS).sort().forEach(key => {
         const isChecked = ['Simple', 'English', 'Jewish', 'Chaldean', 'GeminiResonance'].includes(key);
         const label = document.createElement('label');
         label.innerHTML = `<input type="checkbox" data-cipher="${key}" ${isChecked ? 'checked' : ''}> ${key}`;
@@ -184,11 +175,10 @@ function initCalculatorPage(db) {
 
     function calculateGematriaForText(text) {
         currentValues = {};
-        ALL_CIPHER_KEYS.forEach(cipher => {
+        Object.keys(CIPHERS).forEach(cipher => {
             currentValues[cipher] = CIPHERS[cipher](text);
         });
 
-        // Display summary for a curated list of ciphers
         const summaryCiphers = ['Simple', 'English', 'Jewish', 'GeminiResonance', 'LawOf6'];
         resultsSummary.innerHTML = '';
         summaryCiphers.forEach(cipher => {
@@ -203,13 +193,13 @@ function initCalculatorPage(db) {
 
     async function fetchAndDisplayMatches(isNumberSearch, number = 0) {
         dbMatchesContainer.innerHTML = 'Loading matches...';
-        
-        // Only fetch for Jewish and Simple
         const ciphersToFetch = ['Jewish', 'Simple'];
+        
         const queries = ciphersToFetch.map(cipher => {
             const value = isNumberSearch ? number : currentValues[cipher];
             if (value > 0) {
-                return getDocs(query(gematriaCollectionRef, where(cipher, "==", value), limit(50)));
+                let q = query(gematriaCollectionRef, where(cipher, "==", value), limit(50));
+                return getDocs(q);
             }
             return Promise.resolve(null);
         });
@@ -219,7 +209,6 @@ function initCalculatorPage(db) {
         snapshots.forEach((snapshot, index) => {
             const cipher = ciphersToFetch[index];
             const value = isNumberSearch ? number : currentValues[cipher];
-
             if (snapshot && !snapshot.empty) {
                 const phrasesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderTable(cipher, phrasesData, value);
@@ -330,6 +319,8 @@ function initCalculatorPage(db) {
     
     gematriaInput.addEventListener('input', debouncedHandler);
     saveButton.addEventListener('click', saveToDatabase);
+    cipherSettings.addEventListener('change', handleInputChange);
+    filterSettings.addEventListener('change', handleInputChange);
 }
 
 // --- UTILITY FUNCTIONS ---
