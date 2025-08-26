@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesla Gematria Engine</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="teslagematria.css">
+</head>
+<body>
+    <div class="container">
+        <header class="site-header">
+            <div class="logo-area">
+                <h1>Tesla Gematria Engine</h1>
+                <p>Unlocking the 3, 6, 9 numerical universe</p>
+            </div>
+             <div class="input-area">
+                <input type="text" id="gematria-input" placeholder="Enter a phrase to analyze...">
+                <button id="save-button" disabled>Save to Database</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div id="results-summary" class="results-summary-bar">
+                <!-- Gematria value cards will be injected here -->
+            </div>
+            
+            <div id="breakdown-container" class="breakdown-container">
+                <!-- Letter-by-letter breakdown will be injected here -->
+            </div>
+
+            <details class="cipher-settings-collapsible" open>
+                <summary>Cipher Systems</summary>
+                <div class="main-settings-container">
+                    <div id="cipher-settings" class="settings-group">
+                        <!-- Cipher checkboxes will be dynamically generated -->
+                    </div>
+                </div>
+            </details>
+
+            <div id="db-matches-container">
+                <!-- Dynamic match tables will be injected here -->
+            </div>
+        </main>
+
+        <footer class="site-footer">
+             <a href="gematria.html">Standard Gematria</a> |
+             <a href="teslagematria.html">Tesla Gematria</a>
+        </footer>
+    </div>
+
+    <!-- Modal for Resonance Report -->
+    <div id="resonance-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <button class="modal-close-button">&times;</button>
+            <h2 id="modal-title">Resonance Report</h2>
+            <div id="modal-body">
+                <!-- Report content will be injected here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- IMPORTANT: Make sure you have a firebase-config.js file with your project's configuration -->
+    <script src="firebase-config.js"></script>
+    <script type="module" src="teslagematria.js"></script>
+</body>
+</html>
