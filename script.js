@@ -65,10 +65,28 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSettings();
         loadAnnotations();
         loadBookmarks();
+        injectDynamicStyles();
         applySettings();
         fetchAndOrganizeFiles();
         setupEventListeners();
         renderAllBookmarks();
+    }
+
+    // --- DYNAMIC STYLE INJECTION ---
+    function injectDynamicStyles() {
+        const style = document.createElement('style');
+        style.id = 'app-dynamic-styles';
+        style.innerHTML = `
+            .color-palette.disabled {
+                opacity: 0.5;
+                filter: grayscale(80%);
+                cursor: not-allowed;
+            }
+            .color-palette.disabled .color-swatch {
+                pointer-events: none;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     // --- EVENT LISTENERS ---
@@ -138,6 +156,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('no-fx', !state.settings.isRainbowFxOn);
         document.body.classList.toggle('gutter-visible', state.settings.showBookmarkGutter);
 
+        // NEW: Disable color palette if highlight mode is not active
+        if (state.isHighlightModeActive) {
+            colorSwatches.classList.remove('disabled');
+        } else {
+            colorSwatches.classList.add('disabled');
+        }
+
         document.querySelectorAll('.color-swatch').forEach(swatch => {
             swatch.classList.toggle('active', swatch.dataset.color === state.settings.activeHighlightColor);
         });
@@ -169,6 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleColorChange(e) {
+        if (!state.isHighlightModeActive) return; // Only allow color change if highlight mode is active
         const target = e.target.closest('.color-swatch');
         if (!target) return;
         state.settings.activeHighlightColor = target.dataset.color;
@@ -301,9 +327,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- ANNOTATION & ERASING LOGIC ---
     function toggleHighlightMode() {
         state.isHighlightModeActive = !state.isHighlightModeActive;
-        if (state.isHighlightModeActive) state.isEraseModeActive = false;
+        if (state.isHighlightModeActive) {
+            state.isEraseModeActive = false;
+            if (!state.settings.activeHighlightColor) {
+                state.settings.activeHighlightColor = 'yellow';
+            }
+        }
         highlightModeToggle.classList.toggle('active', state.isHighlightModeActive);
         eraseModeToggle.classList.remove('active');
+        applySettings(); // Update UI to enable/disable color palette
     }
 
     function toggleEraseMode() {
@@ -311,6 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.isEraseModeActive) state.isHighlightModeActive = false;
         eraseModeToggle.classList.toggle('active', state.isEraseModeActive);
         highlightModeToggle.classList.remove('active');
+        applySettings(); // Update UI
     }
 
     function handleIframeInteraction(event) {
@@ -509,37 +542,36 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveBookmarks() { saveData('beansReaderBookmarks', state.bookmarks); }
     function loadBookmarks() { Object.assign(state.bookmarks, loadData('beansReaderBookmarks')); }
 
-    // **FIXED:** More robust XPath generation that handles text nodes correctly.
+    // **FIXED:** Rewritten XPath logic for better reliability with text nodes.
     function getPathTo(node, doc) {
-        if (node.nodeType !== Node.ELEMENT_NODE) {
-             // For non-element nodes, get the path to the parent and find its index
-            const parent = node.parentNode;
-            if (!parent) return '';
-            const parentPath = getPathTo(parent, doc);
-            const children = Array.from(parent.childNodes);
-            const nodeIndex = children.indexOf(node) + 1; // XPath is 1-indexed
-            // Distinguish between text nodes and other node types
-            const nodeIdentifier = node.nodeType === Node.TEXT_NODE ? `text()[${nodeIndex}]` : `node()[${nodeIndex}]`;
-            return `${parentPath}/${nodeIdentifier}`;
-        }
-        // For element nodes
-        if (node.id) return `id("${node.id}")`;
-        if (node === doc.body) return '/html/body';
+        // For element nodes, generate a path based on tag name and sibling index.
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            if (node.id) return `id("${node.id}")`;
+            if (node === doc.body) return '/html/body';
 
-        let ix = 1;
-        let sibling = node.previousSibling;
-        while (sibling) {
-            if (sibling.nodeType === Node.ELEMENT_NODE && sibling.tagName === node.tagName) {
-                ix++;
+            let ix = 1;
+            let sibling = node.previousSibling;
+            while (sibling) {
+                if (sibling.nodeType === Node.ELEMENT_NODE && sibling.tagName === node.tagName) {
+                    ix++;
+                }
+                sibling = sibling.previousSibling;
             }
-            sibling = sibling.previousSibling;
+            return `${getPathTo(node.parentNode, doc)}/${node.tagName.toLowerCase()}[${ix}]`;
         }
-        return `${getPathTo(node.parentNode, doc)}/${node.tagName.toLowerCase()}[${ix}]`;
+
+        // For non-element nodes (like text nodes), find their index among all child nodes.
+        const parent = node.parentNode;
+        if (!parent) return '';
+        const parentPath = getPathTo(parent, doc);
+        const children = Array.from(parent.childNodes);
+        const nodeIndex = children.indexOf(node) + 1; // XPath is 1-indexed
+        
+        return `${parentPath}/node()[${nodeIndex}]`;
     }
 
     function getNodeByPath(path, doc) {
         try {
-            // Use XPath to find the node
             return doc.evaluate(path, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
         } catch (e) {
             console.error("XPath evaluation failed for path:", path, e);
@@ -547,7 +579,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // **FIXED:** These functions now correctly use the robust XPath logic.
     function serializeRange(range, doc) {
         return {
             startContainerPath: getPathTo(range.startContainer, doc),
