@@ -340,7 +340,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const range = selection.getRangeAt(0);
         const annotationId = `anno-${Date.now()}`;
-        // **FIX:** Pass the iframe's document context to serializeRange
         const rangeData = serializeRange(range, iframeDoc);
 
         const newAnnotation = {
@@ -510,23 +509,37 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveBookmarks() { saveData('beansReaderBookmarks', state.bookmarks); }
     function loadBookmarks() { Object.assign(state.bookmarks, loadData('beansReaderBookmarks')); }
 
-    // **FIX:** This function now accepts the document context ('doc')
+    // **FIXED:** More robust XPath generation that handles text nodes correctly.
     function getPathTo(node, doc) {
-        if (node.id) return `id("${node.id}")`;
-        // **FIX:** Compare against the iframe's body, not the main document's body
-        if (node === doc.body) return '/html/body';
-        let ix = 0;
-        const siblings = node.parentNode.childNodes;
-        for (let i = 0; i < siblings.length; i++) {
-            const sibling = siblings[i];
-            if (sibling === node) return `${getPathTo(node.parentNode, doc)}/${node.tagName.toLowerCase()}[${ix + 1}]`;
-            if (sibling.nodeType === 1 && sibling.tagName === node.tagName) ix++;
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+             // For non-element nodes, get the path to the parent and find its index
+            const parent = node.parentNode;
+            if (!parent) return '';
+            const parentPath = getPathTo(parent, doc);
+            const children = Array.from(parent.childNodes);
+            const nodeIndex = children.indexOf(node) + 1; // XPath is 1-indexed
+            // Distinguish between text nodes and other node types
+            const nodeIdentifier = node.nodeType === Node.TEXT_NODE ? `text()[${nodeIndex}]` : `node()[${nodeIndex}]`;
+            return `${parentPath}/${nodeIdentifier}`;
         }
-        return '';
+        // For element nodes
+        if (node.id) return `id("${node.id}")`;
+        if (node === doc.body) return '/html/body';
+
+        let ix = 1;
+        let sibling = node.previousSibling;
+        while (sibling) {
+            if (sibling.nodeType === Node.ELEMENT_NODE && sibling.tagName === node.tagName) {
+                ix++;
+            }
+            sibling = sibling.previousSibling;
+        }
+        return `${getPathTo(node.parentNode, doc)}/${node.tagName.toLowerCase()}[${ix}]`;
     }
 
     function getNodeByPath(path, doc) {
         try {
+            // Use XPath to find the node
             return doc.evaluate(path, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
         } catch (e) {
             console.error("XPath evaluation failed for path:", path, e);
@@ -534,7 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // **FIX:** This function now passes the document context down to getPathTo
+    // **FIXED:** These functions now correctly use the robust XPath logic.
     function serializeRange(range, doc) {
         return {
             startContainerPath: getPathTo(range.startContainer, doc),
