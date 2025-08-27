@@ -96,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc || !state.currentFile) return;
 
-        // Set a base URL for relative paths within the loaded content
         const base = iframeDoc.createElement('base');
         const pathParts = state.currentFile.split('/');
         pathParts.pop();
@@ -108,19 +107,17 @@ document.addEventListener('DOMContentLoaded', () => {
         setupIframeListeners();
         applyAnnotationsForCurrentFile();
         renderAnnotationsForCurrentFile();
-        renderAllBookmarks(); // Refresh bookmarks to show which is active
+        renderAllBookmarks();
 
-        // Scroll to a bookmark if one was clicked
         if (state.targetScrollY !== null) {
             contentFrame.contentWindow.scrollTo(0, state.targetScrollY);
-            state.targetScrollY = null; // Reset after scrolling
+            state.targetScrollY = null;
         }
     }
 
     function setupIframeListeners() {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc) return;
-        // **FIX:** Use 'pointerup' to reliably capture mouse, touch, and Apple Pencil up events.
         iframeDoc.addEventListener('pointerup', handleIframeInteraction);
         iframeDoc.addEventListener('selectionchange', () => {
             const selection = iframeDoc.getSelection();
@@ -276,12 +273,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadFile(fullPath) {
-        if (state.currentFile === fullPath) return; // Don't reload the same file
+        if (state.currentFile === fullPath) return;
         state.currentFile = fullPath;
         welcomeMessage.style.display = 'none';
         document.body.classList.add('file-loaded');
 
-        // Update active file in sidebar
         document.querySelectorAll('#file-list-container li.active').forEach(el => el.classList.remove('active'));
         const fileLink = document.querySelector(`#file-list-container a[data-path="${fullPath}"]`);
         if (fileLink) fileLink.parentElement.classList.add('active');
@@ -291,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const htmlContent = await response.text();
-            contentFrame.srcdoc = htmlContent; // This will trigger the 'load' event
+            contentFrame.srcdoc = htmlContent;
         } catch (error) {
             console.error("Failed to load file content:", error);
             contentFrame.srcdoc = `<html><body><h2>Failed to load content</h2><p>${error}</p></body></html>`;
@@ -318,7 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleIframeInteraction(event) {
-        // **FIX:** Use a small timeout to allow the selection to finalize on touch devices
         setTimeout(() => {
             if (state.isHighlightModeActive) {
                 createAnnotation();
@@ -330,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function addNoteToSelection() {
         const note = prompt('Add a note for this annotation:');
-        if (note === null) { // User cancelled
+        if (note === null) {
             const selection = contentFrame.contentDocument.getSelection();
             if (selection) selection.removeAllRanges();
             return;
@@ -345,6 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const range = selection.getRangeAt(0);
         const annotationId = `anno-${Date.now()}`;
+        // **FIX:** Pass the iframe's document context to serializeRange
         const rangeData = serializeRange(range, iframeDoc);
 
         const newAnnotation = {
@@ -376,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const parent = mark.parentNode;
         while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
         parent.removeChild(mark);
-        parent.normalize(); // Merge adjacent text nodes
+        parent.normalize();
 
         saveAnnotations();
         renderAnnotationsForCurrentFile();
@@ -432,10 +428,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state.currentFile) return;
         const iframeWin = contentFrame.contentWindow;
         const iframeDoc = contentFrame.contentDocument;
-
         const scrollY = iframeWin.scrollY;
         
-        // **FIX:** More robust snippet generation
         let snippet = `Bookmark at ${Math.round((scrollY / iframeDoc.body.scrollHeight) * 100)}%`;
         const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
         const pElement = elements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
@@ -452,7 +446,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!state.bookmarks[state.currentFile]) state.bookmarks[state.currentFile] = [];
         
-        // **FIX:** Prevent duplicate bookmarks at the exact same spot
         const isDuplicate = state.bookmarks[state.currentFile].some(bm => bm.scrollY === scrollY);
         if (isDuplicate) {
             alert("Bookmark already exists at this location.");
@@ -517,8 +510,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveBookmarks() { saveData('beansReaderBookmarks', state.bookmarks); }
     function loadBookmarks() { Object.assign(state.bookmarks, loadData('beansReaderBookmarks')); }
 
+    // **FIX:** This function now accepts the document context ('doc')
     function getPathTo(node, doc) {
         if (node.id) return `id("${node.id}")`;
+        // **FIX:** Compare against the iframe's body, not the main document's body
         if (node === doc.body) return '/html/body';
         let ix = 0;
         const siblings = node.parentNode.childNodes;
@@ -539,6 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // **FIX:** This function now passes the document context down to getPathTo
     function serializeRange(range, doc) {
         return {
             startContainerPath: getPathTo(range.startContainer, doc),
