@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const highlightModeToggle = document.getElementById('highlight-mode-toggle');
     const eraseModeToggle = document.getElementById('erase-mode-toggle');
     const addNoteBtn = document.getElementById('add-note-btn');
-    const addBookmarkBtn = document.getElementById('add-bookmark-btn'); // New
+    const addBookmarkBtn = document.getElementById('add-bookmark-btn');
     const annotationsList = document.getElementById('annotations-list');
-    const bookmarksList = document.getElementById('bookmarks-list'); // New
+    const bookmarksList = document.getElementById('bookmarks-list');
     const fontSizeSlider = document.getElementById('font-size-slider');
     const colorSwatches = document.getElementById('highlighter-colors');
     const doubleSpaceToggle = document.getElementById('double-space-toggle');
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showBookmarkGutter: true,
         },
         annotations: {},
-        bookmarks: {}, // New
+        bookmarks: {},
     };
 
     // --- ICONS & COLORS ---
@@ -64,11 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function initialize() {
         loadSettings();
         loadAnnotations();
-        loadBookmarks(); // New
+        loadBookmarks();
         applySettings();
         fetchAndOrganizeFiles();
         setupEventListeners();
-        renderBookmarks(); // New
+        renderAllBookmarks();
     }
 
     // --- EVENT LISTENERS ---
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightModeToggle.addEventListener('click', toggleHighlightMode);
         eraseModeToggle.addEventListener('click', toggleEraseMode);
         addNoteBtn.addEventListener('click', addNoteToSelection);
-        addBookmarkBtn.addEventListener('click', addBookmark); // New
+        addBookmarkBtn.addEventListener('click', addBookmark);
         fontSizeSlider.addEventListener('input', handleFontSizeChange);
         colorSwatches.addEventListener('click', handleColorChange);
         doubleSpaceToggle.addEventListener('click', toggleDoubleSpacing);
@@ -95,19 +95,23 @@ document.addEventListener('DOMContentLoaded', () => {
     function onIframeLoad() {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc || !state.currentFile) return;
+
+        // Set a base URL for relative paths within the loaded content
         const base = iframeDoc.createElement('base');
         const pathParts = state.currentFile.split('/');
         pathParts.pop();
         const directoryPath = pathParts.join('/') + '/';
         base.href = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${directoryPath}`;
         iframeDoc.head.prepend(base);
+
         updateIframeStyles();
         setupIframeListeners();
-        applyAnnotations();
-        renderAnnotations();
+        applyAnnotationsForCurrentFile();
+        renderAnnotationsForCurrentFile();
+        renderAllBookmarks(); // Refresh bookmarks to show which is active
 
-        // New: Scroll to bookmark if one was clicked
-        if (state.targetScrollY) {
+        // Scroll to a bookmark if one was clicked
+        if (state.targetScrollY !== null) {
             contentFrame.contentWindow.scrollTo(0, state.targetScrollY);
             state.targetScrollY = null; // Reset after scrolling
         }
@@ -116,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupIframeListeners() {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc) return;
+        // **FIX:** Use 'pointerup' to reliably capture mouse, touch, and Apple Pencil up events.
         iframeDoc.addEventListener('pointerup', handleIframeInteraction);
         iframeDoc.addEventListener('selectionchange', () => {
             const selection = iframeDoc.getSelection();
@@ -144,53 +149,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function toggleTheme() {
         state.settings.theme = state.settings.theme === 'dark' ? 'light' : 'dark';
-        applySettings();
         saveSettings();
+        applySettings();
     }
 
     function toggleSidebarMinimize() {
         state.settings.sidebarMinimized = !state.settings.sidebarMinimized;
-        applySettings();
         saveSettings();
+        applySettings();
     }
 
     function toggleRainbowFx() {
         state.settings.isRainbowFxOn = !state.settings.isRainbowFxOn;
-        applySettings();
         saveSettings();
+        applySettings();
     }
 
     function handleFontSizeChange(e) {
         state.settings.fontSize = e.target.value;
-        updateIframeStyles();
         saveSettings();
+        updateIframeStyles();
     }
 
     function handleColorChange(e) {
         const target = e.target.closest('.color-swatch');
         if (!target) return;
         state.settings.activeHighlightColor = target.dataset.color;
-        applySettings();
         saveSettings();
+        applySettings();
     }
 
     function toggleDoubleSpacing() {
         state.settings.isDoubleSpaced = !state.settings.isDoubleSpaced;
-        applySettings();
         saveSettings();
+        applySettings();
     }
 
     function handleMarginChange(e) {
         state.settings.marginSize = e.target.value;
-        updateIframeStyles();
         saveSettings();
+        updateIframeStyles();
     }
 
     function toggleBookmarkGutter() {
         state.settings.showBookmarkGutter = !state.settings.showBookmarkGutter;
-        applySettings();
-        renderAnnotations();
         saveSettings();
+        applySettings();
+        renderAnnotationsForCurrentFile();
     }
 
     function updateIframeStyles() {
@@ -205,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const computedStyles = getComputedStyle(document.body);
         const textColor = computedStyles.getPropertyValue('--text-primary');
         const bodyBgColor = computedStyles.getPropertyValue('--bg-secondary');
-        // UPDATED: Bigger double space
         const lineHeight = state.settings.isDoubleSpaced ? '2.5' : '1.6';
         const margin = `${state.settings.marginSize}%`;
         const highlightStyles = Object.entries(HIGHLIGHT_COLORS).map(([name, cssVar]) => {
@@ -217,8 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 line-height: ${lineHeight}; font-size: ${state.settings.fontSize}px;
                 padding: 2% ${margin};
                 transition: color 0.3s ease, background-color 0.3s ease;
-                margin: 0 auto; /* This helps with centering */
-                max-width: 80ch; /* Good for readability */
+                margin: 0 auto;
+                max-width: 80ch;
             }
             ${highlightStyles}
             mark[id^="anno-"] { cursor: pointer; }
@@ -233,19 +237,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
             const data = await response.json();
-            const flatFileList = [];
-            for (const item of data.tree) {
-                if (item.type === 'blob' && item.path.startsWith(LIBRARY_ROOT) && item.path.endsWith('.html')) {
+            const flatFileList = data.tree
+                .filter(item => item.type === 'blob' && item.path.startsWith(LIBRARY_ROOT) && item.path.endsWith('.html'))
+                .map(item => {
                     const relativePath = item.path.substring(LIBRARY_ROOT.length);
-                    if (relativePath === '') continue;
                     const displayName = relativePath.replace(/\.html$/, '').replace(/_/g, ' ').replace(/\//g, ' / ');
-                    flatFileList.push({
-                        name: displayName,
-                        path: item.path
-                    });
-                }
-            }
-            flatFileList.sort((a, b) => a.name.localeCompare(b.name));
+                    return { name: displayName, path: item.path };
+                })
+                .sort((a, b) => a.name.localeCompare(b.name));
             renderFileList(flatFileList);
         } catch (error) {
             console.error("Failed to fetch files:", error);
@@ -267,11 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 a.textContent = file.name;
                 a.onclick = (e) => {
                     e.preventDefault();
-                    const currentActive = document.querySelector('#file-list-container li.active');
-                    if (currentActive) {
-                        currentActive.classList.remove('active');
-                    }
-                    li.classList.add('active');
                     loadFile(file.path);
                 };
                 li.appendChild(a);
@@ -282,21 +276,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadFile(fullPath) {
+        if (state.currentFile === fullPath) return; // Don't reload the same file
         state.currentFile = fullPath;
         welcomeMessage.style.display = 'none';
         document.body.classList.add('file-loaded');
+
+        // Update active file in sidebar
+        document.querySelectorAll('#file-list-container li.active').forEach(el => el.classList.remove('active'));
+        const fileLink = document.querySelector(`#file-list-container a[data-path="${fullPath}"]`);
+        if (fileLink) fileLink.parentElement.classList.add('active');
+
         try {
             const url = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${fullPath}`;
             const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const htmlContent = await response.text();
-            contentFrame.srcdoc = htmlContent;
+            contentFrame.srcdoc = htmlContent; // This will trigger the 'load' event
         } catch (error) {
             console.error("Failed to load file content:", error);
             contentFrame.srcdoc = `<html><body><h2>Failed to load content</h2><p>${error}</p></body></html>`;
         }
+
         if (window.innerWidth <= 768) {
             sidebar.classList.remove('open');
         }
@@ -318,16 +318,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleIframeInteraction(event) {
-        if (state.isHighlightModeActive) {
-            setTimeout(() => createAnnotation(), 50);
-        } else if (state.isEraseModeActive) {
-            eraseAnnotation(event.target);
-        }
+        // **FIX:** Use a small timeout to allow the selection to finalize on touch devices
+        setTimeout(() => {
+            if (state.isHighlightModeActive) {
+                createAnnotation();
+            } else if (state.isEraseModeActive) {
+                eraseAnnotation(event.target);
+            }
+        }, 50);
     }
 
     function addNoteToSelection() {
         const note = prompt('Add a note for this annotation:');
-        if (note === null) {
+        if (note === null) { // User cancelled
             const selection = contentFrame.contentDocument.getSelection();
             if (selection) selection.removeAllRanges();
             return;
@@ -339,10 +342,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const iframeDoc = contentFrame.contentDocument;
         const selection = iframeDoc.getSelection();
         if (!selection || selection.isCollapsed) return;
+
         const range = selection.getRangeAt(0);
         const annotationId = `anno-${Date.now()}`;
-        // FIXED: Pass iframeDoc to the serialization function
         const rangeData = serializeRange(range, iframeDoc);
+
         const newAnnotation = {
             id: annotationId,
             text: selection.toString(),
@@ -350,12 +354,14 @@ document.addEventListener('DOMContentLoaded', () => {
             note: note,
             color: state.settings.activeHighlightColor
         };
+
         const annotationKey = state.currentFile;
         if (!state.annotations[annotationKey]) state.annotations[annotationKey] = [];
         state.annotations[annotationKey].push(newAnnotation);
+
         applyAnnotationToDOM(newAnnotation);
         saveAnnotations();
-        renderAnnotations();
+        renderAnnotationsForCurrentFile();
         selection.removeAllRanges();
     }
 
@@ -366,11 +372,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const annotationKey = state.currentFile;
         const fileAnnotations = state.annotations[annotationKey] || [];
         state.annotations[annotationKey] = fileAnnotations.filter(anno => anno.id !== annotationId);
+
         const parent = mark.parentNode;
         while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
         parent.removeChild(mark);
+        parent.normalize(); // Merge adjacent text nodes
+
         saveAnnotations();
-        renderAnnotations();
+        renderAnnotationsForCurrentFile();
     }
 
     function applyAnnotationToDOM(annotation) {
@@ -380,9 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const mark = iframeDoc.createElement('mark');
         mark.id = annotation.id;
         mark.className = `highlight highlight-${annotation.color}`;
-        if (annotation.note) {
-            mark.title = annotation.note;
-        }
+        if (annotation.note) mark.title = annotation.note;
         try {
             range.surroundContents(mark);
         } catch (e) {
@@ -390,13 +397,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function applyAnnotations() {
+    function applyAnnotationsForCurrentFile() {
         if (!state.currentFile) return;
         const fileAnnotations = state.annotations[state.currentFile] || [];
         fileAnnotations.forEach(applyAnnotationToDOM);
     }
 
-    function renderAnnotations() {
+    function renderAnnotationsForCurrentFile() {
         annotationsList.innerHTML = '';
         if (!state.currentFile) return;
         const fileAnnotations = state.annotations[state.currentFile] || [];
@@ -404,7 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
             annotationsList.innerHTML = '<li>No annotations for this file.</li>';
             return;
         }
-        // Sorting logic can be complex, for now we just list them
         fileAnnotations.forEach(annotation => {
             const li = document.createElement('li');
             li.dataset.annotationId = annotation.id;
@@ -415,31 +421,26 @@ document.addEventListener('DOMContentLoaded', () => {
             li.innerHTML = content;
             li.addEventListener('click', () => {
                 const targetEl = contentFrame.contentDocument.getElementById(annotation.id);
-                if (targetEl) targetEl.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
+                if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
             annotationsList.appendChild(li);
         });
     }
 
-    // --- NEW: BOOKMARKING ---
+    // --- BOOKMARKING ---
     function addBookmark() {
         if (!state.currentFile) return;
         const iframeWin = contentFrame.contentWindow;
         const iframeDoc = contentFrame.contentDocument;
 
         const scrollY = iframeWin.scrollY;
-        const docHeight = iframeDoc.body.scrollHeight;
-        const scrollPercent = Math.round((scrollY / (docHeight - iframeWin.innerHeight)) * 100);
-
-        // Find the first paragraph at the current view for a snippet
-        let snippet = `Bookmark at ${scrollPercent}%`;
+        
+        // **FIX:** More robust snippet generation
+        let snippet = `Bookmark at ${Math.round((scrollY / iframeDoc.body.scrollHeight) * 100)}%`;
         const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
         const pElement = elements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
         if (pElement) {
-            snippet = pElement.textContent.trim();
+            snippet = pElement.textContent.trim().substring(0, 100) + '...';
         }
 
         const newBookmark = {
@@ -449,17 +450,23 @@ document.addEventListener('DOMContentLoaded', () => {
             snippet: snippet
         };
 
-        if (!state.bookmarks[state.currentFile]) {
-            state.bookmarks[state.currentFile] = [];
+        if (!state.bookmarks[state.currentFile]) state.bookmarks[state.currentFile] = [];
+        
+        // **FIX:** Prevent duplicate bookmarks at the exact same spot
+        const isDuplicate = state.bookmarks[state.currentFile].some(bm => bm.scrollY === scrollY);
+        if (isDuplicate) {
+            alert("Bookmark already exists at this location.");
+            return;
         }
+
         state.bookmarks[state.currentFile].push(newBookmark);
         saveBookmarks();
-        renderBookmarks();
+        renderAllBookmarks();
     }
 
-    function renderBookmarks() {
+    function renderAllBookmarks() {
         bookmarksList.innerHTML = '';
-        const allBookmarks = Object.values(state.bookmarks).flat();
+        const allBookmarks = Object.values(state.bookmarks).flat().sort((a,b) => a.file.localeCompare(b.file));
 
         if (allBookmarks.length === 0) {
             bookmarksList.innerHTML = '<li>No bookmarks yet.</li>';
@@ -468,6 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         allBookmarks.forEach(bookmark => {
             const li = document.createElement('li');
+            li.classList.toggle('active-file', bookmark.file === state.currentFile);
             const bookTitle = bookmark.file.substring(LIBRARY_ROOT.length)
                 .replace(/\.html$/, '').replace(/_/g, ' ').replace(/\//g, ' / ');
 
@@ -476,58 +484,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="bookmark-snippet">${escapeHTML(bookmark.snippet)}</div>
             `;
             li.addEventListener('click', () => {
-                // Set the target scroll position before loading the file
                 state.targetScrollY = bookmark.scrollY;
                 loadFile(bookmark.file);
-
-                // Highlight the file in the sidebar
-                document.querySelectorAll('#file-list-container li.active').forEach(el => el.classList.remove('active'));
-                const fileLink = document.querySelector(`#file-list-container a[data-path="${bookmark.file}"]`);
-                if (fileLink) {
-                    fileLink.parentElement.classList.add('active');
-                }
             });
             bookmarksList.appendChild(li);
         });
     }
 
     // --- DATA PERSISTENCE & UTILITY FUNCTIONS ---
-    function saveSettings() {
-        localStorage.setItem('beansReaderSettings', JSON.stringify(state.settings));
-    }
-    function loadSettings() {
-        const saved = localStorage.getItem('beansReaderSettings');
-        if (saved) {
-            Object.assign(state.settings, JSON.parse(saved));
-        }
-    }
-    function saveAnnotations() {
-        localStorage.setItem('beansReaderAnnotations', JSON.stringify(state.annotations));
-    }
-    function loadAnnotations() {
-        const saved = localStorage.getItem('beansReaderAnnotations');
-        if (saved) {
-            Object.assign(state.annotations, JSON.parse(saved));
-        }
-    }
-    // New
-    function saveBookmarks() {
-        localStorage.setItem('beansReaderBookmarks', JSON.stringify(state.bookmarks));
-    }
-    // New
-    function loadBookmarks() {
-        const saved = localStorage.getItem('beansReaderBookmarks');
-        if (saved) {
-            Object.assign(state.bookmarks, JSON.parse(saved));
+    function saveData(key, data) {
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+        } catch (e) {
+            console.error("Failed to save data to localStorage", e);
         }
     }
 
-    // FIXED: This function now correctly uses the iframe's document
+    function loadData(key) {
+        try {
+            const saved = localStorage.getItem(key);
+            return saved ? JSON.parse(saved) : {};
+        } catch (e) {
+            console.error("Failed to load data from localStorage", e);
+            return {};
+        }
+    }
+
+    function saveSettings() { saveData('beansReaderSettings', state.settings); }
+    function loadSettings() { Object.assign(state.settings, loadData('beansReaderSettings')); }
+    function saveAnnotations() { saveData('beansReaderAnnotations', state.annotations); }
+    function loadAnnotations() { Object.assign(state.annotations, loadData('beansReaderAnnotations')); }
+    function saveBookmarks() { saveData('beansReaderBookmarks', state.bookmarks); }
+    function loadBookmarks() { Object.assign(state.bookmarks, loadData('beansReaderBookmarks')); }
+
     function getPathTo(node, doc) {
-        if (!node || !node.parentNode) return '';
         if (node.id) return `id("${node.id}")`;
-        // Use the passed-in document context
-        if (node === doc.body) return node.tagName.toLowerCase();
+        if (node === doc.body) return '/html/body';
         let ix = 0;
         const siblings = node.parentNode.childNodes;
         for (let i = 0; i < siblings.length; i++) {
@@ -546,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return null;
         }
     }
-    // FIXED: This function now passes the document context down
+
     function serializeRange(range, doc) {
         return {
             startContainerPath: getPathTo(range.startContainer, doc),
@@ -561,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const startContainer = getNodeByPath(rangeData.startContainerPath, doc);
             const endContainer = getNodeByPath(rangeData.endContainerPath, doc);
             if (!startContainer || !endContainer) {
-                console.error("Could not find start or end container for range", rangeData);
+                console.warn("Could not find start or end container for range", rangeData);
                 return null;
             }
             const range = doc.createRange();
@@ -576,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function escapeHTML(str) {
         const p = document.createElement("p");
-        p.appendChild(document.createTextNode(str));
+        p.textContent = str;
         return p.innerHTML;
     }
 
