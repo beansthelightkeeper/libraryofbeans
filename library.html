@@ -58,9 +58,6 @@
                                 <span>Margins</span>
                                 <input type="range" id="margin-slider" min="0" max="40" value="20" step="1">
                             </div>
-                            <button id="bookmark-gutter-toggle" title="Toggle Bookmark Gutter">
-                                <span class="full-text">Bookmark Gutter</span>
-                            </button>
                         </div>
                      </div>
 
@@ -82,20 +79,25 @@
                 </div>
                 
                 <div class="bookmarks-section">
-                    <h2><span class="full-text">Bookmarks</span><span class="mini-text">📑</span></h2>
+                    <div class="section-header-controls">
+                        <h2><span class="full-text">Bookmarks</span><span class="mini-text">📑</span></h2>
+                        <button id="clear-bookmarks-btn" class="clear-btn" title="Clear All Bookmarks">Clear All</button>
+                    </div>
                     <ul id="bookmarks-list">
                     </ul>
                 </div>
 
                 <div class="annotations-section">
-                    <h2><span class="full-text">Annotations</span><span class="mini-text">📝</span></h2>
+                     <div class="section-header-controls">
+                        <h2><span class="full-text">Annotations</span><span class="mini-text">📝</span></h2>
+                        <button id="clear-annotations-btn" class="clear-btn" title="Clear All Annotations">Clear All</button>
+                    </div>
                     <ul id="annotations-list">
                     </ul>
                 </div>
             </div> </aside>
 
         <main class="content-viewer">
-            <div id="bookmark-gutter"></div>
             <div id="welcome-message">
                 <div class="logo-graphic">
                     <div class="triangle"></div>

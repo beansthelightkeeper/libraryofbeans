@@ -16,7 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeMessage = document.getElementById('welcome-message');
     const highlightModeToggle = document.getElementById('highlight-mode-toggle');
     const eraseModeToggle = document.getElementById('erase-mode-toggle');
-    const highlightsList = document.getElementById('highlights-list');
+    const addNoteBtn = document.getElementById('add-note-btn');
+    const addBookmarkBtn = document.getElementById('add-bookmark-btn');
+    const annotationsList = document.getElementById('annotations-list');
+    const bookmarksList = document.getElementById('bookmarks-list');
+    const clearAnnotationsBtn = document.getElementById('clear-annotations-btn');
+    const clearBookmarksBtn = document.getElementById('clear-bookmarks-btn');
     const fontSizeSlider = document.getElementById('font-size-slider');
     const colorSwatches = document.getElementById('highlighter-colors');
     const doubleSpaceToggle = document.getElementById('double-space-toggle');
@@ -26,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- App State ---
     const state = {
         currentFile: null,
+        targetScrollY: null,
         isHighlightModeActive: false,
         isEraseModeActive: false,
         settings: {
@@ -37,7 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
             isRainbowFxOn: true,
             marginSize: 10,
         },
-        highlights: {},
+        annotations: {},
+        bookmarks: {},
     };
 
     // --- ICONS & COLORS ---
@@ -55,11 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIALIZATION ---
     function initialize() {
         loadSettings();
-        loadHighlights();
+        loadAnnotations();
+        loadBookmarks();
         injectDynamicStyles();
         applySettings();
         fetchAndOrganizeFiles();
         setupEventListeners();
+        renderAllBookmarks();
     }
 
     // --- DYNAMIC STYLE INJECTION ---
@@ -78,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         document.head.appendChild(style);
     }
-
+    
     // --- EVENT LISTENERS ---
     function setupEventListeners() {
         themeToggle.addEventListener('click', toggleTheme);
@@ -87,6 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
         menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
         highlightModeToggle.addEventListener('click', toggleHighlightMode);
         eraseModeToggle.addEventListener('click', toggleEraseMode);
+        addNoteBtn.addEventListener('click', addNoteToSelection);
+        addBookmarkBtn.addEventListener('click', addBookmark);
+        clearAnnotationsBtn.addEventListener('click', clearAllAnnotations);
+        clearBookmarksBtn.addEventListener('click', clearAllBookmarks);
         fontSizeSlider.addEventListener('input', handleFontSizeChange);
         colorSwatches.addEventListener('click', handleColorChange);
         doubleSpaceToggle.addEventListener('click', toggleDoubleSpacing);
@@ -110,14 +123,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateIframeStyles();
         setupIframeListeners();
-        applyHighlightsForCurrentFile();
-        renderHighlightsForCurrentFile();
+        applyAnnotationsForCurrentFile();
+        renderAnnotationsForCurrentFile();
+        renderAllBookmarks();
+
+        if (state.targetScrollY !== null) {
+            contentFrame.contentWindow.scrollTo(0, state.targetScrollY);
+            state.targetScrollY = null;
+        }
     }
 
     function setupIframeListeners() {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc) return;
         iframeDoc.addEventListener('pointerup', handleIframeInteraction);
+        iframeDoc.addEventListener('selectionchange', () => {
+            const selection = iframeDoc.getSelection();
+            addNoteBtn.disabled = !selection || selection.isCollapsed;
+        });
     }
 
     // --- SETTINGS & UI UPDATES ---
@@ -211,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 max-width: 80ch;
             }
             ${highlightStyles}
-            mark[id^="highlight-"] { cursor: pointer; }
+            mark[id^="anno-"] { cursor: pointer; }
         `;
     }
 
@@ -283,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- HIGHLIGHTING & ERASING LOGIC ---
+    // --- ANNOTATION & ERASING LOGIC ---
     function toggleHighlightMode() {
         state.isHighlightModeActive = !state.isHighlightModeActive;
         if (state.isHighlightModeActive) {
@@ -306,94 +329,201 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleIframeInteraction(event) {
         setTimeout(() => {
             if (state.isHighlightModeActive) {
-                createHighlight();
+                createAnnotation();
             } else if (state.isEraseModeActive) {
-                eraseHighlight(event.target);
+                eraseAnnotation(event.target);
             }
         }, 50);
     }
 
-    function createHighlight() {
+    function addNoteToSelection() {
+        const note = prompt('Add a note for this annotation:');
+        if (note === null) {
+            const selection = contentFrame.contentDocument.getSelection();
+            if (selection) selection.removeAllRanges();
+            return;
+        }
+        createAnnotation(note);
+    }
+
+    function createAnnotation(note = '') {
         const iframeDoc = contentFrame.contentDocument;
         const selection = iframeDoc.getSelection();
         if (!selection || selection.isCollapsed) return;
 
         const range = selection.getRangeAt(0);
-        const highlightId = `highlight-${Date.now()}`;
+        const annotationId = `anno-${Date.now()}`;
         const rangeData = serializeRange(range, iframeDoc);
 
-        const newHighlight = {
-            id: highlightId,
+        const newAnnotation = {
+            id: annotationId,
             text: selection.toString(),
             rangeData,
+            note: note,
             color: state.settings.activeHighlightColor
         };
 
-        const highlightKey = state.currentFile;
-        if (!state.highlights[highlightKey]) state.highlights[highlightKey] = [];
-        state.highlights[highlightKey].push(newHighlight);
+        const annotationKey = state.currentFile;
+        if (!state.annotations[annotationKey]) state.annotations[annotationKey] = [];
+        state.annotations[annotationKey].push(newAnnotation);
 
-        applyHighlightToDOM(newHighlight);
-        saveHighlights();
-        renderHighlightsForCurrentFile();
+        applyAnnotationToDOM(newAnnotation);
+        saveAnnotations();
+        renderAnnotationsForCurrentFile();
         selection.removeAllRanges();
     }
 
-    function eraseHighlight(target) {
+    function eraseAnnotation(target) {
         const mark = target.closest('mark');
-        if (!mark || !mark.id.startsWith('highlight-')) return;
-        const highlightId = mark.id;
-        const highlightKey = state.currentFile;
-        const fileHighlights = state.highlights[highlightKey] || [];
-        state.highlights[highlightKey] = fileHighlights.filter(h => h.id !== highlightId);
+        if (!mark || !mark.id.startsWith('anno-')) return;
+        const annotationId = mark.id;
+        const annotationKey = state.currentFile;
+        const fileAnnotations = state.annotations[annotationKey] || [];
+        state.annotations[annotationKey] = fileAnnotations.filter(anno => anno.id !== annotationId);
 
         const parent = mark.parentNode;
         while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
         parent.removeChild(mark);
         parent.normalize();
 
-        saveHighlights();
-        renderHighlightsForCurrentFile();
+        saveAnnotations();
+        renderAnnotationsForCurrentFile();
     }
 
-    function applyHighlightToDOM(highlight) {
+    function applyAnnotationToDOM(annotation) {
         const iframeDoc = contentFrame.contentDocument;
-        const range = deserializeRange(highlight.rangeData, iframeDoc);
+        const range = deserializeRange(annotation.rangeData, iframeDoc);
         if (!range) return;
         const mark = iframeDoc.createElement('mark');
-        mark.id = highlight.id;
-        mark.className = `highlight highlight-${highlight.color}`;
+        mark.id = annotation.id;
+        mark.className = `highlight highlight-${annotation.color}`;
+        if (annotation.note) mark.title = annotation.note;
         try {
             range.surroundContents(mark);
         } catch (e) {
-            console.error("Error applying highlight:", e, highlight);
+            console.error("Error applying annotation:", e, annotation);
         }
     }
 
-    function applyHighlightsForCurrentFile() {
+    function applyAnnotationsForCurrentFile() {
         if (!state.currentFile) return;
-        const fileHighlights = state.highlights[state.currentFile] || [];
-        fileHighlights.forEach(applyHighlightToDOM);
+        const fileAnnotations = state.annotations[state.currentFile] || [];
+        fileAnnotations.forEach(applyAnnotationToDOM);
     }
 
-    function renderHighlightsForCurrentFile() {
-        highlightsList.innerHTML = '';
+    function renderAnnotationsForCurrentFile() {
+        annotationsList.innerHTML = '';
         if (!state.currentFile) return;
-        const fileHighlights = state.highlights[state.currentFile] || [];
-        if (fileHighlights.length === 0) {
-            highlightsList.innerHTML = '<li>No highlights for this file.</li>';
+        const fileAnnotations = state.annotations[state.currentFile] || [];
+        if (fileAnnotations.length === 0) {
+            annotationsList.innerHTML = '<li>No annotations for this file.</li>';
             return;
         }
-        fileHighlights.forEach(highlight => {
+        fileAnnotations.forEach(annotation => {
             const li = document.createElement('li');
-            li.dataset.highlightId = highlight.id;
-            li.innerHTML = `<div class="highlight-text">${escapeHTML(highlight.text)}</div>`;
+            li.dataset.annotationId = annotation.id;
+            let content = `<div class="annotation-text">${escapeHTML(annotation.text)}</div>`;
+            if (annotation.note) {
+                content = `<div class="annotation-note">${escapeHTML(annotation.note)}</div>` + content;
+            }
+            li.innerHTML = content;
             li.addEventListener('click', () => {
-                const targetEl = contentFrame.contentDocument.getElementById(highlight.id);
+                const targetEl = contentFrame.contentDocument.getElementById(annotation.id);
                 if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
-            highlightsList.appendChild(li);
+            annotationsList.appendChild(li);
         });
+    }
+
+    function clearAllAnnotations() {
+        if (confirm("Are you sure you want to delete all annotations for all files? This cannot be undone.")) {
+            state.annotations = {};
+            saveAnnotations();
+            renderAnnotationsForCurrentFile();
+            // Also remove marks from the current iframe
+            const iframeDoc = contentFrame.contentDocument;
+            if (iframeDoc) {
+                iframeDoc.querySelectorAll('mark[id^="anno-"]').forEach(mark => {
+                    const parent = mark.parentNode;
+                    while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+                    parent.removeChild(mark);
+                    parent.normalize();
+                });
+            }
+        }
+    }
+
+    // --- BOOKMARKING ---
+    function addBookmark() {
+        if (!state.currentFile) return;
+        const iframeWin = contentFrame.contentWindow;
+        const iframeDoc = contentFrame.contentDocument;
+        const scrollY = iframeWin.scrollY;
+        
+        let snippet = `Bookmark at ${Math.round((scrollY / iframeDoc.body.scrollHeight) * 100)}%`;
+        const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
+        const pElement = elements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
+        if (pElement) {
+            snippet = pElement.textContent.trim().substring(0, 100) + '...';
+        }
+
+        const newBookmark = {
+            id: `bookmark-${Date.now()}`,
+            file: state.currentFile,
+            scrollY: scrollY,
+            snippet: snippet
+        };
+
+        if (!state.bookmarks[state.currentFile]) state.bookmarks[state.currentFile] = [];
+        
+        const isDuplicate = state.bookmarks[state.currentFile].some(bm => bm.scrollY === scrollY);
+        if (isDuplicate) {
+            alert("Bookmark already exists at this location.");
+            return;
+        }
+
+        state.bookmarks[state.currentFile].push(newBookmark);
+        saveBookmarks();
+        renderAllBookmarks();
+    }
+
+    function renderAllBookmarks() {
+        bookmarksList.innerHTML = '';
+        const allBookmarks = Object.values(state.bookmarks).flat().sort((a,b) => a.file.localeCompare(b.file));
+
+        if (allBookmarks.length === 0) {
+            bookmarksList.innerHTML = '<li>No bookmarks yet.</li>';
+            return;
+        }
+
+        allBookmarks.forEach(bookmark => {
+            const li = document.createElement('li');
+            li.classList.toggle('active-file', bookmark.file === state.currentFile);
+            const bookTitle = bookmark.file.substring(LIBRARY_ROOT.length)
+                .replace(/\.html$/, '').replace(/_/g, ' ').replace(/\//g, ' / ');
+
+            li.innerHTML = `
+                <div class="bookmark-title">${bookTitle}</div>
+                <div class="bookmark-snippet">${escapeHTML(bookmark.snippet)}</div>
+            `;
+            li.addEventListener('click', () => {
+                state.targetScrollY = bookmark.scrollY;
+                if (state.currentFile !== bookmark.file) {
+                    loadFile(bookmark.file);
+                } else {
+                    contentFrame.contentWindow.scrollTo({ top: bookmark.scrollY, behavior: 'smooth' });
+                }
+            });
+            bookmarksList.appendChild(li);
+        });
+    }
+
+    function clearAllBookmarks() {
+        if (confirm("Are you sure you want to delete all bookmarks? This cannot be undone.")) {
+            state.bookmarks = {};
+            saveBookmarks();
+            renderAllBookmarks();
+        }
     }
 
     // --- DATA PERSISTENCE & UTILITY FUNCTIONS ---
@@ -417,8 +547,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveSettings() { saveData('beansReaderSettings', state.settings); }
     function loadSettings() { Object.assign(state.settings, loadData('beansReaderSettings')); }
-    function saveHighlights() { saveData('beansReaderHighlights', state.highlights); }
-    function loadHighlights() { Object.assign(state.highlights, loadData('beansReaderHighlights')); }
+    function saveAnnotations() { saveData('beansReaderAnnotations', state.annotations); }
+    function loadAnnotations() { Object.assign(state.annotations, loadData('beansReaderAnnotations')); }
+    function saveBookmarks() { saveData('beansReaderBookmarks', state.bookmarks); }
+    function loadBookmarks() { Object.assign(state.bookmarks, loadData('beansReaderBookmarks')); }
 
     function getPathTo(node, doc) {
         if (node.nodeType === Node.ELEMENT_NODE) {
