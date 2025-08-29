@@ -18,7 +18,6 @@
     <div class="container">
         <aside class="sidebar">
             <header class="sidebar-header">
-                <h1 class="logo">Library of Beans</h1>
                 <div class="main-controls">
                     <a href="index.html" class="home-link" title="Return to Archives">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
@@ -33,6 +32,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
                 </div>
+                <h1 class="logo">Library of Beans</h1>
             </header>
 
             <div class="sidebar-content">
@@ -56,7 +56,7 @@
                         <div class="layout-controls">
                             <div class="slider-container">
                                 <span>Margins</span>
-                                <input type="range" id="margin-slider" min="0" max="40" value="20" step="1">
+                                <input type="range" id="margin-slider" min="0" max="40" value="10" step="1">
                             </div>
                         </div>
                      </div>
@@ -95,7 +95,8 @@
                     <ul id="annotations-list">
                     </ul>
                 </div>
-            </div> </aside>
+            </div>
+        </aside>
 
         <main class="content-viewer">
             <div id="welcome-message">
@@ -112,28 +113,29 @@
     </div>
 
     <div class="bottom-toolbar">
-        <div class="tool-group">
+        <div class="tool-group selection-actions">
             <button id="add-bookmark-btn" title="Bookmark Current Location">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                <span class="toolbar-text">Bookmark</span>
             </button>
             <button id="highlight-mode-toggle" title="Toggle Continuous Highlighting">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                <span class="toolbar-text">Highlight</span>
             </button>
             <button id="erase-mode-toggle" title="Toggle Erase Mode">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5v6h6M21.5 21.5v-6h-6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.2"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21H7z"></path><path d="M5 12.5 12 19.5"></path><path d="M22 11.5 12.5 2"></path></svg>
+                <span class="toolbar-text">Erase</span>
             </button>
             <button id="add-note-btn" disabled title="Add Note to Selection">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
-                <span>Add Note</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path><path d="M20 14.5V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6.5"></path></svg>
+                <span class="toolbar-text">Add Note</span>
             </button>
         </div>
-        <div class="tool-group">
-             <div id="highlighter-colors" class="color-palette">
-                 <button class="color-swatch" data-color="yellow" title="Yellow"></button>
-                 <button class="color-swatch" data-color="pink" title="Pink"></button>
-                 <button class="color-swatch" data-color="green" title="Green"></button>
-                 <button class="color-swatch" data-color="blue" title="Blue"></button>
-             </div>
+         <div id="highlighter-colors" class="color-palette">
+             <button class="color-swatch" data-color="yellow" title="Yellow"></button>
+             <button class="color-swatch" data-color="pink" title="Pink"></button>
+             <button class="color-swatch" data-color="green" title="Green"></button>
+             <button class="color-swatch" data-color="blue" title="Blue"></button>
          </div>
     </div>
 

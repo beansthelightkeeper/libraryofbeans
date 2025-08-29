@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         green: '--highlight-green',
         blue: '--highlight-blue',
     };
+    const HIEROGLYPHS = ['𓂀', '⟁', '∞', '𝄠', '𝨁', '𝨄', '🃟', '🂡', '🙨', '☥', '♅', '♆', '⚚', '⚛', '⚜', '☤', '☧', '⚳', '⬙', '⏣'];
 
     // --- INITIALIZATION ---
     function initialize() {
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchAndOrganizeFiles();
         setupEventListeners();
         renderAllBookmarks();
+        toggleReaderTools(false); // Disable tools on startup
     }
 
     // --- DYNAMIC STYLE INJECTION ---
@@ -79,9 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .color-palette.disabled {
                 opacity: 0.5;
                 filter: grayscale(80%);
-                cursor: not-allowed;
-            }
-            .color-palette.disabled .color-swatch {
                 pointer-events: none;
             }
         `;
@@ -111,8 +110,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function onIframeLoad() {
+        if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) {
+            // Don't process PDFs or empty iframes
+            return;
+        }
+
         const iframeDoc = contentFrame.contentDocument;
-        if (!iframeDoc || !state.currentFile) return;
+        if (!iframeDoc) return;
 
         const base = iframeDoc.createElement('base');
         const pathParts = state.currentFile.split('/');
@@ -155,6 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('no-fx', !state.settings.isRainbowFxOn);
 
         colorSwatches.classList.toggle('disabled', !state.isHighlightModeActive);
+        
+        highlightModeToggle.classList.toggle('active', state.isHighlightModeActive);
+        eraseModeToggle.classList.toggle('active', state.isEraseModeActive);
 
         document.querySelectorAll('.color-swatch').forEach(swatch => {
             swatch.classList.toggle('active', swatch.dataset.color === state.settings.activeHighlightColor);
@@ -208,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateIframeStyles() {
+        if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) return;
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc || !iframeDoc.head) return;
         let style = iframeDoc.getElementById('dynamic-reader-styles');
@@ -246,10 +254,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
             const data = await response.json();
             const flatFileList = data.tree
-                .filter(item => item.type === 'blob' && item.path.startsWith(LIBRARY_ROOT) && item.path.endsWith('.html'))
+                .filter(item => item.type === 'blob' && (item.path.endsWith('.html') || item.path.endsWith('.pdf')) && item.path.startsWith(LIBRARY_ROOT))
                 .map(item => {
                     const relativePath = item.path.substring(LIBRARY_ROOT.length);
-                    const displayName = relativePath.replace(/\.html$/, '').replace(/_/g, ' ').replace(/\//g, ' / ');
+                    const displayName = relativePath.replace(/\.(html|pdf)$/i, '').replace(/_/g, ' ').replace(/\//g, ' / ');
                     return { name: displayName, path: item.path };
                 })
                 .sort((a, b) => a.name.localeCompare(b.name));
@@ -258,6 +266,16 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Failed to fetch files:", error);
             fileListContainer.innerHTML = '<p class="error">Could not load library.</p>';
         }
+    }
+    
+    function getIconForText(text) {
+        let hash = 0;
+        if (text.length === 0) return HIEROGLYPHS[0];
+        for (let i = 0; i < text.length; i++) {
+            hash = (hash << 5) - hash + text.charCodeAt(i);
+            hash |= 0; // Convert to 32bit integer
+        }
+        return HIEROGLYPHS[Math.abs(hash) % HIEROGLYPHS.length];
     }
 
     function renderFileList(files) {
@@ -268,13 +286,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const a = document.createElement('a');
                 a.href = '#';
                 a.dataset.path = file.path;
-                a.textContent = file.name;
+                
+                const icon = getIconForText(file.name);
+                a.innerHTML = `<span class="file-icon" title="${file.name}">${icon}</span><span class="file-name">${file.name}</span>`;
+                
                 a.onclick = (e) => { e.preventDefault(); loadFile(file.path); };
                 li.appendChild(a);
                 ul.appendChild(li);
             });
         } else {
-            ul.innerHTML = '<li>No HTML files found.</li>';
+            ul.innerHTML = '<li>No HTML or PDF files found.</li>';
         }
         fileListContainer.innerHTML = '';
         fileListContainer.appendChild(ul);
@@ -284,18 +305,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.currentFile === fullPath) return;
         state.currentFile = fullPath;
         welcomeMessage.style.display = 'none';
-        document.body.classList.add('file-loaded');
-
+        
         document.querySelectorAll('#file-list-container li.active').forEach(el => el.classList.remove('active'));
         const fileLink = document.querySelector(`#file-list-container a[data-path="${fullPath}"]`);
         if (fileLink) fileLink.parentElement.classList.add('active');
 
+        const isPdf = fullPath.toLowerCase().endsWith('.pdf');
+        toggleReaderTools(!isPdf);
+
         try {
             const url = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${fullPath}`;
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const htmlContent = await response.text();
-            contentFrame.srcdoc = htmlContent;
+            if(isPdf) {
+                contentFrame.srcdoc = '';
+                contentFrame.src = url;
+            } else {
+                contentFrame.src = 'about:blank';
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const htmlContent = await response.text();
+                contentFrame.srcdoc = htmlContent;
+            }
         } catch (error) {
             console.error("Failed to load file content:", error);
             contentFrame.srcdoc = `<html><body><h2>Failed to load content</h2><p>${error}</p></body></html>`;
@@ -304,25 +333,45 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.innerWidth <= 768) {
             sidebar.classList.remove('open');
         }
+        
+        renderAnnotationsForCurrentFile();
+        renderAllBookmarks();
     }
+    
+    function toggleReaderTools(enabled) {
+        const toolsToToggle = [
+            highlightModeToggle, eraseModeToggle, addNoteBtn, addBookmarkBtn, 
+            fontSizeSlider, doubleSpaceToggle, marginSlider
+        ];
+        
+        toolsToToggle.forEach(tool => {
+            if(tool) tool.disabled = !enabled;
+        });
+
+        if (enabled) {
+            colorSwatches.classList.remove('disabled');
+        } else {
+            colorSwatches.classList.add('disabled');
+            // Deactivate modes if tools are disabled
+            state.isHighlightModeActive = false;
+            state.isEraseModeActive = false;
+            applySettings();
+        }
+    }
+
 
     // --- ANNOTATION & ERASING LOGIC ---
     function toggleHighlightMode() {
         state.isHighlightModeActive = !state.isHighlightModeActive;
         if (state.isHighlightModeActive) {
             state.isEraseModeActive = false;
-            state.settings.activeHighlightColor = state.settings.activeHighlightColor || 'yellow';
         }
-        highlightModeToggle.classList.toggle('active', state.isHighlightModeActive);
-        eraseModeToggle.classList.remove('active');
         applySettings();
     }
 
     function toggleEraseMode() {
         state.isEraseModeActive = !state.isEraseModeActive;
         if (state.isEraseModeActive) state.isHighlightModeActive = false;
-        eraseModeToggle.classList.toggle('active', state.isEraseModeActive);
-        highlightModeToggle.classList.remove('active');
         applySettings();
     }
 
@@ -392,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyAnnotationToDOM(annotation) {
         const iframeDoc = contentFrame.contentDocument;
+        if(!iframeDoc) return;
         const range = deserializeRange(annotation.rangeData, iframeDoc);
         if (!range) return;
         const mark = iframeDoc.createElement('mark');
@@ -413,7 +463,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderAnnotationsForCurrentFile() {
         annotationsList.innerHTML = '';
-        if (!state.currentFile) return;
+        if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) {
+            annotationsList.innerHTML = '<li>Annotations unavailable for PDFs.</li>';
+            return;
+        };
         const fileAnnotations = state.annotations[state.currentFile] || [];
         if (fileAnnotations.length === 0) {
             annotationsList.innerHTML = '<li>No annotations for this file.</li>';
@@ -440,7 +493,6 @@ document.addEventListener('DOMContentLoaded', () => {
             state.annotations = {};
             saveAnnotations();
             renderAnnotationsForCurrentFile();
-            // Also remove marks from the current iframe
             const iframeDoc = contentFrame.contentDocument;
             if (iframeDoc) {
                 iframeDoc.querySelectorAll('mark[id^="anno-"]').forEach(mark => {
@@ -455,17 +507,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- BOOKMARKING ---
     function addBookmark() {
-        if (!state.currentFile) return;
+        if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) return;
         const iframeWin = contentFrame.contentWindow;
         const iframeDoc = contentFrame.contentDocument;
         const scrollY = iframeWin.scrollY;
         
         let snippet = `Bookmark at ${Math.round((scrollY / iframeDoc.body.scrollHeight) * 100)}%`;
-        const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
-        const pElement = elements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
-        if (pElement) {
-            snippet = pElement.textContent.trim().substring(0, 100) + '...';
-        }
+        try { // elementFromPoint can fail on weird documents
+             const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
+             const pElement = elements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
+             if (pElement) {
+                 snippet = pElement.textContent.trim().substring(0, 100) + '...';
+             }
+        } catch(e) { /* ignore */ }
+
 
         const newBookmark = {
             id: `bookmark-${Date.now()}`,
@@ -500,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const li = document.createElement('li');
             li.classList.toggle('active-file', bookmark.file === state.currentFile);
             const bookTitle = bookmark.file.substring(LIBRARY_ROOT.length)
-                .replace(/\.html$/, '').replace(/_/g, ' ').replace(/\//g, ' / ');
+                .replace(/\.(html|pdf)$/i, '').replace(/_/g, ' ').replace(/\//g, ' / ');
 
             li.innerHTML = `
                 <div class="bookmark-title">${bookTitle}</div>
@@ -511,7 +566,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (state.currentFile !== bookmark.file) {
                     loadFile(bookmark.file);
                 } else {
-                    contentFrame.contentWindow.scrollTo({ top: bookmark.scrollY, behavior: 'smooth' });
+                    if (contentFrame.contentWindow) {
+                        contentFrame.contentWindow.scrollTo({ top: bookmark.scrollY, behavior: 'smooth' });
+                    }
                 }
             });
             bookmarksList.appendChild(li);
@@ -553,28 +610,28 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadBookmarks() { Object.assign(state.bookmarks, loadData('beansReaderBookmarks')); }
 
     function getPathTo(node, doc) {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-            if (node.id) return `id("${node.id}")`;
-            if (node === doc.body) return '/html/body';
-
-            let ix = 1;
-            let sibling = node.previousSibling;
-            while (sibling) {
-                if (sibling.nodeType === Node.ELEMENT_NODE && sibling.tagName === node.tagName) {
-                    ix++;
+        if (node.id) return `//*[@id='${node.id}']`;
+        if (node === doc.body) return '/html/body';
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+            let nodeIndex = 0;
+            let child = node;
+            while ((child = child.previousSibling) != null) {
+                if(child.nodeType === node.nodeType && child.nodeName === node.nodeName) {
+                    nodeIndex++;
                 }
-                sibling = sibling.previousSibling;
             }
-            return `${getPathTo(node.parentNode, doc)}/${node.tagName.toLowerCase()}[${ix}]`;
+            return `${getPathTo(node.parentNode, doc)}/text()[${nodeIndex + 1}]`;
         }
 
-        const parent = node.parentNode;
-        if (!parent) return '';
-        const parentPath = getPathTo(parent, doc);
-        const children = Array.from(parent.childNodes);
-        const nodeIndex = children.indexOf(node) + 1;
-        
-        return `${parentPath}/node()[${nodeIndex}]`;
+        let ix = 1;
+        let sibling = node.previousSibling;
+        while (sibling) {
+            if (sibling.nodeType === Node.ELEMENT_NODE && sibling.tagName === node.tagName) {
+                ix++;
+            }
+            sibling = sibling.previousSibling;
+        }
+        return `${getPathTo(node.parentNode, doc)}/${node.tagName.toLowerCase()}[${ix}]`;
     }
 
     function getNodeByPath(path, doc) {
@@ -585,7 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return null;
         }
     }
-
+    
     function serializeRange(range, doc) {
         return {
             startContainerPath: getPathTo(range.startContainer, doc),
