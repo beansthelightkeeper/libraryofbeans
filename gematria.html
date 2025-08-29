@@ -11,12 +11,18 @@
     <link rel="stylesheet" href="gematria.css">
 </head>
 <body data-theme="dark">
+    <nav class="main-nav">
+        <div class="nav-links">
+            <a href="gematria.html" class="active">Calculator</a>
+            <a href="delta.html">Delta</a>
+            <a href="statistics.html">Statistics</a>
+            <a href="ciphers.html">Ciphers</a>
+        </div>
+        <button id="theme-toggle" class="theme-toggle-button"></button>
+    </nav>
+
     <div class="container">
         <header class="site-header">
-            <div class="header-top-row">
-                <h1>Gematria Database</h1>
-                <button id="theme-toggle" class="theme-toggle-button"></button>
-            </div>
              <div class="input-area">
                 <input type="text" id="gematria-input" placeholder="Type a word, phrase, or number...">
                 <button id="save-button" disabled>Save</button>
@@ -62,11 +68,7 @@
         </main>
 
         <footer class="site-footer">
-             <a href="gematria.html">Calculator</a> |
-             <a href="statistics.html">Statistics</a> | 
-             <a href="unfold.html">Unfold</a> |
-             <a href="delta.html">Delta</a> |
-             <a href="scanner.html">Scanner</a>
+             <!-- Footer content removed to keep focus on main nav -->
         </footer>
     </div>
 
