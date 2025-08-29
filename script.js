@@ -124,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn("PDF.js not loaded, falling back to native PDF viewer");
             contentFrame.src = url;
             contentFrame.srcdoc = `<html><body><h2>Loading PDF in native viewer...</h2><p>If this fails, ensure the PDF exists at <a href="${url}">${url}</a></p></body></html>`;
+            toggleReaderTools(false); // Disable tools for native viewer
             return;
         }
 
@@ -142,6 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const canvas = iframeDoc.createElement('canvas');
                 canvas.style.display = 'block';
                 canvas.style.margin = 'auto';
+                canvas.dataset.page = pageNum; // For annotation reference
                 const context = canvas.getContext('2d');
 
                 const scale = 1.5; // Adjust scale for readability
@@ -156,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 container.style.height = `${viewport.height}px`;
                 container.style.margin = 'auto';
                 container.style.setProperty('--scale-factor', scale);
+                container.dataset.page = pageNum;
                 iframeDoc.body.appendChild(container);
                 canvas.style.position = 'absolute';
                 container.appendChild(canvas);
@@ -181,10 +184,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 await textLayer.render();
             }
+
+            // Apply annotations after rendering
+            applyAnnotationsForCurrentFile();
+            setupIframeListeners();
         } catch (error) {
             console.error("Error rendering PDF:", error);
-            contentFrame.src = url; // Fallback to native PDF viewer
+            contentFrame.src = url;
             contentFrame.srcdoc = `<html><body><h2>Failed to render PDF</h2><p>Error: ${error.message}. Trying native viewer... <a href="${url}">Open PDF directly</a></p></body></html>`;
+            toggleReaderTools(false); // Disable tools for native viewer
         }
     }
 
@@ -192,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state.currentFile) return;
 
         if (state.currentFile.toLowerCase().endsWith('.pdf')) {
-            return; // PDF rendering handled in loadFile
+            return; // PDF rendering handled in renderPdfInIframe
         }
 
         const iframeDoc = contentFrame.contentDocument;
@@ -235,8 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
         iframeDoc.addEventListener('pointerup', handleIframeInteraction);
         iframeDoc.addEventListener('selectionchange', () => {
             const selection = iframeDoc.getSelection();
-            addNoteBtn.disabled = !selection || selection.isCollapsed;
-            highlightModeToggle.disabled = !selection || selection.isCollapsed;
+            const isValidSelection = selection && !selection.isCollapsed;
+            addNoteBtn.disabled = !isValidSelection;
+            highlightModeToggle.disabled = !isValidSelection;
         });
     }
 
@@ -404,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (fileLink) fileLink.parentElement.classList.add('active');
 
         const isPdf = fullPath.toLowerCase().endsWith('.pdf');
-        toggleReaderTools(!isPdf);
+        toggleReaderTools(isPdf ? window['pdfjs-dist/build/pdf'] : true); // Enable tools for PDFs if PDF.js is loaded
 
         try {
             const url = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${fullPath}`;
@@ -500,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Get all ranges
+        const isPdf = state.currentFile.toLowerCase().endsWith('.pdf');
         const ranges = [];
         for (let i = 0; i < selection.rangeCount; i++) {
             ranges.push(selection.getRangeAt(i));
@@ -515,9 +524,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const endContainer = range.endContainer;
 
             // Validate selection
-            if (startContainer.nodeType !== Node.TEXT_NODE || endContainer.nodeType !== Node.TEXT_NODE) {
-                console.warn("Skipping annotation for non-text selection:", range);
-                continue;
+            if (isPdf) {
+                // PDF: Ensure selection is within textLayer divs
+                const textLayer = startContainer.closest('.textLayer');
+                if (!textLayer || !endContainer.closest('.textLayer')) {
+                    console.warn("Skipping PDF annotation: Selection not in textLayer");
+                    continue;
+                }
+            } else {
+                // HTML: Ensure selection is text nodes
+                if (startContainer.nodeType !== Node.TEXT_NODE || endContainer.nodeType !== Node.TEXT_NODE) {
+                    console.warn("Skipping HTML annotation: Non-text selection");
+                    continue;
+                }
             }
 
             const rangeData = serializeRange(range, iframeDoc);
@@ -526,13 +545,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 text: range.toString(),
                 rangeData,
                 note: note,
-                color: state.settings.activeHighlightColor
+                color: state.settings.activeHighlightColor,
+                isPdf: isPdf,
+                page: isPdf ? startContainer.closest('[data-page]')?.dataset.page : null
             };
             annotations.push(annotation);
         }
 
         if (annotations.length === 0) {
-            alert("Cannot highlight this selection. Please select plain text within a single paragraph.");
+            alert("Cannot highlight this selection. For PDFs, select text within a page's text layer. For HTML, select plain text within a single paragraph.");
             selection.removeAllRanges();
             return;
         }
@@ -569,19 +590,36 @@ document.addEventListener('DOMContentLoaded', () => {
         mark.className = `highlight highlight-${annotation.color}`;
         if (annotation.note) mark.title = annotation.note;
 
-        try {
-            range.surroundContents(mark);
-        } catch (e) {
-            console.warn("Falling back to insertNode for annotation:", e);
-            const fragment = range.extractContents();
-            mark.appendChild(fragment);
-            range.insertNode(mark);
-            iframeDoc.normalize();
+        if (annotation.isPdf) {
+            // PDF: Apply highlight to textLayer divs
+            const textLayer = range.startContainer.closest('.textLayer');
+            if (!textLayer) return;
+            try {
+                const span = iframeDoc.createElement('span');
+                span.className = `highlight highlight-${annotation.color}`;
+                span.id = annotation.id;
+                if (annotation.note) span.title = annotation.note;
+                range.surroundContents(span);
+                textLayer.appendChild(span);
+            } catch (e) {
+                console.warn("Failed to apply PDF annotation:", e);
+            }
+        } else {
+            // HTML: Standard highlight
+            try {
+                range.surroundContents(mark);
+            } catch (e) {
+                console.warn("Falling back to insertNode for HTML annotation:", e);
+                const fragment = range.extractContents();
+                mark.appendChild(fragment);
+                range.insertNode(mark);
+                iframeDoc.normalize();
+            }
         }
     }
 
     function eraseAnnotation(target) {
-        const mark = target.closest('mark');
+        const mark = target.closest('.highlight');
         if (!mark || !mark.id.startsWith('anno-')) return;
         const annotationId = mark.id;
         const annotationKey = state.currentFile;
@@ -598,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function applyAnnotationsForCurrentFile() {
-        if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) return;
+        if (!state.currentFile) return;
         const fileAnnotations = state.annotations[state.currentFile] || [];
         fileAnnotations.forEach(annotation => {
             try {
@@ -611,8 +649,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderAnnotationsForCurrentFile() {
         annotationsList.innerHTML = '';
-        if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) {
-            annotationsList.innerHTML = '<li>Annotations unavailable for PDFs.</li>';
+        if (!state.currentFile) {
+            annotationsList.innerHTML = '<li>No file selected.</li>';
             return;
         }
         const fileAnnotations = state.annotations[state.currentFile] || [];
@@ -627,10 +665,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (annotation.note) {
                 content = `<div class="annotation-note">${escapeHTML(annotation.note)}</div>` + content;
             }
+            if (annotation.isPdf && annotation.page) {
+                content = `<div class="annotation-page">Page ${annotation.page}</div>` + content;
+            }
             li.innerHTML = content;
             li.addEventListener('click', () => {
                 const targetEl = contentFrame.contentDocument.getElementById(annotation.id);
-                if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (targetEl) {
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (annotation.isPdf) {
+                        const pageContainer = targetEl.closest('[data-page]');
+                        if (pageContainer) {
+                            contentFrame.contentWindow.scrollTo(0, pageContainer.offsetTop);
+                        }
+                    }
+                }
             });
             annotationsList.appendChild(li);
         });
@@ -643,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderAnnotationsForCurrentFile();
             const iframeDoc = contentFrame.contentDocument;
             if (iframeDoc) {
-                iframeDoc.querySelectorAll('mark[id^="anno-"]').forEach(mark => {
+                iframeDoc.querySelectorAll('.highlight[id^="anno-"]').forEach(mark => {
                     const parent = mark.parentNode;
                     while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
                     parent.removeChild(mark);
@@ -655,17 +704,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- BOOKMARKING ---
     function addBookmark() {
-        if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) return;
+        if (!state.currentFile) return;
         const iframeWin = contentFrame.contentWindow;
         const iframeDoc = contentFrame.contentDocument;
         const scrollY = iframeWin.scrollY;
         
         let snippet = `Bookmark at ${Math.round((scrollY / iframeDoc.body.scrollHeight) * 100)}%`;
         try {
-            const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
-            const pElement = elements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
-            if (pElement) {
-                snippet = pElement.textContent.trim().substring(0, 100) + '...';
+            const isPdf = state.currentFile.toLowerCase().endsWith('.pdf');
+            if (isPdf) {
+                const pageContainer = Array.from(iframeDoc.querySelectorAll('[data-page]'))
+                    .find(container => container.offsetTop <= scrollY && container.offsetTop + container.offsetHeight > scrollY);
+                if (pageContainer) {
+                    snippet = `Bookmark on Page ${pageContainer.dataset.page}`;
+                }
+            } else {
+                const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
+                const pElement = elements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
+                if (pElement) {
+                    snippet = pElement.textContent.trim().substring(0, 100) + '...';
+                }
             }
         } catch (e) { /* ignore */ }
 
@@ -767,7 +825,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     nodeIndex++;
                 }
             }
-            return `${getPathTo(node.parentNode, doc)}/text()[${nodeIndex + 1}]`;
+            const parentPath = getPathTo(node.parentNode, doc);
+            return `${parentPath}/text()[${nodeIndex + 1}]`;
         }
 
         let ix = 1;
