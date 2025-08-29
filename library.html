@@ -12,8 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
-    <!-- PDF.js library for rendering PDFs -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <!-- PDF.js library for rendering PDFs - Updated to a compatible version -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
     <style>
         /* --- GOOGLE FONT IMPORT --- */
@@ -824,7 +824,7 @@
                     overflow: hidden;
                     opacity: 1; 
                 }
-                .textLayer > span {
+                .textLayer > span, .textLayer > br {
                     color: transparent;
                     position: absolute;
                     white-space: pre;
@@ -837,8 +837,8 @@
             
             const viewerContainer = iframeDoc.getElementById('viewer-container');
             
-            // Set worker source for PDF.js
-            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
+            // Set worker source for PDF.js - Updated to a compatible version
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
             try {
                 const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
@@ -1210,3 +1210,4 @@
     </script>
 </body>
 </html>
+
