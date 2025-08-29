@@ -51,6 +51,14 @@
             <div id="db-matches-container">
                 <!-- Dynamic match tables will be injected here -->
             </div>
+
+            <section class="corpus-uploader">
+                <h3>Corpus Uploader</h3>
+                <p>Upload a .txt or .md file to add its lines to the database. Each line will be treated as a separate phrase.</p>
+                <input type="file" id="file-input" accept=".txt,.md">
+                <button id="upload-button">Upload to Database</button>
+                <div id="upload-status"></div>
+            </section>
         </main>
 
         <footer class="site-footer">
@@ -77,3 +85,4 @@
     <script type="module" src="gematria.js"></script>
 </body>
 </html>
+

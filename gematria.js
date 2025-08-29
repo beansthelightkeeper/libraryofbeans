@@ -1,7 +1,7 @@
 // --- Firebase Imports ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, limit, orderBy, doc, updateDoc, increment, writeBatch, or } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, getDocs, limit, writeBatch, or, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // --- GLOBAL STATE & CONSTANTS ---
 const CIPHERS = {};
@@ -105,8 +105,8 @@ buildGematriaCiphers();
 
 // --- THEME MANAGEMENT ---
 const ICONS = {
-    sun: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`,
-    moon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
+    sun: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`,
+    moon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
 };
 
 function applyTheme(theme, themeToggleButton) {
@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // --- CALCULATOR PAGE LOGIC ---
 function initCalculatorPage(db) {
-    const gematriaCollectionRef = collection(db, "entries"); // Changed collection name for clarity
+    const gematriaCollectionRef = collection(db, "entries");
     const gematriaInput = document.getElementById('gematria-input');
     const resultsSummary = document.getElementById('results-summary');
     const breakdownContainer = document.getElementById('breakdown-container');
@@ -151,6 +151,9 @@ function initCalculatorPage(db) {
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
     const modalClose = modal.querySelector('.modal-close-button');
+    const fileInput = document.getElementById('file-input');
+    const uploadButton = document.getElementById('upload-button');
+    const uploadStatus = document.getElementById('upload-status');
 
     let currentValues = null;
 
@@ -160,16 +163,18 @@ function initCalculatorPage(db) {
     themeToggleButton.addEventListener('click', () => toggleTheme(themeToggleButton));
 
     // --- Dynamically populate cipher settings ---
-    cipherSettings.innerHTML = '<p class="settings-info">Select Ciphers for Resonance Report</p>';
+    cipherSettings.innerHTML = '<p class="settings-info">Select Ciphers for Calculation & Matching</p>';
     Object.keys(CIPHERS).sort().forEach(key => {
-        const isChecked = ['Simple', 'English', 'Jewish', 'Chaldean', 'GeminiResonance'].includes(key);
+        const isChecked = ['Simple', 'English', 'Jewish', 'Chaldean', 'ReverseSimple'].includes(key);
         const label = document.createElement('label');
         label.innerHTML = `<input type="checkbox" data-cipher="${key}" ${isChecked ? 'checked' : ''}> ${key}`;
         cipherSettings.appendChild(label);
     });
 
+    const getSelectedCiphers = () => Array.from(cipherSettings.querySelectorAll('input:checked')).map(cb => cb.dataset.cipher);
+
     const handleInputChange = () => {
-        const input = gematriaInput.value.trim(); // Keep original case for display, convert to lower for processing
+        const input = gematriaInput.value.trim();
         clearResults();
         if (!input) {
             saveButton.disabled = true;
@@ -177,7 +182,7 @@ function initCalculatorPage(db) {
         }
         const isNumberSearch = /^\d+$/.test(input);
         if (isNumberSearch) {
-            fetchAndDisplayMatches(true, parseInt(input, 10));
+            fetchAndDisplayMatchesForNumber(parseInt(input, 10));
             saveButton.disabled = true;
         } else {
             calculateGematriaForText(input);
@@ -197,65 +202,127 @@ function initCalculatorPage(db) {
     function calculateGematriaForText(text) {
         currentValues = {};
         const lowerCaseText = text.toLowerCase();
-        Object.keys(CIPHERS).forEach(cipher => {
+        const selectedCiphers = getSelectedCiphers();
+
+        if (selectedCiphers.length === 0) {
+            resultsSummary.innerHTML = 'Please select at least one cipher in Settings.';
+            return;
+        }
+
+        selectedCiphers.forEach(cipher => {
             currentValues[cipher] = CIPHERS[cipher](lowerCaseText);
         });
 
-        const summaryCiphers = ['Simple', 'English', 'Jewish', 'GeminiResonance', 'LawOf6'];
         resultsSummary.innerHTML = '';
-        summaryCiphers.forEach(cipher => {
-            if (currentValues.hasOwnProperty(cipher)) {
-                displayResultCard(cipher, currentValues[cipher]);
-            }
+        breakdownContainer.innerHTML = '';
+        
+        selectedCiphers.forEach(cipher => {
+            displayResultCard(cipher, currentValues[cipher]);
+            displayBreakdown(cipher, text, currentValues[cipher]);
         });
         
-        displayBreakdown('Simple', text, currentValues['Simple']); // Display original case text
-        fetchAndDisplayMatches(false);
+        fetchAndDisplayMatchesForText();
     }
+    
+    async function fetchAndDisplayMatchesForText() {
+        if (!currentValues) return;
+        const selectedCiphers = getSelectedCiphers();
+        if (selectedCiphers.length === 0) return;
 
-    async function fetchAndDisplayMatches(isNumberSearch, number = 0) {
         dbMatchesContainer.innerHTML = 'Loading matches...';
-        const ciphersToFetch = ['Jewish', 'Simple'];
-        
-        const queries = ciphersToFetch.map(cipher => {
-            const value = isNumberSearch ? number : currentValues[cipher];
-            if (value > 0) {
-                let q = query(gematriaCollectionRef, where(cipher, "==", value), limit(50));
-                return getDocs(q);
-            }
-            return Promise.resolve(null);
-        });
 
-        const snapshots = await Promise.all(queries);
-        dbMatchesContainer.innerHTML = '';
-        snapshots.forEach((snapshot, index) => {
-            const cipher = ciphersToFetch[index];
-            const value = isNumberSearch ? number : currentValues[cipher];
-            if (snapshot && !snapshot.empty) {
-                const phrasesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderTable(cipher, phrasesData, value);
+        // Create an "OR" query in Firestore
+        const constraints = selectedCiphers.map(cipher => where(cipher, "==", currentValues[cipher])).filter(Boolean);
+        if (constraints.length === 0) {
+             dbMatchesContainer.innerHTML = '';
+             return;
+        }
+        
+        const q = query(gematriaCollectionRef, or(...constraints), limit(50));
+        
+        try {
+            const querySnapshot = await getDocs(q);
+            dbMatchesContainer.innerHTML = '';
+            if (querySnapshot.empty) {
+                dbMatchesContainer.innerHTML = '<p>No matches found in the database.</p>';
+                return;
             }
-        });
+            
+            // Group phrases by their calculated value for each cipher
+            const groupedMatches = {};
+            selectedCiphers.forEach(cipher => {
+                const value = currentValues[cipher];
+                if (!groupedMatches[value]) groupedMatches[value] = { phrases: new Set(), ciphers: [] };
+                groupedMatches[value].ciphers.push(cipher);
+                
+                querySnapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    if(data[cipher] === value) {
+                        groupedMatches[value].phrases.add(data.phrase);
+                    }
+                });
+            });
+
+            for (const value in groupedMatches) {
+                if (groupedMatches[value].phrases.size > 0) {
+                    const phrasesData = Array.from(groupedMatches[value].phrases).map(p => ({phrase: p}));
+                    renderTable(groupedMatches[value].ciphers.join(' / '), phrasesData, value);
+                }
+            }
+
+        } catch (error) {
+            console.error("Error fetching matches:", error);
+            dbMatchesContainer.innerHTML = '<p class="error">Error fetching matches from database.</p>';
+        }
     }
 
-    function renderTable(cipher, phrasesData, value) {
+    async function fetchAndDisplayMatchesForNumber(number) {
+        dbMatchesContainer.innerHTML = `Loading matches for value ${number}...`;
+        const selectedCiphers = getSelectedCiphers();
+        if (selectedCiphers.length === 0) {
+            dbMatchesContainer.innerHTML = 'Please select at least one cipher in Settings.';
+            return;
+        };
+
+        const constraints = selectedCiphers.map(cipher => where(cipher, "==", number));
+        const q = query(gematriaCollectionRef, or(...constraints), limit(50));
+
+        try {
+            const querySnapshot = await getDocs(q);
+            dbMatchesContainer.innerHTML = '';
+             if (querySnapshot.empty) {
+                dbMatchesContainer.innerHTML = `<p>No matches found for the value ${number}.</p>`;
+                return;
+            }
+            const phrases = querySnapshot.docs.map(doc => ({phrase: doc.data().phrase}));
+            renderTable(`Value`, phrases, number);
+
+        } catch (error) {
+            console.error("Error fetching matches:", error);
+            dbMatchesContainer.innerHTML = `<p class="error">Error fetching matches for value ${number}.</p>`;
+        }
+    }
+
+
+    function renderTable(cipherDisplay, phrasesData, value) {
         const valueClasses = ['value'];
         if (isPrime(value)) valueClasses.push('prime');
         if (isPerfectSquare(value)) valueClasses.push('square');
         if (isPalindrome(value)) valueClasses.push('palindrome');
         if (!isPrime(value) && value > 1) valueClasses.push('composite');
 
-        const tableRows = phrasesData.map(data => `
-            <tr data-phrase="${escapeHTML(data.phrase)}">
-                <td class="phrase-col">${escapeHTML(data.phrase)}</td>
-                <td class="number-col">${data.searchCount || 0}</td>
+        const uniquePhrases = [...new Set(phrasesData.map(d => d.phrase))];
+
+        const tableRows = uniquePhrases.map(phrase => `
+            <tr data-phrase="${escapeHTML(phrase)}">
+                <td class="phrase-col">${escapeHTML(phrase)}</td>
             </tr>`).join('');
 
         const tableHtml = `
             <details class="match-table-container" open>
-                <summary>${escapeHTML(cipher)} = <span class="${valueClasses.join(' ')}">${value}</span> (${phrasesData.length} matches)</summary>
+                <summary>${escapeHTML(cipherDisplay)} = <span class="${valueClasses.join(' ')}">${value}</span> (${uniquePhrases.length} matches)</summary>
                 <table class="match-table">
-                    <thead><tr><th class="phrase-col">Phrase</th><th class="number-col">Searches</th></tr></thead>
+                    <thead><tr><th class="phrase-col">Phrase</th></tr></thead>
                     <tbody>${tableRows}</tbody>
                 </table>
             </details>
@@ -272,36 +339,43 @@ function initCalculatorPage(db) {
     
     function displayBreakdown(cipher, text, total) {
         const breakdownHtml = text.toLowerCase().split('').map(char => {
-            if (char === ' ') return ' '; // Handle spaces
-            const value = CIPHERS[cipher](char);
+            if (char === ' ') return ' ';
+            // This is a simplified breakdown; a real one would need the specific map.
+            // We'll use the 'Simple' value for visualization purposes as it's the most intuitive.
+            const value = CIPHERS['Simple'](char); 
             return `<span class="breakdown-letter"><span class="char">${escapeHTML(char)}</span><span class="val">${value}</span></span>`;
-        }).join('');
+        }).join('+').replace(/\+ \+/g, '+'); // Clean up spaces
+        
         const line = document.createElement('div');
         line.className = 'breakdown-line';
-        line.innerHTML = `<b>${escapeHTML(text)}</b> in ${escapeHTML(cipher)} equals <strong>${total}</strong>: ${breakdownHtml}`;
+        line.innerHTML = `<b>${escapeHTML(cipher)} for "${escapeHTML(text)}"</b> (${total}): ${breakdownHtml}`;
         breakdownContainer.appendChild(line);
     }
 
     async function saveToDatabase() {
         const phrase = gematriaInput.value.trim().toLowerCase();
-        if (!phrase || !currentValues) return;
+        if (!phrase) return;
         saveButton.disabled = true;
         saveButton.textContent = 'Checking...';
 
         try {
-            // Check if the lowercase phrase already exists
             const q = query(gematriaCollectionRef, where("phrase", "==", phrase));
             const querySnapshot = await getDocs(q);
 
             if (!querySnapshot.empty) {
                 saveButton.textContent = 'Exists!';
-                // Optionally, you could update the searchCount of the existing entry here
             } else {
                 saveButton.textContent = 'Saving...';
-                const dataToSave = { phrase, createdAt: new Date(), searchCount: 1, ...currentValues };
+                // Recalculate all ciphers, not just selected, for a complete DB entry
+                const allCipherValues = {};
+                 Object.keys(CIPHERS).forEach(cipher => {
+                    allCipherValues[cipher] = CIPHERS[cipher](phrase);
+                });
+
+                const dataToSave = { phrase, createdAt: new Date(), searchCount: 1, ...allCipherValues };
                 await addDoc(gematriaCollectionRef, dataToSave);
                 saveButton.textContent = 'Saved!';
-                fetchAndDisplayMatches(false); // Refresh matches to show the new entry
+                fetchAndDisplayMatchesForText(); // Refresh matches
             }
         } catch (error) {
             console.error("Error with database operation: ", error);
@@ -313,13 +387,73 @@ function initCalculatorPage(db) {
             }, 2000);
         }
     }
+    
+     async function processAndUploadFile() {
+        const file = fileInput.files[0];
+        if (!file) {
+            uploadStatus.textContent = "Please select a file first.";
+            return;
+        }
+
+        uploadStatus.textContent = "Reading file...";
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const content = event.target.result;
+            const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+            uploadStatus.textContent = `Found ${lines.length} lines. Processing...`;
+
+            if (lines.length === 0) {
+                uploadStatus.textContent = "File is empty or contains no valid lines.";
+                return;
+            }
+
+            const batchSize = 400;
+            let batch = writeBatch(db);
+            let entriesInBatch = 0;
+            let batchesCommitted = 0;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const phrase = lines[i].trim().toLowerCase();
+                if (!phrase) continue;
+
+                const allCipherValues = {};
+                Object.keys(CIPHERS).forEach(cipher => {
+                    allCipherValues[cipher] = CIPHERS[cipher](phrase);
+                });
+
+                const dataToSave = { phrase, createdAt: new Date(), searchCount: 0, ...allCipherValues };
+                const newDocRef = doc(gematriaCollectionRef);
+                batch.set(newDocRef, dataToSave);
+                entriesInBatch++;
+
+                if (entriesInBatch >= batchSize) {
+                    await batch.commit();
+                    batchesCommitted++;
+                    uploadStatus.textContent = `Uploading... Batch ${batchesCommitted} committed.`;
+                    batch = writeBatch(db);
+                    entriesInBatch = 0;
+                }
+            }
+
+            if (entriesInBatch > 0) {
+                await batch.commit();
+                batchesCommitted++;
+                uploadStatus.textContent = `Finalizing... Batch ${batchesCommitted} committed.`;
+            }
+
+            uploadStatus.textContent = `Upload complete! Added ${lines.length} entries in ${batchesCommitted} batches.`;
+            fileInput.value = '';
+        };
+        reader.readAsText(file);
+    }
+
 
     async function showResonanceReport(phrase) {
         modalTitle.textContent = `Resonance Report for "${phrase}"`;
         modalBody.innerHTML = 'Loading...';
         modal.style.display = 'flex';
 
-        const reportCiphers = Array.from(cipherSettings.querySelectorAll('input:checked')).map(cb => cb.dataset.cipher);
+        const reportCiphers = getSelectedCiphers();
         let reportHtml = '';
 
         for (const cipher of reportCiphers) {
@@ -358,6 +492,7 @@ function initCalculatorPage(db) {
     saveButton.addEventListener('click', saveToDatabase);
     cipherSettings.addEventListener('change', handleInputChange);
     filterSettings.addEventListener('change', handleInputChange);
+    uploadButton.addEventListener('click', processAndUploadFile);
 }
 
 // --- UTILITY FUNCTIONS ---
@@ -374,3 +509,4 @@ function escapeHTML(str) {
     p.appendChild(document.createTextNode(str));
     return p.innerHTML;
 }
+
