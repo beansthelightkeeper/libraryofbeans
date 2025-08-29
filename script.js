@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pointer-events: none;
             }
             .textLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-            .textLayer > div { position: absolute; white-space: pre; cursor: text; }
+            .textLayer > div { position: absolute; white-space: pre; }
             .highlight { cursor: pointer; }
         `;
         document.head.appendChild(style);
@@ -130,43 +130,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const pdfjsLib = window['pdfjs-dist/build/pdf'];
-            // Try local worker, fall back to CDN
-            let workerSrc = 'js/pdf.worker.min.js';
-            try {
-                const workerResponse = await fetch(workerSrc);
-                if (!workerResponse.ok) throw new Error(`Failed to fetch worker: HTTP ${workerResponse.status}`);
-                console.log("Using local pdf.worker.min.js");
-            } catch (e) {
-                console.warn("Local pdf.worker.min.js failed, trying CDN fallback:", e.message);
-                workerSrc = 'https://unpkg.com/pdfjs-dist@4.0.269/build/pdf.worker.min.js';
-            }
-            pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.min.js';
 
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Failed to fetch PDF: HTTP ${response.status}`);
             const pdf = await pdfjsLib.getDocument(url).promise;
             const iframeDoc = contentFrame.contentDocument;
             iframeDoc.body.innerHTML = ''; // Clear previous content
-            iframeDoc.body.style.backgroundColor = getComputedStyle(document.body).getPropertyValue('--bg-secondary');
 
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                 const page = await pdf.getPage(pageNum);
                 const canvas = iframeDoc.createElement('canvas');
                 canvas.style.display = 'block';
-                canvas.style.margin = '20px auto';
-                canvas.dataset.page = pageNum;
+                canvas.style.margin = 'auto';
+                canvas.dataset.page = pageNum; // For annotation reference
                 const context = canvas.getContext('2d');
 
-                const scale = 1.5;
+                const scale = 1.5; // Adjust scale for readability
                 const viewport = page.getViewport({ scale: scale });
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
 
+                // Create container for canvas and text layer
                 const container = iframeDoc.createElement('div');
                 container.style.position = 'relative';
                 container.style.width = `${viewport.width}px`;
                 container.style.height = `${viewport.height}px`;
-                container.style.margin = '20px auto';
+                container.style.margin = 'auto';
                 container.style.setProperty('--scale-factor', scale);
                 container.dataset.page = pageNum;
                 iframeDoc.body.appendChild(container);
@@ -179,11 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 await page.render(renderContext).promise;
 
+                // Add text layer
                 const textContent = await page.getTextContent();
                 const textLayerDiv = iframeDoc.createElement('div');
                 textLayerDiv.className = 'textLayer';
-                textLayerDiv.style.width = `${viewport.width}px`;
-                textLayerDiv.style.height = `${viewport.height}px`;
+                textLayerDiv.style.setProperty('--scale-factor', scale);
                 container.appendChild(textLayerDiv);
 
                 const textLayer = new pdfjsLib.TextLayer({
@@ -195,29 +185,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 await textLayer.render();
             }
 
+            // Apply annotations after rendering
             applyAnnotationsForCurrentFile();
             setupIframeListeners();
         } catch (error) {
             console.error("Error rendering PDF:", error);
             contentFrame.src = url;
             contentFrame.srcdoc = `<html><body><h2>Failed to render PDF</h2><p>Error: ${error.message}. Trying native viewer... <a href="${url}">Open PDF directly</a></p></body></html>`;
-            toggleReaderTools(false);
+            toggleReaderTools(false); // Disable tools for native viewer
         }
     }
 
     function onIframeLoad() {
-        if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) {
-            return;
+        if (!state.currentFile) return;
+
+        if (state.currentFile.toLowerCase().endsWith('.pdf')) {
+            return; // PDF rendering handled in renderPdfInIframe
         }
 
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc) return;
 
+        // Fix broken image paths
         iframeDoc.querySelectorAll('img').forEach(img => {
             if (img.src.includes('beanscodex.com/images/')) {
                 const fileName = img.src.split('/').pop();
                 img.src = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/content/images/${fileName}`;
-                img.onerror = () => { img.style.display = 'none'; };
+                img.onerror = () => {
+                    img.src = ''; // Remove broken image
+                    img.alt = 'Image not found';
+                };
             }
         });
 
@@ -347,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 max-width: 80ch;
             }
             ${highlightStyles}
-            mark[id^="anno-"], span[id^="anno-"] { cursor: pointer; }
+            mark[id^="anno-"] { cursor: pointer; }
         `;
     }
 
@@ -588,21 +585,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const mark = iframeDoc.createElement('span');
+        const mark = iframeDoc.createElement('mark');
         mark.id = annotation.id;
         mark.className = `highlight highlight-${annotation.color}`;
         if (annotation.note) mark.title = annotation.note;
 
         if (annotation.isPdf) {
+            // PDF: Apply highlight to textLayer divs
             const textLayer = range.startContainer.closest('.textLayer');
             if (!textLayer) return;
             try {
-                range.surroundContents(mark);
-                textLayer.appendChild(mark);
+                const span = iframeDoc.createElement('span');
+                span.className = `highlight highlight-${annotation.color}`;
+                span.id = annotation.id;
+                if (annotation.note) span.title = annotation.note;
+                range.surroundContents(span);
+                textLayer.appendChild(span);
             } catch (e) {
                 console.warn("Failed to apply PDF annotation:", e);
             }
         } else {
+            // HTML: Standard highlight
             try {
                 range.surroundContents(mark);
             } catch (e) {
