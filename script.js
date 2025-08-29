@@ -62,6 +62,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INITIALIZATION ---
     function initialize() {
+        // Debug PDF.js loading
+        if (!window['pdfjs-dist/build/pdf']) {
+            console.warn("PDF.js library not loaded. PDFs will use native viewer.");
+        }
         loadSettings();
         loadAnnotations();
         loadBookmarks();
@@ -114,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function renderPdfInIframe(url) {
         // Check if PDF.js is loaded
         if (!window['pdfjs-dist/build/pdf']) {
-            console.warn("PDF.js not loaded, falling back to native PDF viewer");
+            console.warn("PDF.js not loaded, using native PDF viewer");
             contentFrame.src = url;
             return;
         }
@@ -173,8 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Error rendering PDF:", error);
-            // Fallback to native PDF viewer
-            contentFrame.src = url;
+            contentFrame.src = url; // Fallback to native PDF viewer
+            contentFrame.srcdoc = `<html><body><h2>Loading PDF in native viewer...</h2><p>If this fails, ensure the PDF exists at ${url}</p></body></html>`;
         }
     }
 
@@ -479,9 +483,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function createAnnotation(note = '') {
         const iframeDoc = contentFrame.contentDocument;
         const selection = iframeDoc.getSelection();
-        if (!selection || selection.isCollapsed) return;
+        if (!selection || selection.isCollapsed) {
+            alert("Please select some text to highlight or annotate.");
+            return;
+        }
 
-        // Get all ranges (usually one, but supports multiple for robustness)
+        // Get all ranges
         const ranges = [];
         for (let i = 0; i < selection.rangeCount; i++) {
             ranges.push(selection.getRangeAt(i));
@@ -490,9 +497,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const annotationId = `anno-${Date.now()}`;
         const annotations = [];
 
-        for (const range of ranges) {
-            // Skip if range is invalid or spans non-text nodes
-            if (!isValidTextRange(range)) continue;
+        for (let i = 0; i < ranges.length; i++) {
+            const range = ranges[i];
+            // Relaxed validation: allow selections within the same parent node
+            const startContainer = range.startContainer;
+            const endContainer = range.endContainer;
+            const commonAncestor = range.commonAncestorContainer;
+
+            if (startContainer.nodeType !== Node.TEXT_NODE || endContainer.nodeType !== Node.TEXT_NODE) {
+                console.warn("Skipping annotation for non-text selection:", range);
+                continue;
+            }
 
             const rangeData = serializeRange(range, iframeDoc);
             const annotation = {
@@ -506,7 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (annotations.length === 0) {
-            alert("Cannot highlight this selection. Please select plain text.");
+            alert("Cannot highlight this selection. Please select plain text within a single paragraph.");
             selection.removeAllRanges();
             return;
         }
@@ -519,20 +534,13 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 applyAnnotationToDOM(annotation);
             } catch (e) {
-                console.warn("Failed to apply annotation, skipping:", e);
+                console.warn("Failed to apply annotation:", e);
             }
         });
 
         saveAnnotations();
         renderAnnotationsForCurrentFile();
         selection.removeAllRanges();
-    }
-
-    function isValidTextRange(range) {
-        const startContainer = range.startContainer;
-        const endContainer = range.endContainer;
-        // Check if both start and end containers are text nodes
-        return startContainer.nodeType === Node.TEXT_NODE && endContainer.nodeType === Node.TEXT_NODE;
     }
 
     function applyAnnotationToDOM(annotation) {
@@ -549,8 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             range.surroundContents(mark);
         } catch (e) {
-            console.error("Error applying annotation:", e, annotation);
-            // Fallback: insert mark without surrounding
+            console.warn("Falling back to insertNode for annotation:", e);
             const fragment = range.extractContents();
             mark.appendChild(fragment);
             range.insertNode(mark);
