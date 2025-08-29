@@ -9,13 +9,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="gematria.css">
+    <style>
+        /* Make the header icon smaller */
+        .header-icon {
+            width: 48px;
+            height: 48px;
+            object-fit: contain; /* Ensures the image scales nicely within the new size */
+        }
+    </style>
 </head>
 <body data-theme="dark">
     <div class="background-glyphs"></div>
     <div class="container">
         <header class="gematria-header">
             <a href="gematria.html" class="home-link" title="Return to Calculator">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M12 8v1"/><path d="M12 15v1"/><path d="M8 12h1"/><path d="M15 12h1"/></svg>
+                <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M12 8v1"/><path d="M12 15v1"/><path d="M8 12h1"/><path d="M15 12h1"/></svg>
             </a>
             <img src="icon.png" alt="BeansCodex Icon" class="header-icon">
             <h1>Database Statistics</h1>
@@ -29,8 +37,15 @@
                     <h3>Recently Added</h3>
                     <div class="collapsible-content" style="display: block;">
                         <table class="sidebar-table" id="recent-table">
-                            <thead></thead>
-                            <tbody></tbody>
+                            <thead>
+                                <tr>
+                                    <th>Word</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated by script -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -38,8 +53,15 @@
                     <h3>Most Searched</h3>
                     <div class="collapsible-content" style="display: block;">
                         <table class="sidebar-table" id="popular-table">
-                             <thead></thead>
-                            <tbody></tbody>
+                             <thead>
+                                 <tr>
+                                     <th>Word</th>
+                                     <th>Value</th>
+                                 </tr>
+                             </thead>
+                            <tbody>
+                                <!-- Data will be populated by script -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -59,7 +81,10 @@
         </footer>
     </div>
     
+    <!-- Non-module script to make firebaseConfig global -->
     <script src="firebase-config.js"></script>
-    <script type="module" src="gematria.js"></script>
+    <!-- Module script for page logic -->
+    <script type="module" src="statistics.js"></script>
 </body>
 </html>
+
