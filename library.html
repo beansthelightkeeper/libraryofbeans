@@ -12,8 +12,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
-    <!-- PDF.js library for rendering PDFs - Updated to a compatible version -->
+    
+    <!-- PDF.js library and viewer -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.css" />
+
 
     <style>
         /* --- GOOGLE FONT IMPORT --- */
@@ -809,35 +813,11 @@
         async function renderPdfInIframe(pdfUrl, iframe) {
             const iframeDoc = iframe.contentDocument;
             
-            // Setup basic HTML structure and styles in the iframe
-            iframeDoc.body.innerHTML = '<div id="viewer-container" style="background-color: var(--bg-secondary);"></div>';
-            const style = iframeDoc.createElement('style');
-            style.textContent = `
-                .page {
-                    position: relative;
-                    margin: 20px auto;
-                    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-                }
-                .textLayer {
-                    position: absolute;
-                    left: 0; top: 0; right: 0; bottom: 0;
-                    overflow: hidden;
-                    opacity: 1; 
-                }
-                .textLayer > span, .textLayer > br {
-                    color: transparent;
-                    position: absolute;
-                    white-space: pre;
-                    cursor: text;
-                    transform-origin: 0% 0%;
-                }
-                canvas { display: block; }
-            `;
-            iframeDoc.head.appendChild(style);
-            
-            const viewerContainer = iframeDoc.getElementById('viewer-container');
-            
-            // Set worker source for PDF.js - Updated to a compatible version
+            // Setup basic HTML structure
+            iframeDoc.body.innerHTML = '<div id="viewer" class="pdfViewer"></div>';
+            const viewerContainer = iframeDoc.getElementById('viewer');
+
+            // Set worker source for PDF.js
             pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
             try {
@@ -852,14 +832,17 @@
                     pageDiv.style.width = `${viewport.width}px`;
                     pageDiv.style.height = `${viewport.height}px`;
 
+                    const canvasWrapper = iframeDoc.createElement('div');
+                    canvasWrapper.className = 'canvasWrapper';
                     const canvas = iframeDoc.createElement('canvas');
                     canvas.width = viewport.width;
                     canvas.height = viewport.height;
-
+                    canvasWrapper.appendChild(canvas);
+                    
                     const textLayerDiv = iframeDoc.createElement('div');
                     textLayerDiv.className = 'textLayer';
                     
-                    pageDiv.appendChild(canvas);
+                    pageDiv.appendChild(canvasWrapper);
                     pageDiv.appendChild(textLayerDiv);
                     viewerContainer.appendChild(pageDiv);
                     
@@ -869,15 +852,15 @@
                         viewport: viewport
                     }).promise;
                     
-                    // Render text layer to make text selectable
+                    // Render text layer
                     const textContent = await page.getTextContent();
                     
-                    // This version of renderTextLayer is for modern pdf.js
-                    const textLayer = new pdfjsLib.TextLayerBuilder({
+                    const textLayer = new pdfjsViewer.TextLayerBuilder({
                         textLayerDiv: textLayerDiv,
                         pageIndex: page.pageIndex,
-                        viewport: viewport
+                        viewport: viewport,
                     });
+                    
                     textLayer.setTextContent(textContent);
                     textLayer.render();
                 }
@@ -1039,7 +1022,7 @@
             let snippet = `Bookmark at ${Math.round((scrollY / iframeDoc.body.scrollHeight) * 100)}%`;
             try { 
                  const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
-                 const pElement = elements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
+                 const pElement = elements.find(el => (el.tagName === 'P' || el.tagName === 'SPAN') && el.textContent.trim().length > 10);
                  if (pElement) {
                      snippet = pElement.textContent.trim().substring(0, 100) + '...';
                  }
