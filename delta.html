@@ -32,13 +32,29 @@
         .delta-main .matches-cell {
             color: var(--text-secondary);
         }
+        .corpus-uploader {
+            margin-top: 2rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-content);
+            border-radius: 4px;
+        }
+        .corpus-uploader h3 {
+            margin-top: 0;
+            color: var(--text-secondary);
+        }
+        #upload-status {
+            margin-top: 0.5rem;
+            font-family: 'Roboto Mono', monospace;
+            color: var(--accent-color);
+        }
     </style>
 </head>
 <body data-theme="dark">
     <div class="container">
         <header class="gematria-header">
              <a href="gematria.html" class="home-link" title="Return to Calculator">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </a>
             <h1>Delta Analysis</h1>
             <p>Calculate the gematria difference between two phrases</p>
@@ -53,6 +69,14 @@
 
             <section id="delta-results-container">
                 <!-- Delta results will be injected here -->
+            </section>
+
+            <section class="corpus-uploader">
+                <h3>Corpus Uploader</h3>
+                <p>Upload a .txt or .md file to add its lines to the database. Each line will be treated as a separate phrase.</p>
+                <input type="file" id="file-input" accept=".txt,.md">
+                <button id="upload-button">Upload to Database</button>
+                <div id="upload-status"></div>
             </section>
         </main>
 
@@ -69,3 +93,4 @@
     <script type="module" src="delta.js"></script>
 </body>
 </html>
+

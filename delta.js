@@ -1,24 +1,46 @@
 // --- Firebase Imports ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, query, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, getDocs, limit, writeBatch, or, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // --- GLOBAL STATE & CONSTANTS ---
 const CIPHERS = {};
+const PHI = 1.618033988749895;
 
-// --- GEMATRIA CIPHER DEFINITIONS ---
+// --- UTILITY: NUMBER ANALYSIS ---
+function recursiveDigitSum(n) {
+    let val = Math.abs(Math.round(n));
+    while (val > 9) {
+        val = String(val).split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0);
+    }
+    return val;
+}
+
+// --- GEMATRIA CIPHER DEFINITIONS (EXPANDED) ---
 function buildGematriaCiphers() {
     const a = 'abcdefghijklmnopqrstuvwxyz';
     const simpleMap = {};
     a.split('').forEach((l, i) => { simpleMap[l] = i + 1; });
 
+    const jewishValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800];
+    const jewishMap = {};
+    a.split('').forEach((l, i) => { jewishMap[l] = jewishValues[i]; });
+
+    const chaldeanMap = {a:1,b:2,c:3,d:4,e:5,f:8,g:3,h:5,i:1,j:1,k:2,l:3,m:4,n:5,o:7,p:8,q:1,r:2,s:3,t:4,u:6,v:6,w:6,x:5,y:1,z:7};
+
     const calculateWithMap = (text, map) => text.toLowerCase().split('').reduce((sum, char) => sum + (map[char] || 0), 0);
     
+    // --- CORE CIPHERS ---
     CIPHERS['Simple'] = (text) => calculateWithMap(text, simpleMap);
     CIPHERS['English'] = (text) => CIPHERS.Simple(text) * 6;
+    CIPHERS['Jewish'] = (text) => calculateWithMap(text, jewishMap);
+    CIPHERS['Chaldean'] = (text) => calculateWithMap(text, chaldeanMap);
+    CIPHERS['Reduction'] = (text) => recursiveDigitSum(CIPHERS.Simple(text));
     
+    // --- REVERSE CIPHERS ---
     const reverse = (text) => text.split('').reverse().join('');
     CIPHERS['ReverseSimple'] = (text) => CIPHERS.Simple(reverse(text));
+    CIPHERS['ReverseEnglish'] = (text) => CIPHERS.English(reverse(text));
 }
 buildGematriaCiphers();
 
@@ -59,6 +81,9 @@ function initDeltaPage(db) {
     const input2 = document.getElementById('delta-input-2');
     const resultsContainer = document.getElementById('delta-results-container');
     const themeToggleButton = document.getElementById('theme-toggle');
+    const fileInput = document.getElementById('file-input');
+    const uploadButton = document.getElementById('upload-button');
+    const uploadStatus = document.getElementById('upload-status');
 
     // --- Initialize Theme ---
     const savedTheme = localStorage.getItem('gematria-theme') || 'dark';
@@ -86,8 +111,7 @@ function initDeltaPage(db) {
             const val2 = CIPHERS[cipher](text2);
             const delta = Math.abs(val1 - val2);
             
-            // Asynchronously fetch matches for the delta value
-            const matchesPromise = fetchMatchesForValue(db, delta);
+            const matchesPromise = fetchMatchesForValue(db, delta, cipher);
 
             resultsHtml += `
                 <tr data-delta="${delta}" data-cipher="${cipher}">
@@ -99,7 +123,6 @@ function initDeltaPage(db) {
                 </tr>
             `;
             
-            // When matches are found, update the corresponding cell
             matchesPromise.then(matches => {
                 const cell = document.getElementById(`matches-${cipher}-${delta}`);
                 if (cell) {
@@ -112,23 +135,99 @@ function initDeltaPage(db) {
         resultsContainer.innerHTML = resultsHtml;
     }
 
-    async function fetchMatchesForValue(db, value) {
+    async function fetchMatchesForValue(db, value, cipher) {
         if (value < 1) return [];
         try {
             const entriesRef = collection(db, "entries");
-            const q = query(entriesRef, where("Simple", "==", value), limit(10));
+            const q = query(entriesRef, where(cipher, "==", value), limit(10));
             const querySnapshot = await getDocs(q);
-            return querySnapshot.docs.map(doc => doc.data().phrase);
+            const phrases = querySnapshot.docs.map(doc => doc.data().phrase);
+            // Use a Set to get unique phrases in case of multiple matches on different ciphers
+            return [...new Set(phrases)];
         } catch (error) {
-            console.error("Error fetching matches:", error);
+            console.error(`Error fetching matches for ${cipher} = ${value}:`, error);
             return ["Error"];
         }
     }
 
+    async function processAndUploadFile() {
+        const file = fileInput.files[0];
+        if (!file) {
+            uploadStatus.textContent = "Please select a file first.";
+            return;
+        }
+
+        uploadStatus.textContent = "Reading file...";
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const content = event.target.result;
+            const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+            uploadStatus.textContent = `Found ${lines.length} lines. Processing...`;
+
+            if (lines.length === 0) {
+                uploadStatus.textContent = "File is empty or contains no valid lines.";
+                return;
+            }
+
+            const entriesRef = collection(db, "entries");
+            const batchSize = 400; // Firestore batch limit is 500, being safe
+            let batch = writeBatch(db);
+            let entriesInBatch = 0;
+            let batchesCommitted = 0;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const phrase = lines[i].trim().toLowerCase();
+                if (!phrase) continue;
+
+                // For simplicity, we are not checking for duplicates before upload.
+                // An alternative, more robust system would check for existence first,
+                // but that is much slower for large files.
+                const allCipherValues = {};
+                Object.keys(CIPHERS).forEach(cipher => {
+                    allCipherValues[cipher] = CIPHERS[cipher](phrase);
+                });
+
+                const dataToSave = { 
+                    phrase, 
+                    createdAt: new Date(), 
+                    searchCount: 0, 
+                    ...allCipherValues 
+                };
+                
+                const newDocRef = doc(entriesRef); // Create a new doc with a random ID
+                batch.set(newDocRef, dataToSave);
+                entriesInBatch++;
+
+                if (entriesInBatch >= batchSize) {
+                    await batch.commit();
+                    batchesCommitted++;
+                    uploadStatus.textContent = `Uploading... Batch ${batchesCommitted} committed.`;
+                    batch = writeBatch(db);
+                    entriesInBatch = 0;
+                }
+            }
+
+            if (entriesInBatch > 0) {
+                await batch.commit();
+                batchesCommitted++;
+                 uploadStatus.textContent = `Finalizing... Batch ${batchesCommitted} committed.`;
+            }
+
+            uploadStatus.textContent = `Upload complete! Added ${lines.length} entries in ${batchesCommitted} batches.`;
+            fileInput.value = ''; // Reset file input
+        };
+
+        reader.onerror = () => {
+            uploadStatus.textContent = "Error reading file.";
+        };
+
+        reader.readAsText(file);
+    }
+
     input1.addEventListener('input', debouncedHandler);
     input2.addEventListener('input', debouncedHandler);
+    uploadButton.addEventListener('click', processAndUploadFile);
 }
-
 
 // --- UTILITY FUNCTIONS ---
 function debounce(func, delay) {
@@ -144,3 +243,4 @@ function escapeHTML(str) {
     p.appendChild(document.createTextNode(str));
     return p.innerHTML;
 }
+
