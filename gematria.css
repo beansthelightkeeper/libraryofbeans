@@ -1,5 +1,12 @@
 /* --- THEME & GENERAL STYLES --- */
 :root {
+    /* Filter Colors (consistent across themes) */
+    --prime-color: #ffcc00;
+    --square-color: #cc66ff;
+    --palindrome-color: #00ccff;
+    --composite-color: #ff6666;
+
+    /* Dark Theme (Default) */
     --bg-main: #1a1a1a;
     --bg-content: #222;
     --bg-input: #111;
@@ -8,12 +15,19 @@
     --border-color: #333;
     --accent-color: #00b300;
     --accent-hover: #00ff00;
-    /* Filter Colors */
-    --prime-color: #ffcc00;
-    --square-color: #cc66ff;
-    --palindrome-color: #00ccff;
-    --composite-color: #ff6666;
 }
+
+body[data-theme='light'] {
+    --bg-main: #ffffff;
+    --bg-content: #f8f9fa;
+    --bg-input: #ffffff;
+    --text-primary: #111111;
+    --text-secondary: #555555;
+    --border-color: #dee2e6;
+    --accent-color: #009900;
+    --accent-hover: #00cc00;
+}
+
 
 body {
     background-color: var(--bg-main);
@@ -23,6 +37,7 @@ body {
     margin: 0;
     display: flex;
     justify-content: center;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -45,6 +60,34 @@ a:hover {
     margin-bottom: 1.5rem;
     position: relative;
 }
+.header-top-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-bottom: 1rem;
+}
+.theme-toggle-button {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+.theme-toggle-button:hover {
+    background-color: var(--bg-content);
+    color: var(--text-primary);
+}
 .gematria-header .home-link {
     position: absolute; top: 50%; left: 0; transform: translateY(-50%);
     color: var(--text-secondary); text-decoration: none; display: flex;
@@ -52,11 +95,6 @@ a:hover {
     border-radius: 50%; transition: background-color 0.3s, color 0.3s;
 }
 .gematria-header .home-link:hover { background-color: rgba(128, 128, 128, 0.1); color: var(--text-primary); }
-
-
-.logo-area {
-    margin-bottom: 1rem;
-}
 
 .site-header h1, .gematria-header h1 {
     font-size: 1.5rem;
@@ -91,12 +129,15 @@ a:hover {
 #save-button {
     padding: 0.75rem 1rem;
     background-color: var(--accent-color);
-    color: #111;
+    color: #fff;
     border: none;
     border-radius: 4px;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s;
+}
+body[data-theme='dark'] #save-button {
+    color: #111;
 }
 #save-button:hover {
     background-color: var(--accent-hover);
@@ -121,6 +162,7 @@ a:hover {
 }
 .result-card-summary {
     background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
     padding: 0.25rem 0.75rem;
     border-radius: 4px;
     font-family: 'Roboto Mono', monospace;
@@ -157,6 +199,7 @@ a:hover {
     margin: 0 0.2rem;
     padding: 0.1rem 0.3rem;
     background-color: var(--bg-content);
+    border: 1px solid var(--border-color);
     border-radius: 3px;
 }
 .breakdown-letter .char {
@@ -233,7 +276,7 @@ a:hover {
 .match-table-container summary .value.composite { color: var(--composite-color); }
 
 .match-table-container summary:hover {
-    background-color: #2a2a2a;
+    background-color: rgba(128, 128, 128, 0.1);
 }
 .match-table {
     width: 100%;
@@ -261,7 +304,7 @@ a:hover {
     font-family: 'Roboto Mono', monospace;
 }
 .match-table tr:hover {
-    background-color: #2a2a2a;
+    background-color: rgba(128, 128, 128, 0.1);
     cursor: pointer;
 }
 
@@ -319,51 +362,6 @@ a:hover {
     margin-left: 1rem;
 }
 
-
-/* --- SCANNER PAGE --- */
-.scanner-controls {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    background-color: var(--bg-content);
-    padding: 1rem;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
-}
-.file-upload-wrapper {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-#file-upload-button {
-    padding: 0.75rem 1rem;
-    background-color: var(--accent-color);
-    color: #111;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-}
-#file-name-display {
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-#scanner-chunk-size {
-    width: 70px;
-    padding: 0.75rem;
-    background-color: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    color: var(--text-primary);
-}
-#scanner-results-container {
-    background-color: var(--bg-content);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-}
 /* --- FOOTER --- */
 .site-footer {
     text-align: center;

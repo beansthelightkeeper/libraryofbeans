@@ -103,6 +103,23 @@ function buildGematriaCiphers() {
 }
 buildGematriaCiphers();
 
+// --- THEME MANAGEMENT ---
+const ICONS = {
+    sun: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`,
+    moon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
+};
+
+function applyTheme(theme, themeToggleButton) {
+    document.body.dataset.theme = theme;
+    themeToggleButton.innerHTML = theme === 'dark' ? ICONS.sun : ICONS.moon;
+    localStorage.setItem('gematria-theme', theme);
+}
+
+function toggleTheme(themeToggleButton) {
+    const currentTheme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(currentTheme, themeToggleButton);
+}
+
 // --- MAIN APP LOGIC ---
 document.addEventListener('DOMContentLoaded', async () => {
     let db;
@@ -116,13 +133,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     const page = window.location.pathname.split("/").pop();
     if (page === 'gematria.html' || page === '') initCalculatorPage(db);
-    // Add initializers for other pages here if they exist
 });
 
 
 // --- CALCULATOR PAGE LOGIC ---
 function initCalculatorPage(db) {
-    const gematriaCollectionRef = collection(db, "gematria-entries");
+    const gematriaCollectionRef = collection(db, "entries"); // Changed collection name for clarity
     const gematriaInput = document.getElementById('gematria-input');
     const resultsSummary = document.getElementById('results-summary');
     const breakdownContainer = document.getElementById('breakdown-container');
@@ -130,15 +146,20 @@ function initCalculatorPage(db) {
     const cipherSettings = document.getElementById('cipher-settings');
     const filterSettings = document.getElementById('filter-settings');
     const saveButton = document.getElementById('save-button');
+    const themeToggleButton = document.getElementById('theme-toggle');
     const modal = document.getElementById('resonance-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
     const modalClose = modal.querySelector('.modal-close-button');
 
     let currentValues = null;
-    let activeFilters = [];
 
-    // Dynamically populate cipher settings
+    // --- Initialize Theme ---
+    const savedTheme = localStorage.getItem('gematria-theme') || 'dark';
+    applyTheme(savedTheme, themeToggleButton);
+    themeToggleButton.addEventListener('click', () => toggleTheme(themeToggleButton));
+
+    // --- Dynamically populate cipher settings ---
     cipherSettings.innerHTML = '<p class="settings-info">Select Ciphers for Resonance Report</p>';
     Object.keys(CIPHERS).sort().forEach(key => {
         const isChecked = ['Simple', 'English', 'Jewish', 'Chaldean', 'GeminiResonance'].includes(key);
@@ -148,7 +169,7 @@ function initCalculatorPage(db) {
     });
 
     const handleInputChange = () => {
-        const input = gematriaInput.value.trim();
+        const input = gematriaInput.value.trim(); // Keep original case for display, convert to lower for processing
         clearResults();
         if (!input) {
             saveButton.disabled = true;
@@ -175,8 +196,9 @@ function initCalculatorPage(db) {
 
     function calculateGematriaForText(text) {
         currentValues = {};
+        const lowerCaseText = text.toLowerCase();
         Object.keys(CIPHERS).forEach(cipher => {
-            currentValues[cipher] = CIPHERS[cipher](text);
+            currentValues[cipher] = CIPHERS[cipher](lowerCaseText);
         });
 
         const summaryCiphers = ['Simple', 'English', 'Jewish', 'GeminiResonance', 'LawOf6'];
@@ -187,7 +209,7 @@ function initCalculatorPage(db) {
             }
         });
         
-        displayBreakdown('Simple', text, currentValues['Simple']);
+        displayBreakdown('Simple', text, currentValues['Simple']); // Display original case text
         fetchAndDisplayMatches(false);
     }
 
@@ -250,6 +272,7 @@ function initCalculatorPage(db) {
     
     function displayBreakdown(cipher, text, total) {
         const breakdownHtml = text.toLowerCase().split('').map(char => {
+            if (char === ' ') return ' '; // Handle spaces
             const value = CIPHERS[cipher](char);
             return `<span class="breakdown-letter"><span class="char">${escapeHTML(char)}</span><span class="val">${value}</span></span>`;
         }).join('');
@@ -260,20 +283,34 @@ function initCalculatorPage(db) {
     }
 
     async function saveToDatabase() {
-        const phrase = gematriaInput.value.trim();
+        const phrase = gematriaInput.value.trim().toLowerCase();
         if (!phrase || !currentValues) return;
         saveButton.disabled = true;
-        saveButton.textContent = 'Saving...';
+        saveButton.textContent = 'Checking...';
+
         try {
-            const dataToSave = { phrase, createdAt: new Date(), searchCount: 0, ...currentValues };
-            await addDoc(gematriaCollectionRef, dataToSave);
-            saveButton.textContent = 'Saved!';
-            setTimeout(() => { saveButton.textContent = 'Save'; if (gematriaInput.value.trim()) saveButton.disabled = false; }, 2000);
-            fetchAndDisplayMatches(false);
+            // Check if the lowercase phrase already exists
+            const q = query(gematriaCollectionRef, where("phrase", "==", phrase));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                saveButton.textContent = 'Exists!';
+                // Optionally, you could update the searchCount of the existing entry here
+            } else {
+                saveButton.textContent = 'Saving...';
+                const dataToSave = { phrase, createdAt: new Date(), searchCount: 1, ...currentValues };
+                await addDoc(gematriaCollectionRef, dataToSave);
+                saveButton.textContent = 'Saved!';
+                fetchAndDisplayMatches(false); // Refresh matches to show the new entry
+            }
         } catch (error) {
-            console.error("Error adding document: ", error);
+            console.error("Error with database operation: ", error);
             saveButton.textContent = 'Error!';
-            setTimeout(() => { saveButton.textContent = 'Save'; if (gematriaInput.value.trim()) saveButton.disabled = false; }, 2000);
+        } finally {
+            setTimeout(() => { 
+                saveButton.textContent = 'Save'; 
+                if (gematriaInput.value.trim()) saveButton.disabled = false; 
+            }, 2000);
         }
     }
 
@@ -286,7 +323,7 @@ function initCalculatorPage(db) {
         let reportHtml = '';
 
         for (const cipher of reportCiphers) {
-            const value = CIPHERS[cipher](phrase);
+            const value = CIPHERS[cipher](phrase.toLowerCase());
             const q = query(gematriaCollectionRef, where(cipher, "==", value), limit(3));
             const snapshot = await getDocs(q);
             const matches = snapshot.docs
