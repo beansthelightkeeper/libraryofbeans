@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         style.id = 'app-dynamic-styles';
         style.innerHTML = `
             .color-palette.disabled {
-                opacity: 05;
+                opacity: 0.5;
                 filter: grayscale(80%);
                 pointer-events: none;
             }
@@ -112,6 +112,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function renderPdfInIframe(url) {
+        // Check if PDF.js is loaded
+        if (!window['pdfjs-dist/build/pdf']) {
+            console.warn("PDF.js not loaded, falling back to native PDF viewer");
+            contentFrame.src = url;
+            return;
+        }
+
         try {
             const pdfjsLib = window['pdfjs-dist/build/pdf'];
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
@@ -125,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const canvas = iframeDoc.createElement('canvas');
                 canvas.style.display = 'block';
                 canvas.style.margin = 'auto';
-                iframeDoc.body.appendChild(canvas);
                 const context = canvas.getContext('2d');
 
                 const scale = 1.5; // Adjust scale for readability
@@ -133,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
 
-                // Set --scale-factor for text layer
+                // Create container for canvas and text layer
                 const container = iframeDoc.createElement('div');
                 container.style.position = 'relative';
                 container.style.width = `${viewport.width}px`;
@@ -167,7 +173,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Error rendering PDF:", error);
-            contentFrame.srcdoc = `<html><body><h2>Failed to load PDF</h2><p>${error.message}</p></body></html>`;
+            // Fallback to native PDF viewer
+            contentFrame.src = url;
         }
     }
 
@@ -183,9 +190,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Fix broken image paths
         iframeDoc.querySelectorAll('img').forEach(img => {
-            if (img.src.includes('beanscodex.com/images/cover.jpg')) {
-                img.src = ''; // Remove broken image
-                img.alt = 'Image not found';
+            if (img.src.includes('beanscodex.com/images/')) {
+                const fileName = img.src.split('/').pop();
+                img.src = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/content/images/${fileName}`;
+                img.onerror = () => {
+                    img.src = ''; // Remove broken image
+                    img.alt = 'Image not found';
+                };
             }
         });
 
@@ -230,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('no-fx', !state.settings.isRainbowFxOn);
 
         colorSwatches.classList.toggle('disabled', !state.isHighlightModeActive);
-
+        
         highlightModeToggle.classList.toggle('active', state.isHighlightModeActive);
         eraseModeToggle.classList.toggle('active', state.isEraseModeActive);
 
@@ -338,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fileListContainer.innerHTML = '<p class="error">Could not load library.</p>';
         }
     }
-
+    
     function getIconForText(text) {
         let hash = 0;
         if (text.length === 0) return HIEROGLYPHS[0];
@@ -357,9 +368,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const a = document.createElement('a');
                 a.href = '#';
                 a.dataset.path = file.path;
-
+                
                 const icon = getIconForText(file.name);
-                a.innerHTML = `<span class="film-icon" title="${file.name}">${icon}</span><span class="file-name">${file.name}</span>`;
+                a.innerHTML = `<span class="file-icon" title="${file.name}">${icon}</span><span class="file-name">${file.name}</span>`;
+                
                 a.onclick = (e) => { e.preventDefault(); loadFile(file.path); };
                 li.appendChild(a);
                 ul.appendChild(li);
@@ -375,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.currentFile === fullPath) return;
         state.currentFile = fullPath;
         welcomeMessage.style.display = 'none';
-
+        
         document.querySelectorAll('#file-list-container li.active').forEach(el => el.classList.remove('active'));
         const fileLink = document.querySelector(`#file-list-container a[data-path="${fullPath}"]`);
         if (fileLink) fileLink.parentElement.classList.add('active');
@@ -404,26 +416,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.innerWidth <= 768) {
             sidebar.classList.remove('open');
         }
-
+        
         renderAnnotationsForCurrentFile();
         renderAllBookmarks();
     }
-
+    
     function toggleReaderTools(enabled) {
         const toolsToToggle = [
-            highlightModeToggle, eraseModeToggle, addNoteBtn, addBookmarkBtn,
+            highlightModeToggle, eraseModeToggle, addNoteBtn, addBookmarkBtn, 
             fontSizeSlider, doubleSpaceToggle, marginSlider
         ];
-
+        
         toolsToToggle.forEach(tool => {
             if (tool) tool.disabled = !enabled;
         });
 
         if (enabled) {
             colorSwatches.classList.remove('disabled');
-        } else
-
- {
+        } else {
             colorSwatches.classList.add('disabled');
             state.isHighlightModeActive = false;
             state.isEraseModeActive = false;
@@ -471,32 +481,58 @@ document.addEventListener('DOMContentLoaded', () => {
         const selection = iframeDoc.getSelection();
         if (!selection || selection.isCollapsed) return;
 
-        const range = selection.getRangeAt(0);
-        const annotationId = `anno-${Date.now()}`;
-        const rangeData = serializeRange(range, iframeDoc);
+        // Get all ranges (usually one, but supports multiple for robustness)
+        const ranges = [];
+        for (let i = 0; i < selection.rangeCount; i++) {
+            ranges.push(selection.getRangeAt(i));
+        }
 
-        const newAnnotation = {
-            id: annotationId,
-            text: selection.toString(),
-            rangeData,
-            note: note,
-            color: state.settings.activeHighlightColor
-        };
+        const annotationId = `anno-${Date.now()}`;
+        const annotations = [];
+
+        for (const range of ranges) {
+            // Skip if range is invalid or spans non-text nodes
+            if (!isValidTextRange(range)) continue;
+
+            const rangeData = serializeRange(range, iframeDoc);
+            const annotation = {
+                id: `${annotationId}-${ranges.length > 1 ? i : ''}`,
+                text: range.toString(),
+                rangeData,
+                note: note,
+                color: state.settings.activeHighlightColor
+            };
+            annotations.push(annotation);
+        }
+
+        if (annotations.length === 0) {
+            alert("Cannot highlight this selection. Please select plain text.");
+            selection.removeAllRanges();
+            return;
+        }
 
         const annotationKey = state.currentFile;
         if (!state.annotations[annotationKey]) state.annotations[annotationKey] = [];
-        state.annotations[annotationKey].push(newAnnotation);
 
-        try {
-            applyAnnotationToDOM(newAnnotation);
-        } catch (e) {
-            console.warn("Failed to apply annotation, trying fallback method:", e);
-            applyAnnotationFallback(newAnnotation);
-        }
+        annotations.forEach(annotation => {
+            state.annotations[annotationKey].push(annotation);
+            try {
+                applyAnnotationToDOM(annotation);
+            } catch (e) {
+                console.warn("Failed to apply annotation, skipping:", e);
+            }
+        });
 
         saveAnnotations();
         renderAnnotationsForCurrentFile();
         selection.removeAllRanges();
+    }
+
+    function isValidTextRange(range) {
+        const startContainer = range.startContainer;
+        const endContainer = range.endContainer;
+        // Check if both start and end containers are text nodes
+        return startContainer.nodeType === Node.TEXT_NODE && endContainer.nodeType === Node.TEXT_NODE;
     }
 
     function applyAnnotationToDOM(annotation) {
@@ -505,36 +541,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const range = deserializeRange(annotation.rangeData, iframeDoc);
         if (!range) return;
 
-        // Check if range is valid for surroundContents
-        const startContainer = range.startContainer;
-        const endContainer = range.endContainer;
-        if (startContainer.nodeType !== Node.TEXT_NODE || endContainer.nodeType !== Node.TEXT_NODE) {
-            throw new Error("Selection includes non-text nodes");
+        const mark = iframeDoc.createElement('mark');
+        mark.id = annotation.id;
+        mark.className = `highlight highlight-${annotation.color}`;
+        if (annotation.note) mark.title = annotation.note;
+
+        try {
+            range.surroundContents(mark);
+        } catch (e) {
+            console.error("Error applying annotation:", e, annotation);
+            // Fallback: insert mark without surrounding
+            const fragment = range.extractContents();
+            mark.appendChild(fragment);
+            range.insertNode(mark);
+            iframeDoc.normalize();
         }
-
-        const mark = iframeDoc.createElement('mark');
-        mark.id = annotation.id;
-        mark.className = `highlight highlight-${annotation.color}`;
-        if (annotation.note) mark.title = annotation.note;
-        range.surroundContents(mark);
-    }
-
-    function applyAnnotationFallback(annotation) {
-        const iframeDoc = contentFrame.contentDocument;
-        if (!iframeDoc) return;
-        const range = deserializeRange(annotation.rangeData, iframeDoc);
-        if (!range) return;
-
-        const mark = iframeDoc.createElement('mark');
-        mark.id = annotation.id;
-        mark.className = `highlight highlight-${annotation.color}`;
-        if (annotation.note) mark.title = annotation.note;
-
-        // Insert the marked text as a fallback
-        const fragment = range.extractContents();
-        mark.appendChild(fragment);
-        range.insertNode(mark);
-        iframeDoc.normalize();
     }
 
     function eraseAnnotation(target) {
@@ -555,14 +576,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function applyAnnotationsForCurrentFile() {
-        if (!state.currentFile) return;
+        if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) return;
         const fileAnnotations = state.annotations[state.currentFile] || [];
         fileAnnotations.forEach(annotation => {
             try {
                 applyAnnotationToDOM(annotation);
             } catch (e) {
-                console.warn("Failed to apply annotation, using fallback:", e);
-                applyAnnotationFallback(annotation);
+                console.warn("Failed to apply annotation:", e);
             }
         });
     }
@@ -617,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const iframeWin = contentFrame.contentWindow;
         const iframeDoc = contentFrame.contentDocument;
         const scrollY = iframeWin.scrollY;
-
+        
         let snippet = `Bookmark at ${Math.round((scrollY / iframeDoc.body.scrollHeight) * 100)}%`;
         try {
             const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
@@ -635,7 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         if (!state.bookmarks[state.currentFile]) state.bookmarks[state.currentFile] = [];
-
+        
         const isDuplicate = state.bookmarks[state.currentFile].some(bm => bm.scrollY === scrollY);
         if (isDuplicate) {
             alert("Bookmark already exists at this location.");
@@ -747,7 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return null;
         }
     }
-
+    
     function serializeRange(range, doc) {
         return {
             startContainerPath: getPathTo(range.startContainer, doc),
