@@ -83,6 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 filter: grayscale(80%);
                 pointer-events: none;
             }
+            .textLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+            .textLayer > div { position: absolute; white-space: pre; }
         `;
         document.head.appendChild(style);
     }
@@ -109,10 +111,58 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    async function renderPdfInIframe(url) {
+        try {
+            const pdfjsLib = window['pdfjs-dist/build/pdf'];
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
+
+            const pdf = await pdfjsLib.getDocument(url).promise;
+            const iframeDoc = contentFrame.contentDocument;
+            iframeDoc.body.innerHTML = ''; // Clear previous content
+
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const canvas = iframeDoc.createElement('canvas');
+                canvas.style.display = 'block';
+                canvas.style.margin = 'auto';
+                iframeDoc.body.appendChild(canvas);
+                const context = canvas.getContext('2d');
+
+                const viewport = page.getViewport({ scale: 1.5 }); // Adjust scale for readability
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport,
+                };
+                await page.render(renderContext).promise;
+
+                // Add text layer for better interaction
+                const textContent = await page.getTextContent();
+                const textLayerDiv = iframeDoc.createElement('div');
+                textLayerDiv.className = 'textLayer';
+                iframeDoc.body.appendChild(textLayerDiv);
+
+                const textLayer = new pdfjsLib.TextLayer({
+                    textContentSource: textContent,
+                    container: textLayerDiv,
+                    viewport: viewport,
+                    eventBus: new pdfjsLib.EventBus(),
+                });
+                await textLayer.render();
+            }
+        } catch (error) {
+            console.error("Error rendering PDF:", error);
+            contentFrame.srcdoc = `<html><body><h2>Failed to load PDF</h2><p>${error.message}</p></body></html>`;
+        }
+    }
+
     function onIframeLoad() {
-        if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) {
-            // Don't process PDFs or empty iframes
-            return;
+        if (!state.currentFile) return;
+
+        if (state.currentFile.toLowerCase().endsWith('.pdf')) {
+            return; // PDF rendering handled in loadFile
         }
 
         const iframeDoc = contentFrame.contentDocument;
@@ -315,9 +365,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const url = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${fullPath}`;
-            if(isPdf) {
+            if (isPdf) {
                 contentFrame.srcdoc = '';
-                contentFrame.src = url;
+                contentFrame.src = ''; // Reset src to avoid conflicts
+                await renderPdfInIframe(url);
             } else {
                 contentFrame.src = 'about:blank';
                 const response = await fetch(url);
@@ -327,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Failed to load file content:", error);
-            contentFrame.srcdoc = `<html><body><h2>Failed to load content</h2><p>${error}</p></body></html>`;
+            contentFrame.srcdoc = `<html><body><h2>Failed to load content</h2><p>${error.message}</p></body></html>`;
         }
 
         if (window.innerWidth <= 768) {
@@ -345,20 +396,18 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
         
         toolsToToggle.forEach(tool => {
-            if(tool) tool.disabled = !enabled;
+            if (tool) tool.disabled = !enabled;
         });
 
         if (enabled) {
             colorSwatches.classList.remove('disabled');
         } else {
             colorSwatches.classList.add('disabled');
-            // Deactivate modes if tools are disabled
             state.isHighlightModeActive = false;
             state.isEraseModeActive = false;
             applySettings();
         }
     }
-
 
     // --- ANNOTATION & ERASING LOGIC ---
     function toggleHighlightMode() {
@@ -441,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyAnnotationToDOM(annotation) {
         const iframeDoc = contentFrame.contentDocument;
-        if(!iframeDoc) return;
+        if (!iframeDoc) return;
         const range = deserializeRange(annotation.rangeData, iframeDoc);
         if (!range) return;
         const mark = iframeDoc.createElement('mark');
@@ -466,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) {
             annotationsList.innerHTML = '<li>Annotations unavailable for PDFs.</li>';
             return;
-        };
+        }
         const fileAnnotations = state.annotations[state.currentFile] || [];
         if (fileAnnotations.length === 0) {
             annotationsList.innerHTML = '<li>No annotations for this file.</li>';
@@ -513,14 +562,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const scrollY = iframeWin.scrollY;
         
         let snippet = `Bookmark at ${Math.round((scrollY / iframeDoc.body.scrollHeight) * 100)}%`;
-        try { // elementFromPoint can fail on weird documents
-             const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
-             const pElement = elements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
-             if (pElement) {
-                 snippet = pElement.textContent.trim().substring(0, 100) + '...';
-             }
-        } catch(e) { /* ignore */ }
-
+        try {
+            const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
+            const pElement = elements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
+            if (pElement) {
+                snippet = pElement.textContent.trim().substring(0, 100) + '...';
+            }
+        } catch (e) { /* ignore */ }
 
         const newBookmark = {
             id: `bookmark-${Date.now()}`,
@@ -544,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderAllBookmarks() {
         bookmarksList.innerHTML = '';
-        const allBookmarks = Object.values(state.bookmarks).flat().sort((a,b) => a.file.localeCompare(b.file));
+        const allBookmarks = Object.values(state.bookmarks).flat().sort((a, b) => a.file.localeCompare(b.file));
 
         if (allBookmarks.length === 0) {
             bookmarksList.innerHTML = '<li>No bookmarks yet.</li>';
@@ -616,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let nodeIndex = 0;
             let child = node;
             while ((child = child.previousSibling) != null) {
-                if(child.nodeType === node.nodeType && child.nodeName === node.nodeName) {
+                if (child.nodeType === node.nodeType && child.nodeName === node.nodeName) {
                     nodeIndex++;
                 }
             }
