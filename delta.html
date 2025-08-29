@@ -9,15 +9,37 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="gematria.css">
+    <style>
+        /* Styles specific to the Delta page */
+        .delta-main table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .delta-main th, .delta-main td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .delta-main th {
+            color: var(--text-secondary);
+            font-weight: bold;
+        }
+        .delta-main .delta-value {
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        .delta-main .matches-cell {
+            color: var(--text-secondary);
+        }
+    </style>
 </head>
 <body data-theme="dark">
     <div class="container">
         <header class="gematria-header">
              <a href="gematria.html" class="home-link" title="Return to Calculator">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </a>
-            <img src="icon.png" alt="BeansCodex Icon" class="header-icon header-icon-light">
-            <img src="icondark.png" alt="BeansCodex Icon" class="header-icon header-icon-dark">
             <h1>Delta Analysis</h1>
             <p>Calculate the gematria difference between two phrases</p>
             <button id="theme-toggle" class="theme-toggle-button"></button>
@@ -25,8 +47,8 @@
 
         <main class="delta-main">
             <section class="delta-input-grid">
-                <textarea id="delta-input-1" placeholder="Enter first word or phrase..."></textarea>
-                <textarea id="delta-input-2" placeholder="Enter second word or phrase..."></textarea>
+                <textarea id="delta-input-1" placeholder="Enter first word or phrase..." rows="3"></textarea>
+                <textarea id="delta-input-2" placeholder="Enter second word or phrase..." rows="3"></textarea>
             </section>
 
             <section id="delta-results-container">
@@ -39,11 +61,11 @@
              <a href="statistics.html">Statistics</a> | 
              <a href="unfold.html">Unfold</a> |
              <a href="delta.html">Delta</a> |
-             <a href="els.html">ELS</a>
+             <a href="scanner.html">Scanner</a>
         </footer>
     </div>
     
     <script src="firebase-config.js"></script>
-    <script type="module" src="gematria.js"></script>
+    <script type="module" src="delta.js"></script>
 </body>
 </html>
