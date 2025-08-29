@@ -399,11 +399,18 @@ function initCalculatorPage(db) {
         const reader = new FileReader();
         reader.onload = async (event) => {
             const content = event.target.result;
-            const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
-            uploadStatus.textContent = `Found ${lines.length} lines. Processing...`;
+            
+            // 1. Remove numbers and split by punctuation and newlines
+            const phrases = content
+                .replace(/[0-9]/g, '') // Remove all numbers
+                .split(/[.?!;,\n\r]+/) // Split by common punctuation and newlines
+                .map(phrase => phrase.trim()) // Trim whitespace from each potential phrase
+                .filter(phrase => phrase.length > 1); // Filter out empty or single-character strings
 
-            if (lines.length === 0) {
-                uploadStatus.textContent = "File is empty or contains no valid lines.";
+            uploadStatus.textContent = `Found ${phrases.length} potential phrases. Processing...`;
+
+            if (phrases.length === 0) {
+                uploadStatus.textContent = "File contains no valid phrases after cleaning.";
                 return;
             }
 
@@ -412,8 +419,8 @@ function initCalculatorPage(db) {
             let entriesInBatch = 0;
             let batchesCommitted = 0;
             
-            for (let i = 0; i < lines.length; i++) {
-                const phrase = lines[i].trim().toLowerCase();
+            for (let i = 0; i < phrases.length; i++) {
+                const phrase = phrases[i].toLowerCase();
                 if (!phrase) continue;
 
                 const allCipherValues = {};
@@ -441,7 +448,7 @@ function initCalculatorPage(db) {
                 uploadStatus.textContent = `Finalizing... Batch ${batchesCommitted} committed.`;
             }
 
-            uploadStatus.textContent = `Upload complete! Added ${lines.length} entries in ${batchesCommitted} batches.`;
+            uploadStatus.textContent = `Upload complete! Added ${phrases.length} entries in ${batchesCommitted} batches.`;
             fileInput.value = '';
         };
         reader.readAsText(file);
