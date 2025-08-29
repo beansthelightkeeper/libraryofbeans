@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIALIZATION ---
     function initialize() {
         // Debug PDF.js loading
-        if (!window['pdfjs-dist/build/pdf']) {
+        if (!window.pdfjsLib) { // *** CHANGED HERE ***
             console.warn("PDF.js library not loaded. PDFs will use native viewer.");
         } else {
             console.log("PDF.js library loaded successfully.");
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderPdfInIframe(url) {
         // Check if PDF.js is loaded
-        if (!window['pdfjs-dist/build/pdf']) {
+        if (!window.pdfjsLib) { // *** CHANGED HERE ***
             console.warn("PDF.js not loaded, falling back to native PDF viewer");
             contentFrame.src = url;
             contentFrame.srcdoc = `<html><body><h2>Loading PDF in native viewer...</h2><p>If this fails, ensure the PDF exists at <a href="${url}">${url}</a></p></body></html>`;
@@ -129,8 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const pdfjsLib = window['pdfjs-dist/build/pdf'];
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.min.js';
+            const pdfjsLib = window.pdfjsLib; // *** CHANGED HERE ***
+            // *** CRITICAL CHANGE HERE: Point to the CDN worker ***
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
 
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Failed to fetch PDF: HTTP ${response.status}`);
@@ -413,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (fileLink) fileLink.parentElement.classList.add('active');
 
         const isPdf = fullPath.toLowerCase().endsWith('.pdf');
-        toggleReaderTools(isPdf ? window['pdfjs-dist/build/pdf'] : true); // Enable tools for PDFs if PDF.js is loaded
+        toggleReaderTools(isPdf ? window.pdfjsLib : true); // *** CHANGED HERE *** Enable tools for PDFs if PDF.js is loaded
 
         try {
             const url = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${fullPath}`;
