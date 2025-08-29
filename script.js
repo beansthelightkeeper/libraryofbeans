@@ -65,6 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Debug PDF.js loading
         if (!window['pdfjs-dist/build/pdf']) {
             console.warn("PDF.js library not loaded. PDFs will use native viewer.");
+        } else {
+            console.log("PDF.js library loaded successfully.");
         }
         loadSettings();
         loadAnnotations();
@@ -89,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             .textLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
             .textLayer > div { position: absolute; white-space: pre; }
+            .highlight { cursor: pointer; }
         `;
         document.head.appendChild(style);
     }
@@ -118,15 +121,18 @@ document.addEventListener('DOMContentLoaded', () => {
     async function renderPdfInIframe(url) {
         // Check if PDF.js is loaded
         if (!window['pdfjs-dist/build/pdf']) {
-            console.warn("PDF.js not loaded, using native PDF viewer");
+            console.warn("PDF.js not loaded, falling back to native PDF viewer");
             contentFrame.src = url;
+            contentFrame.srcdoc = `<html><body><h2>Loading PDF in native viewer...</h2><p>If this fails, ensure the PDF exists at <a href="${url}">${url}</a></p></body></html>`;
             return;
         }
 
         try {
             const pdfjsLib = window['pdfjs-dist/build/pdf'];
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.min.js';
 
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Failed to fetch PDF: HTTP ${response.status}`);
             const pdf = await pdfjsLib.getDocument(url).promise;
             const iframeDoc = contentFrame.contentDocument;
             iframeDoc.body.innerHTML = ''; // Clear previous content
@@ -178,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Error rendering PDF:", error);
             contentFrame.src = url; // Fallback to native PDF viewer
-            contentFrame.srcdoc = `<html><body><h2>Loading PDF in native viewer...</h2><p>If this fails, ensure the PDF exists at ${url}</p></body></html>`;
+            contentFrame.srcdoc = `<html><body><h2>Failed to render PDF</h2><p>Error: ${error.message}. Trying native viewer... <a href="${url}">Open PDF directly</a></p></body></html>`;
         }
     }
 
@@ -230,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
         iframeDoc.addEventListener('selectionchange', () => {
             const selection = iframeDoc.getSelection();
             addNoteBtn.disabled = !selection || selection.isCollapsed;
+            highlightModeToggle.disabled = !selection || selection.isCollapsed;
         });
     }
 
@@ -414,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Failed to load file content:", error);
-            contentFrame.srcdoc = `<html><body><h2>Failed to load content</h2><p>${error.message}</p></body></html>`;
+            contentFrame.srcdoc = `<html><body><h2>Failed to load content</h2><p>Error: ${error.message}. File: ${fullPath}</p></body></html>`;
         }
 
         if (window.innerWidth <= 768) {
@@ -471,10 +478,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addNoteToSelection() {
+        const iframeDoc = contentFrame.contentDocument;
+        const selection = iframeDoc.getSelection();
+        if (!selection || selection.isCollapsed) {
+            alert("Please select some text to annotate.");
+            return;
+        }
         const note = prompt('Add a note for this annotation:');
         if (note === null) {
-            const selection = contentFrame.contentDocument.getSelection();
-            if (selection) selection.removeAllRanges();
+            selection.removeAllRanges();
             return;
         }
         createAnnotation(note);
@@ -499,11 +511,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < ranges.length; i++) {
             const range = ranges[i];
-            // Relaxed validation: allow selections within the same parent node
             const startContainer = range.startContainer;
             const endContainer = range.endContainer;
-            const commonAncestor = range.commonAncestorContainer;
 
+            // Validate selection
             if (startContainer.nodeType !== Node.TEXT_NODE || endContainer.nodeType !== Node.TEXT_NODE) {
                 console.warn("Skipping annotation for non-text selection:", range);
                 continue;
@@ -535,6 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 applyAnnotationToDOM(annotation);
             } catch (e) {
                 console.warn("Failed to apply annotation:", e);
+                alert("Failed to apply highlight. Try selecting a smaller text range.");
             }
         });
 
@@ -547,7 +559,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc) return;
         const range = deserializeRange(annotation.rangeData, iframeDoc);
-        if (!range) return;
+        if (!range) {
+            console.warn("Failed to deserialize range for annotation:", annotation);
+            return;
+        }
 
         const mark = iframeDoc.createElement('mark');
         mark.id = annotation.id;
