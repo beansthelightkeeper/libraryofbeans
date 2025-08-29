@@ -12,7 +12,301 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <!-- PDF.js library for rendering PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+    <style>
+        /* --- GOOGLE FONT IMPORT --- */
+        @import url('https://fonts.googleapis.com/css2?family=Fondamento&display=swap');
+
+        /* --- KEYFRAME ANIMATIONS FOR RAINBOW THEME --- */
+        @keyframes rainbow-bg-animation {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        /* --- THEME & VARIABLE DEFINITIONS --- */
+        :root {
+            --font-main: 'Nunito', sans-serif;
+            --font-mono: 'Roboto Mono', monospace;
+            --font-fallback: 'Inter', sans-serif;
+            --font-papyrus: 'Fondamento', 'Times New Roman', serif;
+
+            /* Highlight Colors */
+            --highlight-yellow: rgba(255, 242, 0, 0.4);
+            --highlight-pink: rgba(255, 105, 180, 0.4);
+            --highlight-green: rgba(120, 220, 120, 0.4);
+            --highlight-blue: rgba(130, 200, 255, 0.4);
+            --erase-accent: #ff4d4d;
+            --erase-accent-hover: #ff1a1a;
+
+            /* Light Theme */
+            --bg-primary-light: #fdfaf6;
+            --bg-secondary-light: #ffffff;
+            --text-primary-light: #3a3a3a;
+            --text-secondary-light: #606770;
+            --border-light: #e0dccc;
+            --accent-light: #8a6d3b;
+            --accent-hover-light: #66512c;
+            --bookmark-light: rgba(210, 180, 140, 0.8);
+            --button-bg-light: #f5f1e9;
+            --button-bg-hover-light: #e9e2d5;
+
+            /* Dark Theme */
+            --bg-primary-dark: #0d1117;
+            --bg-secondary-dark: #161b22;
+            --text-primary-dark: #c9d1d9;
+            --text-secondary-dark: #8b949e;
+            --border-dark: #30363d;
+            --accent-dark: #00ffff;
+            --accent-hover-dark: #33ffff;
+            --bookmark-dark: rgba(0, 255, 255, 0.4);
+            --button-bg-dark: #21262d;
+            --button-bg-hover-dark: #30363d;
+        }
+
+        /* --- THEME APPLICATION --- */
+        body {
+            --bg-primary: var(--bg-primary-light);
+            --bg-secondary: var(--bg-secondary-light);
+            --text-primary: var(--text-primary-light);
+            --text-secondary: var(--text-secondary-light);
+            --border: var(--border-light);
+            --accent: var(--accent-light);
+            --accent-hover: var(--accent-hover-light);
+            --bookmark: var(--bookmark-light);
+            --button-bg: var(--button-bg-light);
+            --button-bg-hover: var(--button-bg-hover-light);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body[data-theme='dark'] {
+            --bg-primary: var(--bg-primary-dark);
+            --bg-secondary: var(--bg-secondary-dark);
+            --text-primary: var(--text-primary-dark);
+            --text-secondary: var(--text-secondary-dark);
+            --border: var(--border-dark);
+            --accent: var(--accent-dark);
+            --accent-hover: var(--accent-hover-dark);
+            --bookmark: var(--bookmark-dark);
+            --button-bg: var(--button-bg-dark);
+            --button-bg-hover: var(--button-bg-hover-dark);
+        }
+
+        /* --- DARK THEME DECORATION --- */
+        body[data-theme='dark']::before {
+            content: '𓂀 ⟁ ∞ 𝄠 𝨁 𝨄 🃟 🂡 🙨 𓂀 ⟁ ∞ 𝄠 𝨁 𝨄 🃟 🂡 🙨 𓂀 ⟁ ∞ 𝄠 𝨁 𝨄 🃟 🂡 🙨';
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            font-size: 2rem;
+            opacity: 0.05; z-index: -1; pointer-events: none;
+            line-height: 2; word-wrap: break-word; overflow: hidden;
+            background: linear-gradient(90deg, hsl(0, 100%, 70%), hsl(60, 100%, 70%), hsl(120, 100%, 70%), hsl(180, 100%, 70%), hsl(240, 100%, 70%), hsl(300, 100%, 70%), hsl(360, 100%, 70%));
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: rainbow-bg-animation 15s linear infinite alternate;
+        }
+        body[data-theme='dark'].no-fx::before {
+            animation: none; color: var(--accent-dark); opacity: 0.03;
+        }
+        body[data-theme='dark'] .logo {
+            font-family: var(--font-mono); font-weight: 700;
+            color: var(--accent-dark); text-shadow: 0 0 5px var(--accent-dark);
+        }
+
+        /* --- GENERAL LAYOUT & RESET --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--font-main), var(--font-fallback);
+            background-color: var(--bg-primary); color: var(--text-primary);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .container { display: flex; flex-grow: 1; height: 1px; /* Flexbox needs a basis */ }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 320px; background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            transition: width 0.3s ease;
+            z-index: 10; flex-shrink: 0; height: 100%;
+        }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+        }
+        .sidebar-content {
+            flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+        }
+        .logo { font-size: 1.5rem; color: var(--accent); white-space: nowrap; overflow: hidden; margin-left: auto; }
+        .main-controls { display: flex; align-items: center; gap: 8px; }
+        .main-controls button, .main-controls .home-link {
+            background: none; border: none; color: var(--text-secondary); cursor: pointer;
+            padding: 8px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0;
+            width: 40px; height: 40px;
+        }
+        .main-controls button:hover, .main-controls .home-link:hover { background-color: var(--button-bg-hover); color: var(--text-primary); }
+
+        #rainbow-toggle { font-family: var(--font-mono); font-weight: 700; }
+        #rainbow-toggle.active { background-color: var(--accent); color: var(--bg-secondary); border: 1px solid var(--accent); }
+        body[data-theme='dark'] #rainbow-toggle.active { color: var(--bg-primary-dark); }
+        #menu-toggle, #minimize-toggle { display: none; }
+
+        .sidebar h2 {
+            font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-secondary); padding: 16px;
+            border-bottom: 1px solid var(--border); margin: 0; white-space: nowrap;
+        }
+        .sidebar .mini-text { display: none; }
+
+        /* File Navigation & Organization (PAPYRUS THEME) */
+        .file-navigation { flex-shrink: 0; }
+        #file-list-container {
+            font-family: var(--font-papyrus);
+            background-color: #f7f0e2;
+            border: 1px solid #dcd0b8;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            margin: 0 8px;
+            border-radius: 3px;
+        }
+        body[data-theme='dark'] #file-list-container {
+            background-color: #2a2823;
+            border-color: #4f4a3f;
+        }
+        #file-list-container ul { list-style: none; padding-left: 15px; }
+        #file-list-container > ul { padding-left: 0; }
+        #file-list-container li a {
+            padding: 6px 15px;
+            font-size: 1.1rem;
+            transition: letter-spacing 0.3s ease, color 0.2s ease;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-primary); /* Set link color to match theme */
+            text-decoration: none; /* Remove underline */
+        }
+        #file-list-container li a:hover {
+            letter-spacing: 1px;
+            color: var(--accent-hover);
+        }
+        #file-list-container li.active a {
+            color: var(--accent);
+            font-weight: 700;
+        }
+        .file-icon { display: none; }
+
+        /* Reader Tools */
+        .reader-tools { padding: 0 16px 16px 16px; }
+        .tool-group { margin-top: 16px; }
+        .tool-group label {
+            display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-secondary);
+            font-family: var(--font-fallback); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .slider-container { display: flex; align-items: center; gap: 10px; }
+        .slider-container span { font-size: 0.9rem; color: var(--text-secondary); white-space: nowrap; }
+        .slider-container input[type="range"] { width: 100%; }
+        .layout-controls { display: flex; flex-direction: column; gap: 10px; }
+
+        /* --- MINIMIZED SIDEBAR --- */
+        .sidebar.minimized { width: 80px; }
+        .sidebar.minimized .logo, .sidebar.minimized .full-text { display: none; }
+        .sidebar.minimized .mini-text { display: inline; }
+        .sidebar.minimized h2 { text-align: center; padding: 16px 0; }
+        .sidebar.minimized .reader-tools { padding: 0 10px 16px 10px; }
+        .sidebar.minimized .slider-container, .sidebar.minimized .layout-controls { flex-direction: column; }
+        .sidebar.minimized #file-list-container ul { padding: 0; text-align: center; }
+        .sidebar.minimized #file-list-container li a { padding: 8px 0; }
+        .sidebar.minimized .file-name { display: none; }
+        .sidebar.minimized .file-icon { display: inline-block; font-size: 1.5rem; line-height: 1; }
+
+        /* --- MAIN CONTENT VIEW --- */
+        .content-viewer { flex-grow: 1; position: relative; background-color: var(--bg-secondary); display: flex; }
+        #content-frame { width: 100%; height: 100%; border: none; }
+        #welcome-message {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; color: var(--text-secondary); display: flex;
+            flex-direction: column; align-items: center; gap: 20px;
+        }
+        .logo-graphic { display: flex; justify-content: center; align-items: center; transform: rotate(45deg); }
+        .logo-graphic .triangle {
+            width: 0; height: 0; border-left: 20px solid transparent;
+            border-right: 20px solid transparent; border-bottom: 35px solid var(--accent);
+            margin: -5px; opacity: 0.6;
+        }
+        .logo-graphic .triangle:nth-child(2) { transform: rotate(120deg); }
+        .logo-graphic .triangle:nth-child(3) { transform: rotate(240deg); }
+
+        /* --- BOTTOM TOOLBAR --- */
+        .bottom-toolbar {
+            flex-shrink: 0;
+            background-color: var(--bg-primary);
+            border-top: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            z-index: 100;
+            transition: background-color 0.3s ease;
+        }
+        .bottom-toolbar .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+        .bottom-toolbar button {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+            font-size: 0.75rem; border: none; background-color: transparent;
+            color: var(--text-secondary); cursor: pointer; border-radius: 6px;
+            padding: 4px 8px; width: 80px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .bottom-toolbar button:hover { background-color: var(--button-bg-hover); color: var(--text-primary); }
+        .bottom-toolbar button:disabled { opacity: 0.4; cursor: not-allowed; background-color: transparent; }
+        .bottom-toolbar #highlight-mode-toggle.active, .bottom-toolbar #double-space-toggle.active {
+            color: var(--accent);
+        }
+        .bottom-toolbar #erase-mode-toggle.active { color: var(--erase-accent); }
+        .color-palette { display: flex; gap: 10px; }
+        .color-swatch {
+            width: 30px; height: 30px; border-radius: 50%;
+            border: 2px solid var(--border); cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .color-swatch:hover { transform: scale(1.1); }
+        .color-swatch.active { border-color: var(--accent); box-shadow: 0 0 8px var(--accent); transform: scale(1.1); }
+        .color-swatch[data-color="yellow"] { background-color: var(--highlight-yellow); }
+        .color-swatch[data-color="pink"] { background-color: var(--highlight-pink); }
+        .color-swatch[data-color="green"] { background-color: var(--highlight-green); }
+        .color-swatch[data-color="blue"] { background-color: var(--highlight-blue); }
+
+        /* --- RESPONSIVE DESIGN --- */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute; height: 100%; transform: translateX(-100%);
+                box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+            }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar.minimized { transform: translateX(-100%); }
+            #menu-toggle { display: flex; }
+            .content-viewer { width: 100vw; }
+            .bottom-toolbar { padding: 8px; gap: 10px; justify-content: space-around; }
+            .bottom-toolbar .toolbar-text { display: none; } /* Hide text on small screens */
+            .bottom-toolbar button { width: 50px; }
+            .color-palette { display: none; } /* Hide color palette on mobile for now */
+        }
+        @media (min-width: 769px) { #minimize-toggle { display: flex; } }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -139,6 +433,780 @@
          </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- USER CONFIGURATION ---
+        const GITHUB_USERNAME = "beansthelightkeeper";
+        const GITHUB_REPO = "libraryofbeans";
+        const LIBRARY_ROOT = 'content/';
+        // --- END OF CONFIGURATION ---
+
+        // --- DOM Elements ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const menuToggle = document.getElementById('menu-toggle');
+        const minimizeToggle = document.getElementById('minimize-toggle');
+        const rainbowToggle = document.getElementById('rainbow-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const fileListContainer = document.getElementById('file-list-container');
+        const contentFrame = document.getElementById('content-frame');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const highlightModeToggle = document.getElementById('highlight-mode-toggle');
+        const eraseModeToggle = document.getElementById('erase-mode-toggle');
+        const addNoteBtn = document.getElementById('add-note-btn');
+        const addBookmarkBtn = document.getElementById('add-bookmark-btn');
+        const annotationsList = document.getElementById('annotations-list');
+        const bookmarksList = document.getElementById('bookmarks-list');
+        const clearAnnotationsBtn = document.getElementById('clear-annotations-btn');
+        const clearBookmarksBtn = document.getElementById('clear-bookmarks-btn');
+        const fontSizeSlider = document.getElementById('font-size-slider');
+        const colorSwatches = document.getElementById('highlighter-colors');
+        const doubleSpaceToggle = document.getElementById('double-space-toggle');
+        const marginSlider = document.getElementById('margin-slider');
+        const librarySectionHeader = document.getElementById('library-section-header');
+
+        // --- App State ---
+        const state = {
+            currentFile: null,
+            targetScrollY: null,
+            isHighlightModeActive: false,
+            isEraseModeActive: false,
+            settings: {
+                theme: 'dark',
+                fontSize: 16,
+                sidebarMinimized: false,
+                activeHighlightColor: 'yellow',
+                isDoubleSpaced: false,
+                isRainbowFxOn: true,
+                marginSize: 10,
+            },
+            annotations: {},
+            bookmarks: {},
+        };
+
+        // --- ICONS & COLORS ---
+        const ICONS = {
+            sun: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`,
+            moon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
+        };
+        const HIGHLIGHT_COLORS = {
+            yellow: '--highlight-yellow',
+            pink: '--highlight-pink',
+            green: '--highlight-green',
+            blue: '--highlight-blue',
+        };
+        const HIEROGLYPHS = ['𓂀', '⟁', '∞', '𝄠', '𝨁', '𝨄', '🃟', '🂡', '🙨', '☥', '♅', '♆', '⚚', '⚛', '⚜', '☤', '☧', '⚳', '⬙', '⏣'];
+
+        // --- INITIALIZATION ---
+        function initialize() {
+            loadSettings();
+            loadAnnotations();
+            loadBookmarks();
+            injectDynamicStyles();
+            applySettings();
+            fetchAndOrganizeFiles();
+            setupEventListeners();
+            renderAllBookmarks();
+            toggleReaderTools(false); // Disable tools on startup
+        }
+
+        // --- DYNAMIC STYLE INJECTION ---
+        function injectDynamicStyles() {
+            const style = document.createElement('style');
+            style.id = 'app-dynamic-styles';
+            style.innerHTML = `
+                .color-palette.disabled {
+                    opacity: 0.5;
+                    filter: grayscale(80%);
+                    pointer-events: none;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // --- EVENT LISTENERS ---
+        function setupEventListeners() {
+            themeToggle.addEventListener('click', toggleTheme);
+            minimizeToggle.addEventListener('click', toggleSidebarMinimize);
+            rainbowToggle.addEventListener('click', toggleRainbowFx);
+            menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+            highlightModeToggle.addEventListener('click', toggleHighlightMode);
+            eraseModeToggle.addEventListener('click', toggleEraseMode);
+            addNoteBtn.addEventListener('click', addNoteToSelection);
+            addBookmarkBtn.addEventListener('click', addBookmark);
+            clearAnnotationsBtn.addEventListener('click', clearAllAnnotations);
+            clearBookmarksBtn.addEventListener('click', clearAllBookmarks);
+            fontSizeSlider.addEventListener('input', handleFontSizeChange);
+            colorSwatches.addEventListener('click', handleColorChange);
+            doubleSpaceToggle.addEventListener('click', toggleDoubleSpacing);
+            marginSlider.addEventListener('input', handleMarginChange);
+            contentFrame.addEventListener('load', onIframeLoad);
+            librarySectionHeader.addEventListener('click', () => {
+                librarySectionHeader.parentElement.classList.toggle('collapsed');
+            });
+        }
+
+        async function onIframeLoad() {
+            const iframeDoc = contentFrame.contentDocument;
+            if (!iframeDoc) return;
+
+            const pdfUrlToLoad = contentFrame.dataset.loadingPdfUrl;
+            
+            if (pdfUrlToLoad) {
+                delete contentFrame.dataset.loadingPdfUrl;
+                await renderPdfInIframe(pdfUrlToLoad, contentFrame);
+            } else {
+                // This part is for HTML files only
+                if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) {
+                    return;
+                }
+                const base = iframeDoc.createElement('base');
+                const pathParts = state.currentFile.split('/');
+                pathParts.pop();
+                const directoryPath = pathParts.join('/') + '/';
+                base.href = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${directoryPath}`;
+                iframeDoc.head.prepend(base);
+            }
+
+            // Common tasks for both HTML and rendered PDFs
+            updateIframeStyles();
+            setupIframeListeners();
+            applyAnnotationsForCurrentFile();
+            renderAnnotationsForCurrentFile();
+            renderAllBookmarks();
+
+            if (state.targetScrollY !== null) {
+                contentFrame.contentWindow.scrollTo(0, state.targetScrollY);
+                state.targetScrollY = null;
+            }
+        }
+
+
+        function setupIframeListeners() {
+            const iframeDoc = contentFrame.contentDocument;
+            if (!iframeDoc) return;
+            iframeDoc.addEventListener('pointerup', handleIframeInteraction);
+            iframeDoc.addEventListener('selectionchange', () => {
+                const selection = iframeDoc.getSelection();
+                addNoteBtn.disabled = !selection || selection.isCollapsed;
+            });
+        }
+
+        // --- SETTINGS & UI UPDATES ---
+        function applySettings() {
+            document.body.dataset.theme = state.settings.theme;
+            themeToggle.innerHTML = state.settings.theme === 'dark' ? ICONS.sun : ICONS.moon;
+            fontSizeSlider.value = state.settings.fontSize;
+            marginSlider.value = state.settings.marginSize;
+            sidebar.classList.toggle('minimized', state.settings.sidebarMinimized);
+            doubleSpaceToggle.classList.toggle('active', state.settings.isDoubleSpaced);
+            rainbowToggle.classList.toggle('active', state.settings.isRainbowFxOn);
+            document.body.classList.toggle('no-fx', !state.settings.isRainbowFxOn);
+
+            colorSwatches.classList.toggle('disabled', !state.isHighlightModeActive);
+            
+            highlightModeToggle.classList.toggle('active', state.isHighlightModeActive);
+            eraseModeToggle.classList.toggle('active', state.isEraseModeActive);
+
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                swatch.classList.toggle('active', swatch.dataset.color === state.settings.activeHighlightColor);
+            });
+            updateIframeStyles();
+        }
+
+        function toggleTheme() {
+            state.settings.theme = state.settings.theme === 'dark' ? 'light' : 'dark';
+            saveSettings();
+            applySettings();
+        }
+
+        function toggleSidebarMinimize() {
+            state.settings.sidebarMinimized = !state.settings.sidebarMinimized;
+            saveSettings();
+            applySettings();
+        }
+
+        function toggleRainbowFx() {
+            state.settings.isRainbowFxOn = !state.settings.isRainbowFxOn;
+            saveSettings();
+            applySettings();
+        }
+
+        function handleFontSizeChange(e) {
+            state.settings.fontSize = e.target.value;
+            saveSettings();
+            updateIframeStyles();
+        }
+
+        function handleColorChange(e) {
+            if (!state.isHighlightModeActive) return;
+            const target = e.target.closest('.color-swatch');
+            if (!target) return;
+            state.settings.activeHighlightColor = target.dataset.color;
+            saveSettings();
+            applySettings();
+        }
+
+        function toggleDoubleSpacing() {
+            state.settings.isDoubleSpaced = !state.settings.isDoubleSpaced;
+            saveSettings();
+            applySettings();
+        }
+
+        function handleMarginChange(e) {
+            state.settings.marginSize = e.target.value;
+            saveSettings();
+            updateIframeStyles();
+        }
+
+        function updateIframeStyles() {
+            const iframeDoc = contentFrame.contentDocument;
+            if (!iframeDoc || !iframeDoc.head) return;
+            let style = iframeDoc.getElementById('dynamic-reader-styles');
+            if (!style) {
+                style = iframeDoc.createElement('style');
+                style.id = 'dynamic-reader-styles';
+                iframeDoc.head.appendChild(style);
+            }
+            const computedStyles = getComputedStyle(document.body);
+            const textColor = computedStyles.getPropertyValue('--text-primary');
+            const bodyBgColor = computedStyles.getPropertyValue('--bg-secondary');
+            const lineHeight = state.settings.isDoubleSpaced ? '2.5' : '1.6';
+            
+            const isPdf = state.currentFile && state.currentFile.toLowerCase().endsWith('.pdf');
+            const margin = isPdf ? '0' : `${state.settings.marginSize}%`; // No extra margin for PDF container
+            const padding = isPdf ? '0' : `2% ${margin}`;
+
+            const highlightStyles = Object.entries(HIGHLIGHT_COLORS).map(([name, cssVar]) => {
+                return `.highlight-${name} { background-color: ${computedStyles.getPropertyValue(cssVar)}; color: inherit; }`;
+            }).join('\n');
+
+            style.innerHTML = `
+                body {
+                    color: ${textColor}; background-color: ${bodyBgColor};
+                    line-height: ${lineHeight}; font-size: ${state.settings.fontSize}px;
+                    padding: ${padding};
+                    transition: color 0.3s ease, background-color 0.3s ease;
+                    margin: 0 auto;
+                    max-width: ${isPdf ? 'none' : '80ch'};
+                }
+                ${highlightStyles}
+                mark[id^="anno-"] { cursor: pointer; }
+            `;
+        }
+
+
+        // --- GITHUB FILE FETCHING ---
+        async function fetchAndOrganizeFiles() {
+            const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/git/trees/main?recursive=1`;
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+                const data = await response.json();
+                const flatFileList = data.tree
+                    .filter(item => item.type === 'blob' && (item.path.endsWith('.html') || item.path.endsWith('.pdf')) && item.path.startsWith(LIBRARY_ROOT))
+                    .map(item => {
+                        const relativePath = item.path.substring(LIBRARY_ROOT.length);
+                        const displayName = relativePath.replace(/\.(html|pdf)$/i, '').replace(/_/g, ' ').replace(/\//g, ' / ');
+                        return { name: displayName, path: item.path };
+                    })
+                    .sort((a, b) => a.name.localeCompare(b.name));
+                renderFileList(flatFileList);
+            } catch (error) {
+                console.error("Failed to fetch files:", error);
+                fileListContainer.innerHTML = '<p class="error">Could not load library.</p>';
+            }
+        }
+        
+        function getIconForText(text) {
+            let hash = 0;
+            if (text.length === 0) return HIEROGLYPHS[0];
+            for (let i = 0; i < text.length; i++) {
+                hash = (hash << 5) - hash + text.charCodeAt(i);
+                hash |= 0; // Convert to 32bit integer
+            }
+            return HIEROGLYPHS[Math.abs(hash) % HIEROGLYPHS.length];
+        }
+
+        function renderFileList(files) {
+            const ul = document.createElement('ul');
+            if (files.length > 0) {
+                files.forEach(file => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = '#';
+                    a.dataset.path = file.path;
+                    
+                    const icon = getIconForText(file.name);
+                    a.innerHTML = `<span class="file-icon" title="${file.name}">${icon}</span><span class="file-name">${file.name}</span>`;
+                    
+                    a.onclick = (e) => { e.preventDefault(); loadFile(file.path); };
+                    li.appendChild(a);
+                    ul.appendChild(li);
+                });
+            } else {
+                ul.innerHTML = '<li>No HTML or PDF files found.</li>';
+            }
+            fileListContainer.innerHTML = '';
+            fileListContainer.appendChild(ul);
+        }
+
+        async function loadFile(fullPath) {
+            if (state.currentFile === fullPath) return;
+            state.currentFile = fullPath;
+            welcomeMessage.style.display = 'none';
+            
+            document.querySelectorAll('#file-list-container li.active').forEach(el => el.classList.remove('active'));
+            const fileLink = document.querySelector(`#file-list-container a[data-path="${fullPath}"]`);
+            if (fileLink) fileLink.parentElement.classList.add('active');
+
+            const isPdf = fullPath.toLowerCase().endsWith('.pdf');
+            toggleReaderTools(true); // Enable tools for all file types
+
+            try {
+                const url = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${fullPath}`;
+                if(isPdf) {
+                    contentFrame.dataset.loadingPdfUrl = url;
+                    contentFrame.src = 'about:blank'; // Triggers onIframeLoad
+                } else {
+                    delete contentFrame.dataset.loadingPdfUrl;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const htmlContent = await response.text();
+                    contentFrame.srcdoc = htmlContent; // Triggers onIframeLoad
+                }
+            } catch (error) {
+                console.error("Failed to load file content:", error);
+                contentFrame.srcdoc = `<html><body><h2>Failed to load content</h2><p>${error}</p></body></html>`;
+            }
+
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+            }
+        }
+        
+        function toggleReaderTools(enabled) {
+            const toolsToToggle = [
+                highlightModeToggle, eraseModeToggle, addNoteBtn, addBookmarkBtn, 
+                fontSizeSlider, doubleSpaceToggle, marginSlider
+            ];
+            
+            toolsToToggle.forEach(tool => {
+                if(tool) tool.disabled = !enabled;
+            });
+
+            if (enabled) {
+                colorSwatches.classList.remove('disabled');
+            } else {
+                colorSwatches.classList.add('disabled');
+                // Deactivate modes if tools are disabled
+                state.isHighlightModeActive = false;
+                state.isEraseModeActive = false;
+                applySettings();
+            }
+        }
+        
+        // --- PDF RENDERING ---
+        async function renderPdfInIframe(pdfUrl, iframe) {
+            const iframeDoc = iframe.contentDocument;
+            
+            // Setup basic HTML structure and styles in the iframe
+            iframeDoc.body.innerHTML = '<div id="viewer-container" style="background-color: var(--bg-secondary);"></div>';
+            const style = iframeDoc.createElement('style');
+            style.textContent = `
+                .page {
+                    position: relative;
+                    margin: 20px auto;
+                    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                }
+                .textLayer {
+                    position: absolute;
+                    left: 0; top: 0; right: 0; bottom: 0;
+                    overflow: hidden;
+                    opacity: 1; 
+                }
+                .textLayer > span {
+                    color: transparent;
+                    position: absolute;
+                    white-space: pre;
+                    cursor: text;
+                    transform-origin: 0% 0%;
+                }
+                canvas { display: block; }
+            `;
+            iframeDoc.head.appendChild(style);
+            
+            const viewerContainer = iframeDoc.getElementById('viewer-container');
+            
+            // Set worker source for PDF.js
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
+
+            try {
+                const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 1.5 });
+
+                    const pageDiv = iframeDoc.createElement('div');
+                    pageDiv.className = 'page';
+                    pageDiv.style.width = `${viewport.width}px`;
+                    pageDiv.style.height = `${viewport.height}px`;
+
+                    const canvas = iframeDoc.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    const textLayerDiv = iframeDoc.createElement('div');
+                    textLayerDiv.className = 'textLayer';
+                    
+                    pageDiv.appendChild(canvas);
+                    pageDiv.appendChild(textLayerDiv);
+                    viewerContainer.appendChild(pageDiv);
+                    
+                    // Render canvas
+                    await page.render({
+                        canvasContext: canvas.getContext('2d'),
+                        viewport: viewport
+                    }).promise;
+                    
+                    // Render text layer to make text selectable
+                    const textContent = await page.getTextContent();
+                    
+                    // This version of renderTextLayer is for modern pdf.js
+                    const textLayer = new pdfjsLib.TextLayerBuilder({
+                        textLayerDiv: textLayerDiv,
+                        pageIndex: page.pageIndex,
+                        viewport: viewport
+                    });
+                    textLayer.setTextContent(textContent);
+                    textLayer.render();
+                }
+            } catch (error) {
+                console.error('Error rendering PDF:', error);
+                viewerContainer.textContent = `Failed to load PDF. ${error.message}`;
+            }
+        }
+
+
+        // --- ANNOTATION & ERASING LOGIC ---
+        function toggleHighlightMode() {
+            state.isHighlightModeActive = !state.isHighlightModeActive;
+            if (state.isHighlightModeActive) {
+                state.isEraseModeActive = false;
+            }
+            applySettings();
+        }
+
+        function toggleEraseMode() {
+            state.isEraseModeActive = !state.isEraseModeActive;
+            if (state.isEraseModeActive) state.isHighlightModeActive = false;
+            applySettings();
+        }
+
+        function handleIframeInteraction(event) {
+            setTimeout(() => {
+                if (state.isHighlightModeActive) {
+                    createAnnotation();
+                } else if (state.isEraseModeActive) {
+                    eraseAnnotation(event.target);
+                }
+            }, 50);
+        }
+
+        function addNoteToSelection() {
+            const note = prompt('Add a note for this annotation:');
+            if (note === null) {
+                const selection = contentFrame.contentDocument.getSelection();
+                if (selection) selection.removeAllRanges();
+                return;
+            }
+            createAnnotation(note);
+        }
+
+        function createAnnotation(note = '') {
+            const iframeDoc = contentFrame.contentDocument;
+            const selection = iframeDoc.getSelection();
+            if (!selection || selection.isCollapsed) return;
+
+            const range = selection.getRangeAt(0);
+            const annotationId = `anno-${Date.now()}`;
+            const rangeData = serializeRange(range, iframeDoc);
+
+            const newAnnotation = {
+                id: annotationId,
+                text: selection.toString(),
+                rangeData,
+                note: note,
+                color: state.settings.activeHighlightColor
+            };
+
+            const annotationKey = state.currentFile;
+            if (!state.annotations[annotationKey]) state.annotations[annotationKey] = [];
+            state.annotations[annotationKey].push(newAnnotation);
+
+            applyAnnotationToDOM(newAnnotation);
+            saveAnnotations();
+            renderAnnotationsForCurrentFile();
+            selection.removeAllRanges();
+        }
+
+        function eraseAnnotation(target) {
+            const mark = target.closest('mark');
+            if (!mark || !mark.id.startsWith('anno-')) return;
+            const annotationId = mark.id;
+            const annotationKey = state.currentFile;
+            const fileAnnotations = state.annotations[annotationKey] || [];
+            state.annotations[annotationKey] = fileAnnotations.filter(anno => anno.id !== annotationId);
+
+            const parent = mark.parentNode;
+            while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+            parent.removeChild(mark);
+            parent.normalize();
+
+            saveAnnotations();
+            renderAnnotationsForCurrentFile();
+        }
+
+        function applyAnnotationToDOM(annotation) {
+            const iframeDoc = contentFrame.contentDocument;
+            if(!iframeDoc) return;
+            const range = deserializeRange(annotation.rangeData, iframeDoc);
+            if (!range) return;
+            const mark = iframeDoc.createElement('mark');
+            mark.id = annotation.id;
+            mark.className = `highlight highlight-${annotation.color}`;
+            if (annotation.note) mark.title = annotation.note;
+            try {
+                range.surroundContents(mark);
+            } catch (e) {
+                console.error("Error applying annotation:", e, annotation);
+            }
+        }
+
+        function applyAnnotationsForCurrentFile() {
+            if (!state.currentFile) return;
+            const fileAnnotations = state.annotations[state.currentFile] || [];
+            fileAnnotations.forEach(applyAnnotationToDOM);
+        }
+
+        function renderAnnotationsForCurrentFile() {
+            annotationsList.innerHTML = '';
+            const fileAnnotations = state.annotations[state.currentFile] || [];
+            if (fileAnnotations.length === 0) {
+                annotationsList.innerHTML = '<li>No annotations for this file.</li>';
+                return;
+            }
+            fileAnnotations.forEach(annotation => {
+                const li = document.createElement('li');
+                li.dataset.annotationId = annotation.id;
+                let content = `<div class="annotation-text">${escapeHTML(annotation.text)}</div>`;
+                if (annotation.note) {
+                    content = `<div class="annotation-note">${escapeHTML(annotation.note)}</div>` + content;
+                }
+                li.innerHTML = content;
+                li.addEventListener('click', () => {
+                    const targetEl = contentFrame.contentDocument.getElementById(annotation.id);
+                    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                });
+                annotationsList.appendChild(li);
+            });
+        }
+
+        function clearAllAnnotations() {
+            if (confirm("Are you sure you want to delete all annotations for all files? This cannot be undone.")) {
+                state.annotations = {};
+                saveAnnotations();
+                renderAnnotationsForCurrentFile();
+                const iframeDoc = contentFrame.contentDocument;
+                if (iframeDoc) {
+                    iframeDoc.querySelectorAll('mark[id^="anno-"]').forEach(mark => {
+                        const parent = mark.parentNode;
+                        while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+                        parent.removeChild(mark);
+                        parent.normalize();
+                    });
+                }
+            }
+        }
+
+        // --- BOOKMARKING ---
+        function addBookmark() {
+            if (!state.currentFile) return;
+            const iframeWin = contentFrame.contentWindow;
+            const iframeDoc = contentFrame.contentDocument;
+            const scrollY = iframeWin.scrollY;
+            
+            let snippet = `Bookmark at ${Math.round((scrollY / iframeDoc.body.scrollHeight) * 100)}%`;
+            try { 
+                 const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
+                 const pElement = elements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
+                 if (pElement) {
+                     snippet = pElement.textContent.trim().substring(0, 100) + '...';
+                 }
+            } catch(e) { /* ignore */ }
+
+
+            const newBookmark = {
+                id: `bookmark-${Date.now()}`,
+                file: state.currentFile,
+                scrollY: scrollY,
+                snippet: snippet
+            };
+
+            if (!state.bookmarks[state.currentFile]) state.bookmarks[state.currentFile] = [];
+            
+            const isDuplicate = state.bookmarks[state.currentFile].some(bm => bm.scrollY === scrollY);
+            if (isDuplicate) {
+                // Using a custom alert/modal would be better, but for now, this is fine.
+                console.warn("Bookmark already exists at this location.");
+                return;
+            }
+
+            state.bookmarks[state.currentFile].push(newBookmark);
+            saveBookmarks();
+            renderAllBookmarks();
+        }
+
+        function renderAllBookmarks() {
+            bookmarksList.innerHTML = '';
+            const allBookmarks = Object.values(state.bookmarks).flat().sort((a,b) => a.file.localeCompare(b.file));
+
+            if (allBookmarks.length === 0) {
+                bookmarksList.innerHTML = '<li>No bookmarks yet.</li>';
+                return;
+            }
+
+            allBookmarks.forEach(bookmark => {
+                const li = document.createElement('li');
+                li.classList.toggle('active-file', bookmark.file === state.currentFile);
+                const bookTitle = bookmark.file.substring(LIBRARY_ROOT.length)
+                    .replace(/\.(html|pdf)$/i, '').replace(/_/g, ' ').replace(/\//g, ' / ');
+
+                li.innerHTML = `
+                    <div class="bookmark-title">${bookTitle}</div>
+                    <div class="bookmark-snippet">${escapeHTML(bookmark.snippet)}</div>
+                `;
+                li.addEventListener('click', () => {
+                    state.targetScrollY = bookmark.scrollY;
+                    if (state.currentFile !== bookmark.file) {
+                        loadFile(bookmark.file);
+                    } else {
+                        if (contentFrame.contentWindow) {
+                            contentFrame.contentWindow.scrollTo({ top: bookmark.scrollY, behavior: 'smooth' });
+                        }
+                    }
+                });
+                bookmarksList.appendChild(li);
+            });
+        }
+
+        function clearAllBookmarks() {
+            if (confirm("Are you sure you want to delete all bookmarks? This cannot be undone.")) {
+                state.bookmarks = {};
+                saveBookmarks();
+                renderAllBookmarks();
+            }
+        }
+
+        // --- DATA PERSISTENCE & UTILITY FUNCTIONS ---
+        function saveData(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (e) {
+                console.error("Failed to save data to localStorage", e);
+            }
+        }
+
+        function loadData(key) {
+            try {
+                const saved = localStorage.getItem(key);
+                return saved ? JSON.parse(saved) : {};
+            } catch (e) {
+                console.error("Failed to load data from localStorage", e);
+                return {};
+            }
+        }
+
+        function saveSettings() { saveData('beansReaderSettings', state.settings); }
+        function loadSettings() { Object.assign(state.settings, loadData('beansReaderSettings')); }
+        function saveAnnotations() { saveData('beansReaderAnnotations', state.annotations); }
+        function loadAnnotations() { Object.assign(state.annotations, loadData('beansReaderAnnotations')); }
+        function saveBookmarks() { saveData('beansReaderBookmarks', state.bookmarks); }
+        function loadBookmarks() { Object.assign(state.bookmarks, loadData('beansReaderBookmarks')); }
+
+        function getPathTo(node, doc) {
+            if (node.id) return `//*[@id='${node.id}']`;
+            if (node === doc.body) return '/html/body';
+            
+            // Handle text nodes
+            if (node.nodeType === Node.TEXT_NODE) {
+                let nodeIndex = 0;
+                let child = node;
+                while ((child = child.previousSibling) != null) {
+                    if(child.nodeType === node.nodeType && child.nodeName === node.nodeName) {
+                        nodeIndex++;
+                    }
+                }
+                return `${getPathTo(node.parentNode, doc)}/text()[${nodeIndex + 1}]`;
+            }
+
+            // Handle element nodes
+            let ix = 1;
+            let sibling = node.previousSibling;
+            while (sibling) {
+                if (sibling.nodeType === Node.ELEMENT_NODE && sibling.tagName === node.tagName) {
+                    ix++;
+                }
+                sibling = sibling.previousSibling;
+            }
+            return `${getPathTo(node.parentNode, doc)}/${node.tagName.toLowerCase()}[${ix}]`;
+        }
+
+        function getNodeByPath(path, doc) {
+            try {
+                return doc.evaluate(path, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            } catch (e) {
+                console.error("XPath evaluation failed for path:", path, e);
+                return null;
+            }
+        }
+        
+        function serializeRange(range, doc) {
+            return {
+                startContainerPath: getPathTo(range.startContainer, doc),
+                startOffset: range.startOffset,
+                endContainerPath: getPathTo(range.endContainer, doc),
+                endOffset: range.endOffset,
+            };
+        }
+
+        function deserializeRange(rangeData, doc) {
+            try {
+                const startContainer = getNodeByPath(rangeData.startContainerPath, doc);
+                const endContainer = getNodeByPath(rangeData.endContainerPath, doc);
+                if (!startContainer || !endContainer) {
+                    console.warn("Could not find start or end container for range", rangeData);
+                    return null;
+                }
+                const range = doc.createRange();
+                range.setStart(startContainer, rangeData.startOffset);
+                range.setEnd(endContainer, rangeData.endOffset);
+                return range;
+            } catch (e) {
+                console.error("Failed to deserialize range:", e, rangeData);
+                return null;
+            }
+        }
+
+        function escapeHTML(str) {
+            const p = document.createElement("p");
+            p.textContent = str;
+            return p.innerHTML;
+        }
+
+        // --- START THE APP ---
+        initialize();
+    });
+    </script>
 </body>
 </html>
