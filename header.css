@@ -1,0 +1,45 @@
+/* --- Add these new styles to your header.css file --- */
+
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu-content {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -5px; /* Adjust vertical alignment */
+    background-color: #333;
+    min-width: 600px; /* Wider menu for columns */
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+    border-radius: 4px;
+    padding: 10px;
+    /* Use Flexbox for columns */
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    max-height: 80vh; /* Limit height to 80% of viewport */
+    align-content: flex-start;
+}
+
+.dropdown-submenu:hover .dropdown-submenu-content {
+    display: flex; /* Changed from block to flex */
+}
+
+.submenu-column {
+    padding: 0 15px;
+    width: 200px; /* Set a fixed width for columns */
+}
+
+.submenu-column h4 {
+    color: #00bcd4; /* Accent color for headings */
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+}
+
+.dropdown-submenu-content a {
+    padding: 8px 0; /* Adjust padding for tighter list */
+    white-space: normal;
+}
