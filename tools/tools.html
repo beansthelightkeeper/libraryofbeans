@@ -4,22 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Esoteric Tools Guide</title>
-    <link rel="stylesheet" href="gematria.css">
+    <meta charset="utf-8">        
+    <meta http-equiv="x-ua-compatible" content="ie=edge">        
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">   
+    <title>Gematria Calculator Results</title>        
+    <link rel="icon" type="image/png" href="../icon.png" />        
+    <link rel="stylesheet" href="/gematriamain/gematria.css">
+    <link rel="stylesheet" href="../header.css">
+    <link rel="stylesheet" href="../footer.css">
+    <script src="../header.js" defer></script> 
+    <script src="../footer.js" defer></script> 
 </head>
 <body>
-    <header>
+    <header id="main-header-placeholder"></header>
         <a href="#" onclick="return viewMenu();" class="menu-button-link">
-             <img src="https://placehold.co/32x32/ffffff/000000?text=%E2%98%B0" alt="menu button" class="menu-button" />
+            <img src="../icon.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto; border-radius: 50%;">
         </a>
-        <div class="menu" id="menu">
-            <div class="menu-column">
-                <ul>
-                    <li><a href="gematria.html">Calculator</a></li>
-                    <li><a href="numerology.html">Numerology</a></li>
-                    <li><a href="tools.html" class="active">Tools</a></li>
-                </ul>
-            </div>
-        </div>
     </header>
     <div class="container">
         <section class="content static-page">
@@ -71,16 +71,7 @@
         </section>
     </div>
 
-    <footer>
-        <div class="footer-line">
-            <ul>
-                <li><a href="gematria.html">Calculator</a></li>
-                <li><a href="numerology.html">Numerology</a></li>
-                <li><a href="tools.html">Tools</a></li>
-            </ul>
-        </div>
-        <div>&copy; 2025 Gematria Calculator Project</div>
-    </footer>
+     <footer id="main-footer-placeholder"></footer>
      <script>
         function viewMenu() {
             document.getElementById('menu').classList.toggle('active');

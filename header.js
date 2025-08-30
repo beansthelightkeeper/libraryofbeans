@@ -35,6 +35,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     </ul>
                 </div>
                 <div class="header-col">
+                    <h4>Beans Gematria</h4>
+                    <ul>
+                        <li><a href="/work/ciphers.html#jewish-gematria">Jewish Gematria</a></li>
+                        <li><a href="/work/ciphers.html#english-gematria">English Gematria</a></li>
+                        <li><a href="/work/ciphers.html#simple-gematria">Simple Gematria</a></li>
+                        <li><a href="/work/ciphers.html#latin-gematria">Latin Gematria</a></li>
+                        <li><a href="/work/ciphers.html#chaldean-gematria">Chaldean</a></li>
+                        <li><a href="/work/ciphers.html#greek-isopsephy">Greek Isopsephy</a></li>
+                        <li><a href="/work/ciphers.html#hebrew-gematria">Traditional Hebrew</a></li>
+                    </ul>
+                </div>
+                <div class="header-col">
                     <h4>Tools</h4>
                     <ul>
                         <li><a href="/tools/tools.html">Tools</a></li>
@@ -46,10 +58,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     </ul>
                 </div>
                 <div class="header-col">
+                    <h4>Other</h4>
+                    <ul>
+                       <li><a href="/gematriamain/localdb.html">Local Database</a></li>
+                    </ul>
+                </div>
+                <div class="header-col">
                     <h4>External</h4>
                     <ul>
                         <li><a href="https://www.gematrix.org" target="_blank">Gematrix.org</a></li>
-                        <li><a href="https://en.wikipedia.org/wiki/Gematria" target="_blank">Wikipedia</a></li>
                         <li><a href="https://chrome.google.com/webstore/detail/gematria-calculator-gemat/gabklpcbgpilmpfpbingloinmdpojagl?hl=en-US&utm_source=chrome-ntp- launcher" target="_blank" style="color:red;">Chrome App</a></li>
                         <li><a href="https://gematrixorg.tumblr.com" target="_blank">Tumblr</a></li>
                         <li><a href="https://twitter.com/princesspastry_" target="_blank">Twitter</a></li>
