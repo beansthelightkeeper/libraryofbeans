@@ -1,45 +1,68 @@
-/* --- Add these new styles to your header.css file --- */
-
-.dropdown-submenu {
-    position: relative;
-}
-
-.dropdown-submenu-content {
-    display: none;
-    position: absolute;
-    left: 100%;
-    top: -5px; /* Adjust vertical alignment */
-    background-color: #333;
-    min-width: 600px; /* Wider menu for columns */
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
-    border-radius: 4px;
-    padding: 10px;
-    /* Use Flexbox for columns */
+/* --- Main Header Container --- */
+.site-header-main {
     display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    max-height: 80vh; /* Limit height to 80% of viewport */
-    align-content: flex-start;
+    justify-content: center;
+    gap: 3rem; /* Spacing between columns */
+    padding: 2rem 4rem;
+    border-bottom: 1px solid rgba(200, 162, 200, 0.2);
+    position: relative;
+    background-color: transparent; /* Make it blend with the page */
 }
 
-.dropdown-submenu:hover .dropdown-submenu-content {
-    display: flex; /* Changed from block to flex */
+.header-column {
+    padding: 0 1rem;
 }
 
-.submenu-column {
-    padding: 0 15px;
-    width: 200px; /* Set a fixed width for columns */
+.header-column h4 {
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #c8a2c8; /* Lilac */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
 }
 
-.submenu-column h4 {
-    color: #00bcd4; /* Accent color for headings */
-    margin-top: 5px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #555;
-    padding-bottom: 5px;
+.header-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
-.dropdown-submenu-content a {
-    padding: 8px 0; /* Adjust padding for tighter list */
-    white-space: normal;
+.header-column li {
+    padding: 0.3rem 0;
 }
+
+.header-column a {
+    color: #e0d8f0;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 400;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.header-column a:hover {
+    color: #fff;
+    text-shadow: 0 0 8px rgba(200, 162, 200, 0.9); /* Lilac glow */
+}
+
+/* --- Theme Toggle Button --- */
+.theme-toggle-container {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+}
+
+#theme-toggle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid #888;
+    cursor: pointer;
+    background-color: #fff;
+}
+body[data-theme='dark'] #theme-toggle {
+    background-color: #000;
+    border-color: #555;
+}
+
