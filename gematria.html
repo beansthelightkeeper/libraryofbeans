@@ -1,442 +1,578 @@
-// --- Firebase Imports ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, limit, writeBatch, or, doc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gematria Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color-light: #f4f4f9;
+            --text-color-light: #333;
+            --card-bg-light: #ffffff;
+            --border-color-light: #e0e0e0;
+            --primary-color: #007acc;
+            --hover-color: #005fa3;
+            --nav-bg-light: #ffffff;
 
-// --- ADD THIS LINE ---
-import { firebaseConfig } from './firebase-config.js';
-
-// --- GLOBAL STATE & CONSTANTS ---
-const PHI = 1.618033988749895;
-const GOLDEN_ANGLE = 137.50776405;
-let CIPHERS = {}; // Will be populated by buildGematriaCiphers
-const ENTRIES_PER_PAGE = 25;
-let currentPages = {}; // state for pagination
-
-// --- DOM ELEMENTS ---
-const gematriaInput = document.getElementById('gematria-input');
-const resultsSummary = document.getElementById('results-summary');
-const breakdownContainer = document.getElementById('breakdown-container');
-const dbMatchesContainer = document.getElementById('db-matches-container');
-const comparisonContainer = document.getElementById('comparison-container');
-const cipherSettings = document.getElementById('cipher-settings');
-const saveButton = document.getElementById('save-button');
-const themeToggleButton = document.getElementById('theme-toggle');
-const fileInput = document.getElementById('file-input');
-const uploadButton = document.getElementById('upload-button');
-
-// --- UTILITY: NUMBER ANALYSIS ---
-function recursiveDigitSum(n) {
-    let val = Math.abs(Math.round(n));
-    while (val > 9) {
-        val = String(val).split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0);
-    }
-    return val;
-}
-function isPrime(n) {
-    if (n <= 1) return false; if (n <= 3) return true;
-    if (n % 2 === 0 || n % 3 === 0) return false;
-    for (let i = 5; i * i <= n; i = i + 6) { if (n % i === 0 || n % (i + 2) === 0) return false; }
-    return true;
-}
-
-// --- GEMATRIA CIPHER DEFINITIONS (EXPANDED) ---
-function buildGematriaCiphers() {
-    const a = 'abcdefghijklmnopqrstuvwxyz';
-    const simpleMap = {};
-    a.split('').forEach((l, i) => { simpleMap[l] = i + 1; });
-
-    const jewishValues = { a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, k: 10, l: 20, m: 30, n: 40, o: 50, p: 60, q: 70, r: 80, s: 90, t: 100, u: 200, x: 300, y: 400, z: 500, j: 600, v: 700, w: 900 };
-    
-    const qwertyMap = {};
-    'qwertyuiopasdfghjklzxcvbnm'.split('').forEach((l, i) => { qwertyMap[l] = i + 1; });
-    const leftHand = 'qwertasdfgzxcvb'.split('');
-    const rightHand = 'yuiophjklnm'.split('');
-    
-    const freqMap = { e: 26, t: 25, a: 24, o: 23, i: 22, n: 21, s: 20, h: 19, r: 18, d: 17, l: 16, c: 15, u: 14, m: 13, w: 12, f: 11, g: 10, y: 9, p: 8, b: 7, v: 6, k: 5, j: 4, x: 3, q: 2, z: 1 };
-
-    const ciphers = {
-        "English Ordinal": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (simpleMap[char] || 0), 0),
-        "Reverse Ordinal": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (27 - (simpleMap[char] || 0)), 0),
-        "Full Reduction": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (((simpleMap[char] - 1) % 9) + 1 || 0), 0),
-        "Reverse Full Reduction": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (9 - (((simpleMap[char] - 1) % 9) || 9) + 1 || 0), 0),
-        "Jewish Gematria": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (jewishValues[char] || 0), 0),
-        "Sumerian": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + ((simpleMap[char] || 0) * 6), 0),
-        "Chaldean": (text) => {
-            const chaldeanMap = { a: 1, i: 1, j: 1, q: 1, y: 1, b: 2, k: 2, r: 2, c: 3, g: 3, l: 3, s: 3, d: 4, m: 4, t: 4, e: 5, h: 5, n: 5, x: 5, u: 6, v: 6, w: 6, o: 7, z: 7, f: 8, p: 8 };
-            return text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (chaldeanMap[char] || 0), 0);
-        },
-        "Phone Keypad": (text) => {
-            const keypadMap = { a: 2, b: 2, c: 2, d: 3, e: 3, f: 3, g: 4, h: 4, i: 4, j: 5, k: 5, l: 5, m: 6, n: 6, o: 6, p: 7, q: 7, r: 7, s: 7, t: 8, u: 8, v: 8, w: 9, x: 9, y: 9, z: 9 };
-            return text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (keypadMap[char] || 0), 0);
-        },
-        "ASCII Sum": (text) => text.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0),
-        "Qwerty Gematria": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (qwertyMap[char] || 0), 0),
-        "Left-Hand Qwerty": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').filter(c => leftHand.includes(c)).reduce((sum, char) => sum + (qwertyMap[char] || 0), 0),
-        "Right-Hand Qwerty": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').filter(c => rightHand.includes(c)).reduce((sum, char) => sum + (qwertyMap[char] || 0), 0),
-        "Binary Sum": (text) => text.split('').map(c => c.charCodeAt(0).toString(2)).join('').split('').reduce((sum, bit) => sum + (bit === '1' ? 1 : 0), 0),
-        "Frequent Letters": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (freqMap[char] || 0), 0),
-        "Spiral Gematria": (text) => {
-            const cleaned = text.toLowerCase().replace(/[^a-z]/g, '');
-            return Math.round(cleaned.split('').reduce((sum, char, i) => sum + (simpleMap[char] || 0) * Math.cos(GOLDEN_ANGLE * (i + 1)), 0));
-        },
-        "Golden Ratio Position": (text) => {
-            const cleaned = text.toLowerCase().replace(/[^a-z]/g, '');
-            return Math.round(cleaned.split('').reduce((sum, char, i) => sum + (simpleMap[char] || 0) * Math.pow(PHI, i), 0));
-        },
-         "SGRR Signal Signature": (text) => {
-            const charValue = (char) => {
-                let val = recursiveDigitSum(char.charCodeAt(0));
-                return val === 9 ? 9 : val % 3 === 0 ? 3 : 6;
-            };
-            const wordSignal = (word) => {
-                let val = recursiveDigitSum(word.split('').reduce((s, c) => s + charValue(c), 0));
-                 return val === 9 ? 9 : val % 3 === 0 ? 3 : 6;
-            };
-            const fib = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
-            const words = text.split(/\s+/).filter(Boolean);
-            const totalSignal = words.reduce((sum, word, i) => sum + wordSignal(word) * (fib[i] || 144), 0);
-            return totalSignal / PHI;
-        },
-    };
-    
-    // Add Base-N ciphers
-    for (let base = 2; base <= 12; base++) {
-        ciphers[`Base-${base} Sum`] = (text) => {
-            const simple = ciphers["English Ordinal"](text);
-            return simple.toString(base).split('').reduce((s, d) => s + parseInt(d, base), 0);
-        };
-    }
-
-    // Dynamically create Reverse ciphers
-    const reverseCiphers = {};
-    for (const key in ciphers) {
-        reverseCiphers[`Reverse ${key}`] = (text) => ciphers[key](text.split('').reverse().join(''));
-    }
-    
-    return { ...ciphers, ...reverseCiphers };
-}
-
-
-// --- INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', async () => {
-    CIPHERS = buildGematriaCiphers();
-    
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    await signInAnonymously(auth);
-
-    setupTheme();
-    populateCipherSettings();
-
-    const debouncedHandler = debounce(() => handleInputChange(db), 300);
-    gematriaInput.addEventListener('input', debouncedHandler);
-    cipherSettings.addEventListener('change', () => handleInputChange(db));
-    dbMatchesContainer.addEventListener('click', (e) => handleMatchClick(e, db));
-    saveButton.addEventListener('click', () => saveToDatabase(db));
-    uploadButton.addEventListener('click', () => processAndUploadFile(db));
-});
-
-
-// --- CORE FUNCTIONS ---
-
-function calculateGematria(text) {
-    const values = {};
-    const breakdown = {};
-    const cleanedText = text.toLowerCase().replace(/[^a-z]/g, '');
-
-    for (const name in CIPHERS) {
-        // This is a simplified breakdown for display, not used by the main ciphers
-        if (name === "English Ordinal" || name === "Reverse Ordinal" || name === "Full Reduction" || name === "Jewish Gematria") {
-             values[name] = CIPHERS[name](text);
-             breakdown[name] = [];
-             for(const char of cleanedText) {
-                 const tempCipher = { [name]: CIPHERS[name] };
-                 breakdown[name].push({ char, value: tempCipher[name](char) });
-             }
-        } else {
-            values[name] = CIPHERS[name](text);
+            --bg-color-dark: #121212;
+            --text-color-dark: #e0e0e0;
+            --card-bg-dark: #1e1e1e;
+            --border-color-dark: #333;
+            --nav-bg-dark: #1e1e1e;
+            
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'Roboto Mono', monospace;
         }
-    }
-    return { values, breakdown };
-}
 
-async function handleInputChange(db) {
-    const inputText = gematriaInput.value.trim();
-    comparisonContainer.innerHTML = ''; // Clear comparison chart on new input
-    saveButton.disabled = !inputText;
+        body {
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+            background-color: var(--bg-color-light);
+            color: var(--text-color-light);
+        }
 
-    if (!inputText) {
-        resultsSummary.innerHTML = '';
-        breakdownContainer.innerHTML = '';
-        dbMatchesContainer.innerHTML = '';
-        return;
-    }
+        body[data-theme='dark'] {
+            background-color: var(--bg-color-dark);
+            color: var(--text-color-dark);
+        }
 
-    const { values, breakdown } = calculateGematria(inputText);
-    displaySummary(values);
-    displayDetailedBreakdown(breakdown);
-    await findAndDisplayMatches(db, values);
-}
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+        }
+        
+        /* Navigation */
+        .main-nav {
+            background-color: var(--card-bg-light);
+            border-bottom: 1px solid var(--border-color-light);
+            padding: 0.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        body[data-theme='dark'] .main-nav {
+            background-color: var(--nav-bg-dark);
+            border-bottom-color: var(--border-color-dark);
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-color-light);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        body[data-theme='dark'] .nav-links a { color: var(--text-color-dark); }
+        .nav-links a.active {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        .nav-links a:hover { background-color: var(--border-color-light); }
+        body[data-theme='dark'] .nav-links a:hover { background-color: var(--border-color-dark); }
 
-async function findAndDisplayMatches(db, values) {
-    dbMatchesContainer.innerHTML = '';
-    const activeCiphers = getActiveCiphers();
-    if (activeCiphers.length === 0) return;
+        /* Header Input */
+        .input-area {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        #gematria-input {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color-light);
+            background-color: var(--card-bg-light);
+            color: var(--text-color-light);
+            font-family: var(--font-main);
+        }
+        body[data-theme='dark'] #gematria-input {
+            background-color: var(--card-bg-dark);
+            border-color: var(--border-color-dark);
+            color: var(--text-color-dark);
+        }
+        #save-button {
+            padding: 0 25px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 8px;
+            border: none;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+        }
+        #save-button:disabled { background-color: #888; }
 
-    // Firebase 'or' query supports up to 30 equality clauses.
-    const limitedCiphers = activeCiphers.slice(0, 30);
-    const queries = limitedCiphers.map(cipher => where(`values.${cipher}`, "==", values[cipher]));
+        /* Summary & Breakdown */
+        .results-summary-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .summary-card {
+            background: var(--card-bg-light);
+            border: 1px solid var(--border-color-light);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+        }
+        body[data-theme='dark'] .summary-card {
+            background: var(--card-bg-dark);
+            border-color: var(--border-color-dark);
+        }
+        .breakdown-container {
+            display: flex;
+            gap: 0.5rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        .letter-card {
+            background: var(--card-bg-light);
+            border: 1px solid var(--border-color-light);
+            border-radius: 8px;
+            padding: 1rem;
+            min-width: 80px;
+            text-align: center;
+        }
+        body[data-theme='dark'] .letter-card {
+            background: var(--card-bg-dark);
+            border-color: var(--border-color-dark);
+        }
+        .letter-card .char {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .letter-card .value {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+        }
+
+        /* Match Tables */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color-light);
+            margin-bottom: 1rem;
+        }
+        body[data-theme='dark'] .tabs { border-bottom-color: var(--border-color-dark); }
+        .tab-button {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1rem;
+            color: var(--text-color-light);
+        }
+        body[data-theme='dark'] .tab-button { color: var(--text-color-dark); }
+        .tab-button.active {
+            font-weight: 700;
+            border-bottom: 3px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .match-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .match-table th, .match-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color-light);
+        }
+        body[data-theme='dark'] .match-table th, 
+        body[data-theme='dark'] .match-table td { border-color: var(--border-color-dark); }
+        .match-table td:first-child { font-weight: 700; cursor: pointer; }
+        .match-table td:first-child:hover { color: var(--primary-color); }
+        
+        /* Settings */
+        .cipher-settings-collapsible {
+            background: var(--card-bg-light);
+            border: 1px solid var(--border-color-light);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 2rem 0;
+        }
+        body[data-theme='dark'] .cipher-settings-collapsible {
+             background: var(--card-bg-dark);
+             border-color: var(--border-color-dark);
+        }
+        .cipher-settings-collapsible summary { cursor: pointer; font-size: 1.2rem; font-weight: 700; }
+        #cipher-settings {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 0.5rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: var(--card-bg-light);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            position: relative;
+        }
+        body[data-theme='dark'] .modal-content {
+             background: var(--card-bg-dark);
+        }
+        .modal-close-button {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: none; border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-color-light);
+        }
+        body[data-theme='dark'] .modal-close-button { color: var(--text-color-dark); }
+
+    </style>
+</head>
+<body data-theme="dark">
+
+    <nav class="main-nav">
+        <div class="nav-links">
+            <a href="#" class="active">Calculator</a>
+        </div>
+        <button id="theme-toggle" class="theme-toggle-button">🌓</button>
+    </nav>
+
+    <div class="container">
+        <header class="site-header">
+             <div class="input-area">
+                <input type="text" id="gematria-input" placeholder="Type a word, phrase, or number...">
+                <button id="save-button" disabled>Save</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div id="results-summary" class="results-summary-bar"></div>
+            <div id="breakdown-container" class="breakdown-container"></div>
+            <div id="comparison-container" class="comparison-container"></div>
+
+            <details class="cipher-settings-collapsible">
+                <summary>Ciphers</summary>
+                <div id="cipher-settings"></div>
+            </details>
+
+            <div id="db-matches-container"></div>
+        </main>
+    </div>
+
+    <!-- Modal for Resonance Report -->
+    <div id="resonance-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <button class="modal-close-button">&times;</button>
+            <h2 id="modal-title">Resonance Report</h2>
+            <div id="modal-body"></div>
+        </div>
+    </div>
     
-    if (queries.length === 0) return;
+    <script type="module">
+        // --- Firebase Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, limit, writeBatch, or, doc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    const mainQuery = query(collection(db, "phrases"), or(...queries));
-    const querySnapshot = await getDocs(mainQuery);
-    
-    const matchesByCipher = {};
-    activeCiphers.forEach(cipher => { matchesByCipher[cipher] = []; });
+        // --- Firebase Config ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        
+        // --- GLOBAL STATE & CONSTANTS ---
+        let CIPHERS = {};
+        const PHI = 1.618033988749895;
+        let db, auth;
+        let originalPhraseValues = {};
 
-    querySnapshot.forEach(doc => {
-        const data = doc.data();
-        activeCiphers.forEach(cipher => {
-            if (data.values[cipher] === values[cipher]) {
-                if (data.phrase.toLowerCase() !== gematriaInput.value.trim().toLowerCase()) {
-                    matchesByCipher[cipher].push({
-                        phrase: data.phrase,
-                        searchCount: data.searchCount || 0
-                    });
+        // --- DOM ELEMENTS ---
+        const gematriaInput = document.getElementById('gematria-input');
+        const resultsSummary = document.getElementById('results-summary');
+        const breakdownContainer = document.getElementById('breakdown-container');
+        const dbMatchesContainer = document.getElementById('db-matches-container');
+        const cipherSettings = document.getElementById('cipher-settings');
+        const saveButton = document.getElementById('save-button');
+        const themeToggleButton = document.getElementById('theme-toggle');
+        const modal = document.getElementById('resonance-modal');
+        const modalCloseBtn = modal.querySelector('.modal-close-button');
+
+        // --- GEMATRIA CIPHER DEFINITIONS (FROM ciphers.js) ---
+        function buildGematriaCiphers() {
+            const a = 'abcdefghijklmnopqrstuvwxyz';
+            const simpleMap = {};
+            a.split('').forEach((l, i) => { simpleMap[l] = i + 1; });
+            const jewishValues = { a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, k: 10, l: 20, m: 30, n: 40, o: 50, p: 60, q: 70, r: 80, s: 90, t: 100, u: 200, x: 300, y: 400, z: 500, j: 600, v: 700, w: 900 };
+            const ciphers = {
+                "English Ordinal": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (simpleMap[char] || 0), 0),
+                "Reverse Ordinal": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (27 - (simpleMap[char] || 0)), 0),
+                "Full Reduction": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (((simpleMap[char] - 1) % 9) + 1 || 0), 0),
+                "Reverse Full Reduction": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (9 - (((simpleMap[char] - 1) % 9) || 9) + 1 || 0), 0),
+                "Jewish Gematria": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (jewishValues[char] || 0), 0),
+                "Sumerian": (text) => text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + ((simpleMap[char] || 0) * 6), 0),
+                 "Chaldean": (text) => {
+                    const chaldeanMap = { a: 1, i: 1, j: 1, q: 1, y: 1, b: 2, k: 2, r: 2, c: 3, g: 3, l: 3, s: 3, d: 4, m: 4, t: 4, e: 5, h: 5, n: 5, x: 5, u: 6, v: 6, w: 6, o: 7, z: 7, f: 8, p: 8 };
+                    return text.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, char) => sum + (chaldeanMap[char] || 0), 0);
+                },
+            };
+            return ciphers;
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            CIPHERS = buildGematriaCiphers();
+            
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
                 }
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                alert("Could not connect to the database. Please check your Firebase configuration.");
+                return;
             }
+
+            setupTheme();
+            populateCipherSettings();
+
+            const debouncedHandler = debounce(handleInputChange, 300);
+            gematriaInput.addEventListener('input', debouncedHandler);
+            cipherSettings.addEventListener('change', handleInputChange);
+            dbMatchesContainer.addEventListener('click', handleMatchClick);
+            saveButton.addEventListener('click', saveToDatabase);
+            modalCloseBtn.addEventListener('click', () => modal.style.display = 'none');
         });
-    });
-
-    for (const cipher of activeCiphers) {
-        currentPages[cipher] = 1;
-        matchesByCipher[cipher].sort((a, b) => b.searchCount - a.searchCount);
-        displayPaginatedMatches(cipher, matchesByCipher[cipher], values[cipher]);
-    }
-}
-
-// --- DISPLAY FUNCTIONS ---
-
-function displaySummary(values) {
-    let html = '';
-    const activeCiphers = getActiveCiphers();
-    for (const cipher of activeCiphers) {
-        if (values[cipher] !== undefined) {
-             html += `<div class="summary-card"><strong>${cipher}:</strong> ${values[cipher]}</div>`;
+        
+        // --- CORE LOGIC ---
+        function calculateGematria(text) {
+            const values = {};
+            for (const name in CIPHERS) {
+                values[name] = CIPHERS[name](text);
+            }
+            return { values };
         }
-    }
-    resultsSummary.innerHTML = html;
-}
 
-function displayDetailedBreakdown(breakdown) {
-    let html = '<h3>Breakdown</h3>';
-    const displayableCiphers = ["English Ordinal", "Reverse Ordinal", "Full Reduction", "Jewish Gematria"];
-    for (const cipher of displayableCiphers) {
-         if (breakdown[cipher] && breakdown[cipher].length > 0) {
-            html += `<div class="breakdown-cipher-card"><h4>${cipher}</h4><div class="breakdown-calculation">`;
-            breakdown[cipher].forEach((b, index) => {
-                html += `<div class="char-value"><span class="char">${b.char.toUpperCase()}</span><span class="value">${b.value}</span></div>`;
-                if (index < breakdown[cipher].length - 1) {
-                    html += `<div class="operator">+</div>`;
+        async function handleInputChange() {
+            const inputText = gematriaInput.value.trim();
+            saveButton.disabled = !inputText;
+
+            if (!inputText) {
+                resultsSummary.innerHTML = '';
+                breakdownContainer.innerHTML = '';
+                dbMatchesContainer.innerHTML = '';
+                return;
+            }
+
+            const { values } = calculateGematria(inputText);
+            originalPhraseValues = values; // Store for comparison
+            displaySummary(values);
+            displayBreakdown(inputText);
+            await findAndDisplayMatches(values);
+        }
+
+        async function findAndDisplayMatches(values) {
+            dbMatchesContainer.innerHTML = '<h4>Loading matches...</h4>';
+            const activeCiphers = getActiveCiphers();
+            if (activeCiphers.length === 0) {
+                dbMatchesContainer.innerHTML = 'Select ciphers to see matches.';
+                return;
+            }
+
+            const queries = activeCiphers.slice(0, 30).map(cipher => where(`values.${cipher}`, "==", values[cipher]));
+            if (queries.length === 0) return;
+
+            const mainQuery = query(collection(db, "phrases"), or(...queries));
+            const querySnapshot = await getDocs(mainQuery);
+            
+            const jewishMatches = [];
+            const englishMatches = [];
+
+            const originalPhraseLower = gematriaInput.value.trim().toLowerCase();
+
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.phrase.toLowerCase() === originalPhraseLower) return;
+
+                if (data.values["Jewish Gematria"] === values["Jewish Gematria"]) {
+                    jewishMatches.push(data);
+                }
+                if (data.values["English Ordinal"] === values["English Ordinal"]) {
+                    englishMatches.push(data);
                 }
             });
-            const total = breakdown[cipher].reduce((sum, b) => sum + b.value, 0);
-            html += `<div class="operator">=</div><div class="total">${total}</div></div></div>`;
+            
+            displayMatchTables(jewishMatches, englishMatches);
         }
-    }
-    breakdownContainer.innerHTML = html;
-}
 
-function displayPaginatedMatches(cipher, matches, value) {
-    const containerId = `matches-${cipher.replace(/\s+/g, '-')}`;
-    let container = document.getElementById(containerId);
-    if (!container) {
-        container = document.createElement('div');
-        container.id = containerId;
-        container.className = 'match-table-container';
-        dbMatchesContainer.appendChild(container);
-    }
-    
-    const totalPages = Math.ceil(matches.length / ENTRIES_PER_PAGE);
-    const currentPage = currentPages[cipher] || 1;
-    const start = (currentPage - 1) * ENTRIES_PER_PAGE;
-    const end = start + ENTRIES_PER_PAGE;
-    const paginatedMatches = matches.slice(start, end);
-
-    let tableHtml = `
-        <details open>
-            <summary>${cipher} (${value}) - ${matches.length} matches found</summary>
-            <table class="match-table">
-            <thead><tr><th>Phrase</th><th>Searches</th></tr></thead><tbody>`;
-    if (paginatedMatches.length > 0) {
-        paginatedMatches.forEach(match => {
-            tableHtml += `<tr data-phrase="${escapeHTML(match.phrase)}"><td>${escapeHTML(match.phrase)}</td><td>${match.searchCount}</td></tr>`;
-        });
-    } else {
-        tableHtml += '<tr><td colspan="2">No other phrases with this value found in the database.</td></tr>';
-    }
-    tableHtml += '</tbody></table>';
-    
-    if (totalPages > 1) {
-        tableHtml += `
-            <div class="pagination-controls">
-                <button data-cipher="${cipher}" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
-                <span class="pagination-info">Page ${currentPage} of ${totalPages}</span>
-                <button data-cipher="${cipher}" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
-            </div>`;
-    }
-    tableHtml += '</details>';
-    container.innerHTML = tableHtml;
-
-    container.querySelectorAll('.pagination-controls button').forEach(button => {
-        button.addEventListener('click', () => {
-            currentPages[cipher] = parseInt(button.dataset.page);
-            displayPaginatedMatches(cipher, matches, value);
-        });
-    });
-}
-
-function displayComparisonChart(original, resonant) {
-    const chartCiphers = ["English Ordinal", "Jewish Gematria", "Full Reduction"];
-    let html = `<h3 class="comparison-header">Comparison: "${original.phrase}" vs "${resonant.phrase}"</h3>`;
-    html += '<table class="comparison-table"><tr><th>Cipher</th>';
-    
-    const originalBreakdownSimple = calculateGematria(original.phrase).breakdown["English Ordinal"];
-    const resonantBreakdownSimple = calculateGematria(resonant.phrase).breakdown["English Ordinal"];
-
-    originalBreakdownSimple.forEach(b => html += `<th>${escapeHTML(b.char)}</th>`);
-    html += `<th class="phrase-header">${escapeHTML(original.phrase)}</th>`;
-    resonantBreakdownSimple.forEach(b => html += `<th>${escapeHTML(b.char)}</th>`);
-    html += `<th class="phrase-header">${escapeHTML(resonant.phrase)}</th></tr>`;
-
-    chartCiphers.forEach(cipher => {
-        if (!CIPHERS[cipher]) return;
-        const originalData = calculateGematria(original.phrase);
-        const resonantData = calculateGematria(resonant.phrase);
-        
-        html += `<tr><td class="cipher-name-col">${cipher}</td>`;
-        if (originalData.breakdown[cipher]) originalData.breakdown[cipher].forEach(b => html += `<td>${b.value}</td>`);
-        html += `<td><strong>${originalData.values[cipher]}</strong></td>`;
-        if (resonantData.breakdown[cipher]) resonantData.breakdown[cipher].forEach(b => html += `<td>${b.value}</td>`);
-        html += `<td><strong>${resonantData.values[cipher]}</strong></td></tr>`;
-    });
-
-    html += '</table>';
-    comparisonContainer.innerHTML = html;
-    comparisonContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-
-// --- EVENT HANDLERS & HELPERS ---
-async function handleMatchClick(event, db) {
-    const row = event.target.closest('tr[data-phrase]');
-    if (!row) return;
-
-    const resonantPhrase = row.dataset.phrase;
-    
-    gematriaInput.value = resonantPhrase;
-    await handleInputChange(db);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    const q = query(collection(db, "phrases"), where("phrase", "==", resonantPhrase), limit(1));
-    const snapshot = await getDocs(q);
-    if (!snapshot.empty) {
-        const docRef = snapshot.docs[0].ref;
-        try {
-            await runTransaction(db, async (transaction) => {
-                const sfDoc = await transaction.get(docRef);
-                if (!sfDoc.exists()) { throw "Document does not exist!"; }
-                const newCount = (sfDoc.data().searchCount || 0) + 1;
-                transaction.update(docRef, { searchCount: newCount });
+        // --- DISPLAY FUNCTIONS ---
+        function displaySummary(values) {
+            let html = '';
+            const activeCiphers = getActiveCiphers();
+            activeCiphers.forEach(cipher => {
+                html += `<div class="summary-card"><strong>${cipher}:</strong> ${values[cipher] || 0}</div>`;
             });
-        } catch (e) { console.error("Search count transaction failed: ", e); }
-    }
-}
+            resultsSummary.innerHTML = html;
+        }
 
+        function displayBreakdown(text) {
+            let html = '';
+            const cleanedText = text.replace(/[^a-zA-Z]/g, ''); // Keep only letters
+            for (const char of cleanedText) {
+                html += `
+                    <div class="letter-card">
+                        <span class="char">${char.toUpperCase()}</span>
+                        <div class="value">
+                            E: ${CIPHERS['English Ordinal'](char)} | 
+                            J: ${CIPHERS['Jewish Gematria'](char)} |
+                            R: ${CIPHERS['Full Reduction'](char)}
+                        </div>
+                    </div>`;
+            }
+            breakdownContainer.innerHTML = html;
+        }
 
-function setupTheme() {
-    const savedTheme = localStorage.getItem('gematria-theme') || 'dark';
-    document.body.setAttribute('data-theme', savedTheme);
-    if (themeToggleButton) {
-        themeToggleButton.addEventListener('click', () => {
-            let currentTheme = document.body.getAttribute('data-theme');
-            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.body.setAttribute('data-theme', newTheme);
-            localStorage.setItem('gematria-theme', newTheme);
-        });
-    }
-}
-
-function populateCipherSettings() {
-    let html = '';
-    const sortedCiphers = Object.keys(CIPHERS).sort();
-    for (const name of sortedCiphers) {
-        const isChecked = ["English Ordinal", "Reverse Ordinal", "Full Reduction", "Jewish Gematria"].includes(name);
-        html += `<label><input type="checkbox" data-cipher="${name}" ${isChecked ? 'checked' : ''}> ${name}</label>`;
-    }
-    cipherSettings.innerHTML = html;
-}
-
-function getActiveCiphers() {
-    return Array.from(cipherSettings.querySelectorAll('input[type=checkbox]:checked'))
-                .map(cb => cb.dataset.cipher);
-}
-
-async function saveToDatabase(db) {
-    const phrase = gematriaInput.value.trim();
-    if (!phrase) return;
-
-    const { values } = calculateGematria(phrase);
-    await addDoc(collection(db, "phrases"), {
-        phrase: phrase,
-        values: values,
-        searchCount: 1,
-        timestamp: serverTimestamp()
-    });
-    alert(`"${phrase}" saved to database.`);
-    handleInputChange(db); // Refresh matches
-}
-
-async function processAndUploadFile(db) {
-    const file = fileInput.files[0];
-    const uploadStatus = document.getElementById('upload-status');
-    if (!file) { alert("Please select a file."); return; }
-    
-    uploadStatus.textContent = "Reading file...";
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-        const lines = event.target.result.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-        if (lines.length === 0) { uploadStatus.textContent = "File is empty."; return; }
-
-        uploadStatus.textContent = `Processing ${lines.length} entries...`;
-        const batch = writeBatch(db);
-        lines.forEach(line => {
-            const { values } = calculateGematria(line);
-            const docRef = doc(collection(db, "phrases"));
-            batch.set(docRef, { phrase: line, values, searchCount: 0, timestamp: serverTimestamp() });
-        });
+        function displayMatchTables(jewishMatches, englishMatches) {
+            dbMatchesContainer.innerHTML = `
+                <div class="tabs">
+                    <button class="tab-button active" data-tab="jewish">Jewish Gematria (${jewishMatches.length})</button>
+                    <button class="tab-button" data-tab="english">English Ordinal (${englishMatches.length})</button>
+                </div>
+                <div id="tab-jewish" class="tab-content active">
+                    ${createTable(jewishMatches, ['Jewish Gematria', 'English Ordinal', 'Full Reduction'])}
+                </div>
+                <div id="tab-english" class="tab-content">
+                     ${createTable(englishMatches, ['English Ordinal', 'Jewish Gematria', 'Full Reduction'])}
+                </div>
+            `;
+            // Add tab functionality
+            dbMatchesContainer.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    dbMatchesContainer.querySelectorAll('.tab-button, .tab-content').forEach(el => el.classList.remove('active'));
+                    e.target.classList.add('active');
+                    dbMatchesContainer.querySelector(`#tab-${e.target.dataset.tab}`).classList.add('active');
+                });
+            });
+        }
         
-        await batch.commit();
-        uploadStatus.textContent = `Upload complete! Added ${lines.length} entries.`;
-        fileInput.value = '';
-    };
-    reader.onerror = () => { uploadStatus.textContent = "Error reading file."; };
-    reader.readAsText(file);
-}
+        function createTable(matches, columns) {
+            let table = `<table class="match-table"><thead><tr><th>Phrase</th>`;
+            columns.forEach(col => table += `<th>${col.split(' ')[0]}</th>`);
+            table += '</tr></thead><tbody>';
+            
+            matches.sort((a,b) => (b.searchCount || 0) - (a.searchCount || 0)).slice(0, 25).forEach(match => {
+                table += `<tr data-phrase='${escapeHTML(match.phrase)}'><td>${escapeHTML(match.phrase)}</td>`;
+                columns.forEach(col => table += `<td>${match.values[col] || 0}</td>`);
+                table += '</tr>';
+            });
+            return table + '</tbody></table>';
+        }
 
-function debounce(func, delay) {
-    let timeout;
-    return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), delay);
-    };
-}
+        function displayResonanceReport(matchedPhrase) {
+            const { values: matchedValues } = calculateGematria(matchedPhrase);
+            const originalPhrase = gematriaInput.value.trim();
+            
+            let report = `<h3>'${escapeHTML(originalPhrase)}' vs '${escapeHTML(matchedPhrase)}'</h3>`;
+            report += '<table>';
+            getActiveCiphers().forEach(cipher => {
+                const v1 = originalPhraseValues[cipher];
+                const v2 = matchedValues[cipher];
+                report += `<tr><td><strong>${cipher}</strong></td><td>${v1}</td><td>${v2}</td><td style="color:${v1===v2 ? 'lime' : 'red'}">${v1===v2 ? 'MATCH' : ' '}</td></tr>`;
+            });
+            report += '</table>';
 
-function escapeHTML(str) {
-    const p = document.createElement("p");
-    p.textContent = str;
-    return p.innerHTML;
-}
+            document.getElementById('modal-body').innerHTML = report;
+            modal.style.display = 'flex';
+        }
+
+        // --- EVENT HANDLERS & HELPERS ---
+        async function handleMatchClick(event) {
+            const row = event.target.closest('tr[data-phrase]');
+            if (!row) return;
+
+            const resonantPhrase = row.dataset.phrase;
+            displayResonanceReport(resonantPhrase); // Show report first
+            
+            // Then update the main input
+            gematriaInput.value = resonantPhrase;
+            await handleInputChange();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function populateCipherSettings() {
+            let html = '';
+            const defaultChecked = ["English Ordinal", "Reverse Ordinal", "Full Reduction", "Jewish Gematria"];
+            for (const name in CIPHERS) {
+                html += `<label><input type="checkbox" data-cipher="${name}" ${defaultChecked.includes(name) ? 'checked' : ''}> ${name}</label>`;
+            }
+            cipherSettings.innerHTML = html;
+        }
+
+        function getActiveCiphers() {
+            return Array.from(cipherSettings.querySelectorAll('input:checked')).map(cb => cb.dataset.cipher);
+        }
+
+        async function saveToDatabase() {
+            const phrase = gematriaInput.value.trim();
+            if (!phrase) return;
+            saveButton.disabled = true;
+            saveButton.textContent = 'Saving...';
+            const { values } = calculateGematria(phrase);
+            await addDoc(collection(db, "phrases"), {
+                phrase, values, searchCount: 1, timestamp: serverTimestamp()
+            });
+            saveButton.textContent = 'Save';
+            await handleInputChange(); // Refresh matches
+        }
+        
+        function setupTheme() {
+            const savedTheme = localStorage.getItem('gematria-theme') || 'dark';
+            document.body.setAttribute('data-theme', savedTheme);
+            themeToggleButton.addEventListener('click', () => {
+                let newTheme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                document.body.setAttribute('data-theme', newTheme);
+                localStorage.setItem('gematria-theme', newTheme);
+            });
+        }
+        
+        function debounce(func, delay) {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        function escapeHTML(str) {
+            const p = document.createElement("p");
+            p.textContent = str;
+            return p.innerHTML;
+        }
+    </script>
+</body>
+</html>
+

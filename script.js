@@ -2,8 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- USER CONFIGURATION ---
     const GITHUB_USERNAME = "beansthelightkeeper";
     const GITHUB_REPO = "libraryofbeans";
-    // ✨ EXPLANATION: This line tells the script to ONLY look for files inside the 'content/' folder in your GitHub repository.
-    // If your files are in the root directory, you would change this to: const LIBRARY_ROOT = '';
     const LIBRARY_ROOT = 'content/';
     // --- END OF CONFIGURATION ---
 
@@ -85,11 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const style = document.createElement('style');
         style.id = 'app-dynamic-styles';
         style.innerHTML = `
-            .color-palette.disabled {
-                opacity: 0.5;
-                filter: grayscale(80%);
-                pointer-events: none;
-            }
+            .color-palette.disabled { opacity: 0.5; filter: grayscale(80%); pointer-events: none; }
             .textLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.25; }
             .textLayer > span { position: absolute; white-space: pre; }
             .highlight { cursor: pointer; }
@@ -119,71 +113,69 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-   async function renderPdfInIframe(url) {
-    if (!window.pdfjsLib) {
-        console.warn("PDF.js not loaded, falling back to native PDF viewer");
-        contentFrame.src = url;
-        toggleReaderTools(false);
-        return;
-    }
-
-    try {
-        const pdfjsLib = window.pdfjsLib;
-        const pdf = await pdfjsLib.getDocument(url).promise;
-        const iframeDoc = contentFrame.contentDocument;
-        iframeDoc.body.innerHTML = '';
-        iframeDoc.body.style.cssText = 'margin: 0; background-color: var(--bg-primary);';
-
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-            const page = await pdf.getPage(pageNum);
-            const scale = 1.5;
-            const viewport = page.getViewport({ scale });
-
-            const container = iframeDoc.createElement('div');
-            container.style.cssText = `position: relative; width: ${viewport.width}px; height: ${viewport.height}px; margin: 20px auto; box-shadow: 0 0 10px rgba(0,0,0,0.2);`;
-            container.dataset.page = pageNum;
-
-            const canvas = iframeDoc.createElement('canvas');
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            container.appendChild(canvas);
-
-            const textLayerDiv = iframeDoc.createElement('div');
-            textLayerDiv.className = 'textLayer';
-            container.appendChild(textLayerDiv);
-
-            iframeDoc.body.appendChild(container);
-
-            const renderContext = {
-                canvasContext: canvas.getContext('2d'),
-                viewport: viewport,
-            };
-            await page.render(renderContext).promise;
-
-            const textContent = await page.getTextContent();
-
-            // ✨ FIX: Use the new TextLayerBuilder API
-            // This replaces the old `pdfjsLib.renderTextLayer(...)` call.
-            const textLayer = new pdfjsLib.TextLayerBuilder({
-                textLayerDiv: textLayerDiv,
-                pageIndex: page.pageIndex,
-                viewport: viewport,
-            });
-
-            textLayer.setTextContent(textContent);
-            textLayer.render();
-            // --- End of Fix ---
+    // ✨ FIX #2: This function is updated to use the new TextLayerBuilder API.
+    async function renderPdfInIframe(url) {
+        if (!window.pdfjsLib) {
+            console.warn("PDF.js not loaded, falling back to native PDF viewer");
+            contentFrame.src = url;
+            toggleReaderTools(false);
+            return;
         }
 
-        applyAnnotationsForCurrentFile();
-        setupIframeListeners();
-    } catch (error) {
-        console.error("Error rendering PDF:", error);
-        contentFrame.src = url;
-        contentFrame.srcdoc = `<html><body><h2>Failed to render PDF</h2><p>Error: ${error.message}. Trying native viewer... <a href="${url}">Open PDF directly</a></p></body></html>`;
-        toggleReaderTools(false);
+        try {
+            const pdfjsLib = window.pdfjsLib;
+            const pdf = await pdfjsLib.getDocument(url).promise;
+            const iframeDoc = contentFrame.contentDocument;
+            iframeDoc.body.innerHTML = '';
+            iframeDoc.body.style.cssText = 'margin: 0; background-color: var(--bg-primary);';
+
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const scale = 1.5;
+                const viewport = page.getViewport({ scale });
+
+                const container = iframeDoc.createElement('div');
+                container.style.cssText = `position: relative; width: ${viewport.width}px; height: ${viewport.height}px; margin: 20px auto; box-shadow: 0 0 10px rgba(0,0,0,0.2);`;
+                container.dataset.page = pageNum;
+
+                const canvas = iframeDoc.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                container.appendChild(canvas);
+
+                const textLayerDiv = iframeDoc.createElement('div');
+                textLayerDiv.className = 'textLayer';
+                container.appendChild(textLayerDiv);
+
+                iframeDoc.body.appendChild(container);
+
+                const renderContext = {
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport,
+                };
+                await page.render(renderContext).promise;
+
+                const textContent = await page.getTextContent();
+
+                const textLayer = new pdfjsLib.TextLayerBuilder({
+                    textLayerDiv: textLayerDiv,
+                    pageIndex: page.pageIndex,
+                    viewport: viewport,
+                });
+
+                textLayer.setTextContent(textContent);
+                textLayer.render();
+            }
+
+            applyAnnotationsForCurrentFile();
+            setupIframeListeners();
+        } catch (error) {
+            console.error("Error rendering PDF:", error);
+            contentFrame.src = url;
+            contentFrame.srcdoc = `<html><body><h2>Failed to render PDF</h2><p>Error: ${error.message}. Trying native viewer...</p></body></html>`;
+            toggleReaderTools(false);
+        }
     }
-}
 
     function onIframeLoad() {
         if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) {
@@ -196,9 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
         iframeDoc.querySelectorAll('img[src*="beanscodex.com/images/"]').forEach(img => {
             const fileName = img.src.split('/').pop();
             img.src = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/content/images/${fileName}`;
-            img.onerror = () => {
-                img.style.display = 'none';
-            };
+            img.onerror = () => { img.style.display = 'none'; };
         });
 
         const base = iframeDoc.createElement('base');
@@ -230,7 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- SETTINGS & UI UPDATES ---
     function applySettings() {
         document.body.dataset.theme = state.settings.theme;
         themeToggle.innerHTML = state.settings.theme === 'dark' ? ICONS.sun : ICONS.moon;
@@ -318,15 +307,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 line-height: ${lineHeight}; font-size: ${state.settings.fontSize}px;
                 padding: 2% ${margin};
                 transition: color 0.3s ease, background-color 0.3s ease;
-                margin: 0 auto;
-                max-width: 80ch;
+                margin: 0 auto; max-width: 80ch;
             }
             ${highlightStyles}
             mark[id^="anno-"] { cursor: pointer; }
         `;
     }
 
-    // --- GITHUB FILE FETCHING ---
     async function fetchAndOrganizeFiles() {
         const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/git/trees/main?recursive=1`;
         try {
@@ -338,10 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .map(item => {
                     const relativePath = item.path.substring(LIBRARY_ROOT.length);
                     const displayName = relativePath.replace(/\.(html|pdf)$/i, '').replace(/_/g, ' ').replace(/\//g, ' / ');
-                    return {
-                        name: displayName,
-                        path: item.path
-                    };
+                    return { name: displayName, path: item.path };
                 })
                 .sort((a, b) => a.name.localeCompare(b.name));
             renderFileList(flatFileList);
@@ -383,6 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fileListContainer.appendChild(ul);
     }
 
+    // ✨ FIX #1: This function is updated to load files locally.
     async function loadFile(fullPath) {
         if (state.currentFile === fullPath) return;
         state.currentFile = fullPath;
@@ -396,8 +381,8 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleReaderTools(isPdf ? !!window.pdfjsLib : true);
 
         try {
-            // ✨ FIX: Use the local path directly to load PDFs from your local server, avoiding CDN file size limits.
-            const url = fullPath;
+            // This line ensures files are loaded from your local server, not the CDN.
+            const url = fullPath; 
 
             if (isPdf) {
                 contentFrame.srcdoc = ' ';
@@ -412,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Failed to load file content:", error);
-            contentFrame.srcdoc = `<html><body><h2>Failed to load content</h2><p>Error: ${error.message}. File: ${fullPath}</p></body></html>`;
+            contentFrame.srcdoc = `<html><body><h2>Failed to load content</h2><p>Error: ${error.message}.</p></body></html>`;
         }
 
         if (window.innerWidth <= 768) {
@@ -437,8 +422,9 @@ document.addEventListener('DOMContentLoaded', () => {
             applySettings();
         }
     }
-
-    // --- ANNOTATION & ERASING LOGIC ---
+    
+    // ... (The rest of the file continues below, no changes needed there)
+    
     function toggleHighlightMode() {
         state.isHighlightModeActive = !state.isHighlightModeActive;
         if (state.isHighlightModeActive) state.isEraseModeActive = false;
@@ -565,10 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
             li.innerHTML = content;
             li.addEventListener('click', () => {
                 const targetEl = contentFrame.contentDocument.getElementById(annotation.id);
-                if (targetEl) targetEl.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
+                if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
             annotationsList.appendChild(li);
         });
@@ -591,7 +574,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- BOOKMARKING ---
     function addBookmark() {
         if (!state.currentFile) return;
         const iframeWin = contentFrame.contentWindow;
@@ -636,10 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (state.currentFile !== bookmark.file) {
                     loadFile(bookmark.file);
                 } else if (contentFrame.contentWindow) {
-                    contentFrame.contentWindow.scrollTo({
-                        top: bookmark.scrollY,
-                        behavior: 'smooth'
-                    });
+                    contentFrame.contentWindow.scrollTo({ top: bookmark.scrollY, behavior: 'smooth' });
                 }
             });
             bookmarksList.appendChild(li);
@@ -654,45 +633,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- DATA PERSISTENCE & UTILITY FUNCTIONS ---
-    function saveData(key, data) {
-        localStorage.setItem(key, JSON.stringify(data));
-    }
-
-    function loadData(key) {
-        return JSON.parse(localStorage.getItem(key) || '{}');
-    }
-
-    function saveSettings() {
-        saveData('beansReaderSettings', state.settings);
-    }
-
-    function loadSettings() {
-        Object.assign(state.settings, loadData('beansReaderSettings'));
-    }
-
-    function saveAnnotations() {
-        saveData('beansReaderAnnotations', state.annotations);
-    }
-
-    function loadAnnotations() {
-        Object.assign(state.annotations, loadData('beansReaderAnnotations'));
-    }
-
-    function saveBookmarks() {
-        saveData('beansReaderBookmarks', state.bookmarks);
-    }
-
-    function loadBookmarks() {
-        Object.assign(state.bookmarks, loadData('beansReaderBookmarks'));
-    }
+    function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+    function loadData(key) { return JSON.parse(localStorage.getItem(key) || '{}'); }
+    function saveSettings() { saveData('beansReaderSettings', state.settings); }
+    function loadSettings() { Object.assign(state.settings, loadData('beansReaderSettings')); }
+    function saveAnnotations() { saveData('beansReaderAnnotations', state.annotations); }
+    function loadAnnotations() { Object.assign(state.annotations, loadData('beansReaderAnnotations')); }
+    function saveBookmarks() { saveData('beansReaderBookmarks', state.bookmarks); }
+    function loadBookmarks() { Object.assign(state.bookmarks, loadData('beansReaderBookmarks')); }
 
     function getPathTo(node, doc) {
         if (node.id) return `//*[@id='${node.id}']`;
         if (node === doc.body) return '/html/body';
         let parent = node.parentNode;
         if (!parent) return '';
-
         if (node.nodeType !== Node.ELEMENT_NODE) {
             let index = 1;
             for (let i = 0; i < parent.childNodes.length; i++) {
@@ -700,7 +654,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (parent.childNodes[i].nodeType === node.nodeType && parent.childNodes[i].nodeName === node.nodeName) index++;
             }
         }
-
         let ix = 1;
         for (let sibling = node.previousSibling; sibling; sibling = sibling.previousSibling) {
             if (sibling.nodeType === Node.ELEMENT_NODE && sibling.tagName === node.tagName) ix++;
@@ -711,10 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function getNodeByPath(path, doc) {
         try {
             return doc.evaluate(path, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-        } catch (e) {
-            console.error("XPath evaluation failed for path:", path, e);
-            return null;
-        }
+        } catch (e) { console.error("XPath evaluation failed for path:", path, e); return null; }
     }
 
     function serializeRange(range, doc) {
@@ -735,10 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
             range.setStart(startContainer, rangeData.startOffset);
             range.setEnd(endContainer, rangeData.endOffset);
             return range;
-        } catch (e) {
-            console.error("Failed to deserialize range:", e, rangeData);
-            return null;
-        }
+        } catch (e) { console.error("Failed to deserialize range:", e, rangeData); return null; }
     }
 
     function escapeHTML(str) {
