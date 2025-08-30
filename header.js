@@ -32,6 +32,7 @@ function createHeader(pathPrefix = '.') {
         { name: 'Home', href: 'index.html' },
         { name: 'Calculator', href: 'gematriamain/gematria.html' },
         { name: 'Library', href: 'library.html' },
+        { name: 'Local DB', href: 'localdb.html' },
         {
             name: 'Tools',
             children: [
@@ -66,7 +67,7 @@ function createHeader(pathPrefix = '.') {
                 if (child.type === 'mega-menu') {
                     // Handle the special Ciphers mega-menu
                     navHtml += `<div class="dropdown-submenu">
-                        <a href="${pathPrefix}/infopages/ciphers.html">${child.name} &raquo;</a>
+                        <a href="${pathPrefix}/${child.href}">${child.name} &raquo;</a>
                         <div class="dropdown-submenu-content">`;
                     const cipherCategories = child.data;
                     for (const category in cipherCategories) {
@@ -118,3 +119,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
