@@ -129,11 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const pdfjsLib = window.pdfjsLib;
-            // ✨ FIX: The syntax error was caused by having a second `const response = ...` line here.
-            // It has been removed to ensure `response` is only declared once.
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Failed to fetch PDF: HTTP ${response.status}`);
-            
             const pdf = await pdfjsLib.getDocument(url).promise;
             const iframeDoc = contentFrame.contentDocument;
             iframeDoc.body.innerHTML = '';
@@ -142,12 +137,14 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                 const page = await pdf.getPage(pageNum);
                 const scale = 1.5;
-                const viewport = page.getViewport({ scale });
-                
+                const viewport = page.getViewport({
+                    scale
+                });
+
                 const container = iframeDoc.createElement('div');
                 container.style.cssText = `position: relative; width: ${viewport.width}px; height: ${viewport.height}px; margin: 20px auto; box-shadow: 0 0 10px rgba(0,0,0,0.2);`;
                 container.dataset.page = pageNum;
-                
+
                 const canvas = iframeDoc.createElement('canvas');
                 canvas.width = viewport.width;
                 canvas.height = viewport.height;
@@ -156,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const textLayerDiv = iframeDoc.createElement('div');
                 textLayerDiv.className = 'textLayer';
                 container.appendChild(textLayerDiv);
-                
+
                 iframeDoc.body.appendChild(container);
 
                 const renderContext = {
@@ -195,7 +192,9 @@ document.addEventListener('DOMContentLoaded', () => {
         iframeDoc.querySelectorAll('img[src*="beanscodex.com/images/"]').forEach(img => {
             const fileName = img.src.split('/').pop();
             img.src = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/content/images/${fileName}`;
-            img.onerror = () => { img.style.display = 'none'; };
+            img.onerror = () => {
+                img.style.display = 'none';
+            };
         });
 
         const base = iframeDoc.createElement('base');
@@ -335,7 +334,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 .map(item => {
                     const relativePath = item.path.substring(LIBRARY_ROOT.length);
                     const displayName = relativePath.replace(/\.(html|pdf)$/i, '').replace(/_/g, ' ').replace(/\//g, ' / ');
-                    return { name: displayName, path: item.path };
+                    return {
+                        name: displayName,
+                        path: item.path
+                    };
                 })
                 .sort((a, b) => a.name.localeCompare(b.name));
             renderFileList(flatFileList);
@@ -363,7 +365,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 a.href = '#';
                 a.dataset.path = file.path;
                 a.innerHTML = `<span class="file-icon" title="${file.name}">${getIconForText(file.name)}</span><span class="file-name">${file.name}</span>`;
-                a.onclick = (e) => { e.preventDefault(); loadFile(file.path); };
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    loadFile(file.path);
+                };
                 li.appendChild(a);
                 ul.appendChild(li);
             });
@@ -387,7 +392,9 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleReaderTools(isPdf ? !!window.pdfjsLib : true);
 
         try {
-            const url = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${fullPath}`;
+            // ✨ FIX: Use the local path directly to load PDFs from your local server, avoiding CDN file size limits.
+            const url = fullPath;
+
             if (isPdf) {
                 contentFrame.srcdoc = ' ';
                 contentFrame.src = 'about:blank';
@@ -480,7 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const annotationKey = state.currentFile;
         if (!state.annotations[annotationKey]) state.annotations[annotationKey] = [];
         state.annotations[annotationKey].push(annotation);
-        
+
         try {
             applyAnnotationToDOM(annotation);
         } catch (e) {
@@ -554,7 +561,10 @@ document.addEventListener('DOMContentLoaded', () => {
             li.innerHTML = content;
             li.addEventListener('click', () => {
                 const targetEl = contentFrame.contentDocument.getElementById(annotation.id);
-                if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (targetEl) targetEl.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
             });
             annotationsList.appendChild(li);
         });
@@ -588,7 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const visibleElements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
         const pElement = visibleElements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
         if (pElement) snippet = pElement.textContent.trim().substring(0, 100) + '...';
-        
+
         const pageContainer = visibleElements.find(el => el.matches('[data-page]'));
         if (pageContainer) snippet = `Bookmark on Page ${pageContainer.dataset.page}`;
 
@@ -622,7 +632,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (state.currentFile !== bookmark.file) {
                     loadFile(bookmark.file);
                 } else if (contentFrame.contentWindow) {
-                    contentFrame.contentWindow.scrollTo({ top: bookmark.scrollY, behavior: 'smooth' });
+                    contentFrame.contentWindow.scrollTo({
+                        top: bookmark.scrollY,
+                        behavior: 'smooth'
+                    });
                 }
             });
             bookmarksList.appendChild(li);
@@ -638,14 +651,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- DATA PERSISTENCE & UTILITY FUNCTIONS ---
-    function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
-    function loadData(key) { return JSON.parse(localStorage.getItem(key) || '{}'); }
-    function saveSettings() { saveData('beansReaderSettings', state.settings); }
-    function loadSettings() { Object.assign(state.settings, loadData('beansReaderSettings')); }
-    function saveAnnotations() { saveData('beansReaderAnnotations', state.annotations); }
-    function loadAnnotations() { Object.assign(state.annotations, loadData('beansReaderAnnotations')); }
-    function saveBookmarks() { saveData('beansReaderBookmarks', state.bookmarks); }
-    function loadBookmarks() { Object.assign(state.bookmarks, loadData('beansReaderBookmarks')); }
+    function saveData(key, data) {
+        localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    function loadData(key) {
+        return JSON.parse(localStorage.getItem(key) || '{}');
+    }
+
+    function saveSettings() {
+        saveData('beansReaderSettings', state.settings);
+    }
+
+    function loadSettings() {
+        Object.assign(state.settings, loadData('beansReaderSettings'));
+    }
+
+    function saveAnnotations() {
+        saveData('beansReaderAnnotations', state.annotations);
+    }
+
+    function loadAnnotations() {
+        Object.assign(state.annotations, loadData('beansReaderAnnotations'));
+    }
+
+    function saveBookmarks() {
+        saveData('beansReaderBookmarks', state.bookmarks);
+    }
+
+    function loadBookmarks() {
+        Object.assign(state.bookmarks, loadData('beansReaderBookmarks'));
+    }
 
     function getPathTo(node, doc) {
         if (node.id) return `//*[@id='${node.id}']`;
@@ -710,4 +746,3 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- START THE APP ---
     initialize();
 });
-
