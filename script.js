@@ -113,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ✨ FIX #2: This function is updated to use the new TextLayerBuilder API.
     async function renderPdfInIframe(url) {
         if (!window.pdfjsLib) {
             console.warn("PDF.js not loaded, falling back to native PDF viewer");
@@ -367,7 +366,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fileListContainer.appendChild(ul);
     }
 
-    // ✨ FIX #1: This function is updated to load files locally.
     async function loadFile(fullPath) {
         if (state.currentFile === fullPath) return;
         state.currentFile = fullPath;
@@ -381,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleReaderTools(isPdf ? !!window.pdfjsLib : true);
 
         try {
-            // This line ensures files are loaded from your local server, not the CDN.
+            // This now correctly loads files relative to your website, not the CDN.
             const url = fullPath; 
 
             if (isPdf) {
@@ -389,10 +387,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 contentFrame.src = 'about:blank';
                 await renderPdfInIframe(url);
             } else {
-                contentFrame.src = 'about:blank';
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const htmlContent = await response.text();
+                // For HTML files, we load them into srcdoc to keep them sandboxed
+                contentFrame.src = 'about:blank';
                 contentFrame.srcdoc = htmlContent;
             }
         } catch (error) {
@@ -422,8 +421,6 @@ document.addEventListener('DOMContentLoaded', () => {
             applySettings();
         }
     }
-    
-    // ... (The rest of the file continues below, no changes needed there)
     
     function toggleHighlightMode() {
         state.isHighlightModeActive = !state.isHighlightModeActive;
