@@ -62,8 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INITIALIZATION ---
     function initialize() {
-        // Debug PDF.js loading
-       if (!window.pdfjsLib) {
+        if (!window.pdfjsLib) {
             console.warn("PDF.js library not loaded. PDFs will use native viewer.");
         } else {
             console.log("PDF.js library loaded successfully.");
@@ -76,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchAndOrganizeFiles();
         setupEventListeners();
         renderAllBookmarks();
-        toggleReaderTools(false); // Disable tools on startup
+        toggleReaderTools(false);
     }
 
     // --- DYNAMIC STYLE INJECTION ---
@@ -89,8 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 filter: grayscale(80%);
                 pointer-events: none;
             }
-            .textLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-            .textLayer > div { position: absolute; white-space: pre; }
+            .textLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.25; }
+            .textLayer > span { position: absolute; white-space: pre; }
             .highlight { cursor: pointer; }
         `;
         document.head.appendChild(style);
@@ -119,118 +118,91 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function renderPdfInIframe(url) {
-        // Check if PDF.js is loaded
-        // Check if PDF.js is loaded
-            if (!window.pdfjsLib) {
-             console.warn("PDF.js not loaded, falling back to native PDF viewer");
-    //...
-    return;
-}
+        if (!window.pdfjsLib) {
+            console.warn("PDF.js not loaded, falling back to native PDF viewer");
+            contentFrame.src = url;
+            toggleReaderTools(false);
+            return;
+        }
 
-try {
-    const pdfjsLib = window.pdfjsLib; // Use the globally set library
-    // The workerSrc is now set in library.html, so we can remove the line below
-    // pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.min.js'; 
-
-    const response = await fetch(url);
-    //...
+        try {
+            const pdfjsLib = window.pdfjsLib;
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Failed to fetch PDF: HTTP ${response.status}`);
+            
             const pdf = await pdfjsLib.getDocument(url).promise;
             const iframeDoc = contentFrame.contentDocument;
-            iframeDoc.body.innerHTML = ''; // Clear previous content
+            iframeDoc.body.innerHTML = '';
+            iframeDoc.body.style.cssText = 'margin: 0; background-color: var(--bg-primary);';
 
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                 const page = await pdf.getPage(pageNum);
-                const canvas = iframeDoc.createElement('canvas');
-                canvas.style.display = 'block';
-                canvas.style.margin = 'auto';
-                canvas.dataset.page = pageNum; // For annotation reference
-                const context = canvas.getContext('2d');
-
-                const scale = 1.5; // Adjust scale for readability
-                const viewport = page.getViewport({ scale: scale });
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-
-                // Create container for canvas and text layer
+                const scale = 1.5;
+                const viewport = page.getViewport({ scale });
+                
                 const container = iframeDoc.createElement('div');
-                container.style.position = 'relative';
-                container.style.width = `${viewport.width}px`;
-                container.style.height = `${viewport.height}px`;
-                container.style.margin = 'auto';
-                container.style.setProperty('--scale-factor', scale);
+                container.style.cssText = `position: relative; width: ${viewport.width}px; height: ${viewport.height}px; margin: 20px auto; box-shadow: 0 0 10px rgba(0,0,0,0.2);`;
                 container.dataset.page = pageNum;
-                iframeDoc.body.appendChild(container);
-                canvas.style.position = 'absolute';
+                
+                const canvas = iframeDoc.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
                 container.appendChild(canvas);
 
+                const textLayerDiv = iframeDoc.createElement('div');
+                textLayerDiv.className = 'textLayer';
+                container.appendChild(textLayerDiv);
+                
+                iframeDoc.body.appendChild(container);
+
                 const renderContext = {
-                    canvasContext: context,
+                    canvasContext: canvas.getContext('2d'),
                     viewport: viewport,
                 };
                 await page.render(renderContext).promise;
 
-                // Add text layer
                 const textContent = await page.getTextContent();
-                const textLayerDiv = iframeDoc.createElement('div');
-                textLayerDiv.className = 'textLayer';
-                textLayerDiv.style.setProperty('--scale-factor', scale);
-                container.appendChild(textLayerDiv);
-
-                const textLayer = new pdfjsLib.TextLayer({
+                pdfjsLib.renderTextLayer({
                     textContentSource: textContent,
                     container: textLayerDiv,
                     viewport: viewport,
-                    eventBus: new pdfjsLib.EventBus(),
+                    textDivs: []
                 });
-                await textLayer.render();
             }
 
-            // Apply annotations after rendering
             applyAnnotationsForCurrentFile();
             setupIframeListeners();
         } catch (error) {
             console.error("Error rendering PDF:", error);
             contentFrame.src = url;
             contentFrame.srcdoc = `<html><body><h2>Failed to render PDF</h2><p>Error: ${error.message}. Trying native viewer... <a href="${url}">Open PDF directly</a></p></body></html>`;
-            toggleReaderTools(false); // Disable tools for native viewer
+            toggleReaderTools(false);
         }
     }
 
     function onIframeLoad() {
-        if (!state.currentFile) return;
-
-        if (state.currentFile.toLowerCase().endsWith('.pdf')) {
-            return; // PDF rendering handled in renderPdfInIframe
+        if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) {
+            return;
         }
 
         const iframeDoc = contentFrame.contentDocument;
         if (!iframeDoc) return;
 
-        // Fix broken image paths
-        iframeDoc.querySelectorAll('img').forEach(img => {
-            if (img.src.includes('beanscodex.com/images/')) {
-                const fileName = img.src.split('/').pop();
-                img.src = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/content/images/${fileName}`;
-                img.onerror = () => {
-                    img.src = ''; // Remove broken image
-                    img.alt = 'Image not found';
-                };
-            }
+        iframeDoc.querySelectorAll('img[src*="beanscodex.com/images/"]').forEach(img => {
+            const fileName = img.src.split('/').pop();
+            img.src = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/content/images/${fileName}`;
+            img.onerror = () => { img.style.display = 'none'; };
         });
 
         const base = iframeDoc.createElement('base');
         const pathParts = state.currentFile.split('/');
         pathParts.pop();
-        const directoryPath = pathParts.join('/') + '/';
-        base.href = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${directoryPath}`;
+        base.href = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${pathParts.join('/')}/`;
         iframeDoc.head.prepend(base);
 
         updateIframeStyles();
         setupIframeListeners();
         applyAnnotationsForCurrentFile();
-        renderAnnotationsForCurrentFile();
         renderAllBookmarks();
 
         if (state.targetScrollY !== null) {
@@ -261,12 +233,9 @@ try {
         doubleSpaceToggle.classList.toggle('active', state.settings.isDoubleSpaced);
         rainbowToggle.classList.toggle('active', state.settings.isRainbowFxOn);
         document.body.classList.toggle('no-fx', !state.settings.isRainbowFxOn);
-
         colorSwatches.classList.toggle('disabled', !state.isHighlightModeActive);
-        
         highlightModeToggle.classList.toggle('active', state.isHighlightModeActive);
         eraseModeToggle.classList.toggle('active', state.isEraseModeActive);
-
         document.querySelectorAll('.color-swatch').forEach(swatch => {
             swatch.classList.toggle('active', swatch.dataset.color === state.settings.activeHighlightColor);
         });
@@ -333,9 +302,9 @@ try {
         const bodyBgColor = computedStyles.getPropertyValue('--bg-secondary');
         const lineHeight = state.settings.isDoubleSpaced ? '2.5' : '1.6';
         const margin = `${state.settings.marginSize}%`;
-        const highlightStyles = Object.entries(HIGHLIGHT_COLORS).map(([name, cssVar]) => {
-            return `.highlight-${name} { background-color: ${computedStyles.getPropertyValue(cssVar)}; color: inherit; }`;
-        }).join('\n');
+        const highlightStyles = Object.entries(HIGHLIGHT_COLORS).map(([name, cssVar]) =>
+            `.highlight-${name} { background-color: ${computedStyles.getPropertyValue(cssVar)}; color: inherit; }`
+        ).join('\n');
         style.innerHTML = `
             body {
                 color: ${textColor}; background-color: ${bodyBgColor};
@@ -371,13 +340,12 @@ try {
             fileListContainer.innerHTML = '<p class="error">Could not load library.</p>';
         }
     }
-    
+
     function getIconForText(text) {
         let hash = 0;
-        if (text.length === 0) return HIEROGLYPHS[0];
         for (let i = 0; i < text.length; i++) {
             hash = (hash << 5) - hash + text.charCodeAt(i);
-            hash |= 0; // Convert to 32bit integer
+            hash |= 0;
         }
         return HIEROGLYPHS[Math.abs(hash) % HIEROGLYPHS.length];
     }
@@ -390,10 +358,7 @@ try {
                 const a = document.createElement('a');
                 a.href = '#';
                 a.dataset.path = file.path;
-                
-                const icon = getIconForText(file.name);
-                a.innerHTML = `<span class="file-icon" title="${file.name}">${icon}</span><span class="file-name">${file.name}</span>`;
-                
+                a.innerHTML = `<span class="file-icon" title="${file.name}">${getIconForText(file.name)}</span><span class="file-name">${file.name}</span>`;
                 a.onclick = (e) => { e.preventDefault(); loadFile(file.path); };
                 li.appendChild(a);
                 ul.appendChild(li);
@@ -409,19 +374,19 @@ try {
         if (state.currentFile === fullPath) return;
         state.currentFile = fullPath;
         welcomeMessage.style.display = 'none';
-        
+
         document.querySelectorAll('#file-list-container li.active').forEach(el => el.classList.remove('active'));
         const fileLink = document.querySelector(`#file-list-container a[data-path="${fullPath}"]`);
         if (fileLink) fileLink.parentElement.classList.add('active');
 
         const isPdf = fullPath.toLowerCase().endsWith('.pdf');
-        toggleReaderTools(isPdf ? window['pdfjs-dist/build/pdf'] : true); // Enable tools for PDFs if PDF.js is loaded
+        toggleReaderTools(isPdf ? !!window.pdfjsLib : true);
 
         try {
             const url = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${fullPath}`;
             if (isPdf) {
-                contentFrame.srcdoc = '';
-                contentFrame.src = ''; // Reset src to avoid conflicts
+                contentFrame.srcdoc = ' ';
+                contentFrame.src = 'about:blank';
                 await renderPdfInIframe(url);
             } else {
                 contentFrame.src = 'about:blank';
@@ -438,25 +403,20 @@ try {
         if (window.innerWidth <= 768) {
             sidebar.classList.remove('open');
         }
-        
+
         renderAnnotationsForCurrentFile();
         renderAllBookmarks();
     }
-    
+
     function toggleReaderTools(enabled) {
         const toolsToToggle = [
-            highlightModeToggle, eraseModeToggle, addNoteBtn, addBookmarkBtn, 
+            highlightModeToggle, eraseModeToggle, addNoteBtn, addBookmarkBtn,
             fontSizeSlider, doubleSpaceToggle, marginSlider
         ];
-        
-        toolsToToggle.forEach(tool => {
-            if (tool) tool.disabled = !enabled;
-        });
+        toolsToToggle.forEach(tool => tool.disabled = !enabled);
 
-        if (enabled) {
-            colorSwatches.classList.remove('disabled');
-        } else {
-            colorSwatches.classList.add('disabled');
+        colorSwatches.classList.toggle('disabled', !enabled);
+        if (!enabled) {
             state.isHighlightModeActive = false;
             state.isEraseModeActive = false;
             applySettings();
@@ -466,9 +426,7 @@ try {
     // --- ANNOTATION & ERASING LOGIC ---
     function toggleHighlightMode() {
         state.isHighlightModeActive = !state.isHighlightModeActive;
-        if (state.isHighlightModeActive) {
-            state.isEraseModeActive = false;
-        }
+        if (state.isHighlightModeActive) state.isEraseModeActive = false;
         applySettings();
     }
 
@@ -480,21 +438,14 @@ try {
 
     function handleIframeInteraction(event) {
         setTimeout(() => {
-            if (state.isHighlightModeActive) {
-                createAnnotation();
-            } else if (state.isEraseModeActive) {
-                eraseAnnotation(event.target);
-            }
+            if (state.isHighlightModeActive) createAnnotation();
+            else if (state.isEraseModeActive) eraseAnnotation(event.target);
         }, 50);
     }
 
     function addNoteToSelection() {
-        const iframeDoc = contentFrame.contentDocument;
-        const selection = iframeDoc.getSelection();
-        if (!selection || selection.isCollapsed) {
-            alert("Please select some text to annotate.");
-            return;
-        }
+        const selection = contentFrame.contentDocument.getSelection();
+        if (!selection || selection.isCollapsed) return;
         const note = prompt('Add a note for this annotation:');
         if (note === null) {
             selection.removeAllRanges();
@@ -506,72 +457,31 @@ try {
     function createAnnotation(note = '') {
         const iframeDoc = contentFrame.contentDocument;
         const selection = iframeDoc.getSelection();
-        if (!selection || selection.isCollapsed) {
-            alert("Please select some text to highlight or annotate.");
-            return;
-        }
-
-        const isPdf = state.currentFile.toLowerCase().endsWith('.pdf');
-        const ranges = [];
-        for (let i = 0; i < selection.rangeCount; i++) {
-            ranges.push(selection.getRangeAt(i));
-        }
+        if (!selection || selection.isCollapsed) return;
 
         const annotationId = `anno-${Date.now()}`;
-        const annotations = [];
+        const range = selection.getRangeAt(0);
 
-        for (let i = 0; i < ranges.length; i++) {
-            const range = ranges[i];
-            const startContainer = range.startContainer;
-            const endContainer = range.endContainer;
-
-            // Validate selection
-            if (isPdf) {
-                // PDF: Ensure selection is within textLayer divs
-                const textLayer = startContainer.closest('.textLayer');
-                if (!textLayer || !endContainer.closest('.textLayer')) {
-                    console.warn("Skipping PDF annotation: Selection not in textLayer");
-                    continue;
-                }
-            } else {
-                // HTML: Ensure selection is text nodes
-                if (startContainer.nodeType !== Node.TEXT_NODE || endContainer.nodeType !== Node.TEXT_NODE) {
-                    console.warn("Skipping HTML annotation: Non-text selection");
-                    continue;
-                }
-            }
-
-            const rangeData = serializeRange(range, iframeDoc);
-            const annotation = {
-                id: `${annotationId}-${ranges.length > 1 ? i : ''}`,
-                text: range.toString(),
-                rangeData,
-                note: note,
-                color: state.settings.activeHighlightColor,
-                isPdf: isPdf,
-                page: isPdf ? startContainer.closest('[data-page]')?.dataset.page : null
-            };
-            annotations.push(annotation);
-        }
-
-        if (annotations.length === 0) {
-            alert("Cannot highlight this selection. For PDFs, select text within a page's text layer. For HTML, select plain text within a single paragraph.");
-            selection.removeAllRanges();
-            return;
-        }
+        const rangeData = serializeRange(range, iframeDoc);
+        const annotation = {
+            id: annotationId,
+            text: range.toString(),
+            rangeData,
+            note,
+            color: state.settings.activeHighlightColor,
+            isPdf: state.currentFile.toLowerCase().endsWith('.pdf'),
+            page: range.startContainer.closest('[data-page]')?.dataset.page,
+        };
 
         const annotationKey = state.currentFile;
         if (!state.annotations[annotationKey]) state.annotations[annotationKey] = [];
-
-        annotations.forEach(annotation => {
-            state.annotations[annotationKey].push(annotation);
-            try {
-                applyAnnotationToDOM(annotation);
-            } catch (e) {
-                console.warn("Failed to apply annotation:", e);
-                alert("Failed to apply highlight. Try selecting a smaller text range.");
-            }
-        });
+        state.annotations[annotationKey].push(annotation);
+        
+        try {
+            applyAnnotationToDOM(annotation);
+        } catch (e) {
+            console.warn("Failed to apply annotation:", e);
+        }
 
         saveAnnotations();
         renderAnnotationsForCurrentFile();
@@ -580,53 +490,30 @@ try {
 
     function applyAnnotationToDOM(annotation) {
         const iframeDoc = contentFrame.contentDocument;
-        if (!iframeDoc) return;
         const range = deserializeRange(annotation.rangeData, iframeDoc);
-        if (!range) {
-            console.warn("Failed to deserialize range for annotation:", annotation);
-            return;
-        }
+        if (!range) return;
 
         const mark = iframeDoc.createElement('mark');
         mark.id = annotation.id;
         mark.className = `highlight highlight-${annotation.color}`;
         if (annotation.note) mark.title = annotation.note;
 
-        if (annotation.isPdf) {
-            // PDF: Apply highlight to textLayer divs
-            const textLayer = range.startContainer.closest('.textLayer');
-            if (!textLayer) return;
-            try {
-                const span = iframeDoc.createElement('span');
-                span.className = `highlight highlight-${annotation.color}`;
-                span.id = annotation.id;
-                if (annotation.note) span.title = annotation.note;
-                range.surroundContents(span);
-                textLayer.appendChild(span);
-            } catch (e) {
-                console.warn("Failed to apply PDF annotation:", e);
-            }
-        } else {
-            // HTML: Standard highlight
-            try {
-                range.surroundContents(mark);
-            } catch (e) {
-                console.warn("Falling back to insertNode for HTML annotation:", e);
-                const fragment = range.extractContents();
-                mark.appendChild(fragment);
-                range.insertNode(mark);
-                iframeDoc.normalize();
-            }
+        try {
+            range.surroundContents(mark);
+        } catch (e) {
+            console.warn("Surround failed, trying fallback:", e);
+            const fragment = range.extractContents();
+            mark.appendChild(fragment);
+            range.insertNode(mark);
         }
     }
 
     function eraseAnnotation(target) {
-        const mark = target.closest('.highlight');
-        if (!mark || !mark.id.startsWith('anno-')) return;
+        const mark = target.closest('.highlight[id^="anno-"]');
+        if (!mark) return;
         const annotationId = mark.id;
         const annotationKey = state.currentFile;
-        const fileAnnotations = state.annotations[annotationKey] || [];
-        state.annotations[annotationKey] = fileAnnotations.filter(anno => anno.id !== annotationId);
+        state.annotations[annotationKey] = (state.annotations[annotationKey] || []).filter(anno => anno.id !== annotationId);
 
         const parent = mark.parentNode;
         while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
@@ -640,13 +527,7 @@ try {
     function applyAnnotationsForCurrentFile() {
         if (!state.currentFile) return;
         const fileAnnotations = state.annotations[state.currentFile] || [];
-        fileAnnotations.forEach(annotation => {
-            try {
-                applyAnnotationToDOM(annotation);
-            } catch (e) {
-                console.warn("Failed to apply annotation:", e);
-            }
-        });
+        fileAnnotations.forEach(applyAnnotationToDOM);
     }
 
     function renderAnnotationsForCurrentFile() {
@@ -664,31 +545,19 @@ try {
             const li = document.createElement('li');
             li.dataset.annotationId = annotation.id;
             let content = `<div class="annotation-text">${escapeHTML(annotation.text)}</div>`;
-            if (annotation.note) {
-                content = `<div class="annotation-note">${escapeHTML(annotation.note)}</div>` + content;
-            }
-            if (annotation.isPdf && annotation.page) {
-                content = `<div class="annotation-page">Page ${annotation.page}</div>` + content;
-            }
+            if (annotation.note) content = `<div class="annotation-note">${escapeHTML(annotation.note)}</div>` + content;
+            if (annotation.page) content = `<div class="annotation-page">Page ${annotation.page}</div>` + content;
             li.innerHTML = content;
             li.addEventListener('click', () => {
                 const targetEl = contentFrame.contentDocument.getElementById(annotation.id);
-                if (targetEl) {
-                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    if (annotation.isPdf) {
-                        const pageContainer = targetEl.closest('[data-page]');
-                        if (pageContainer) {
-                            contentFrame.contentWindow.scrollTo(0, pageContainer.offsetTop);
-                        }
-                    }
-                }
+                if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
             annotationsList.appendChild(li);
         });
     }
 
     function clearAllAnnotations() {
-        if (confirm("Are you sure you want to delete all annotations for all files? This cannot be undone.")) {
+        if (confirm("Delete all annotations for all files? This cannot be undone.")) {
             state.annotations = {};
             saveAnnotations();
             renderAnnotationsForCurrentFile();
@@ -710,41 +579,24 @@ try {
         const iframeWin = contentFrame.contentWindow;
         const iframeDoc = contentFrame.contentDocument;
         const scrollY = iframeWin.scrollY;
-        
-        let snippet = `Bookmark at ${Math.round((scrollY / iframeDoc.body.scrollHeight) * 100)}%`;
-        try {
-            const isPdf = state.currentFile.toLowerCase().endsWith('.pdf');
-            if (isPdf) {
-                const pageContainer = Array.from(iframeDoc.querySelectorAll('[data-page]'))
-                    .find(container => container.offsetTop <= scrollY && container.offsetTop + container.offsetHeight > scrollY);
-                if (pageContainer) {
-                    snippet = `Bookmark on Page ${pageContainer.dataset.page}`;
-                }
-            } else {
-                const elements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
-                const pElement = elements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
-                if (pElement) {
-                    snippet = pElement.textContent.trim().substring(0, 100) + '...';
-                }
-            }
-        } catch (e) { /* ignore */ }
 
-        const newBookmark = {
-            id: `bookmark-${Date.now()}`,
-            file: state.currentFile,
-            scrollY: scrollY,
-            snippet: snippet
-        };
+        let snippet = `Bookmark at ${Math.round((scrollY / iframeDoc.body.scrollHeight) * 100)}%`;
+        const visibleElements = iframeDoc.elementsFromPoint(iframeWin.innerWidth / 2, 50);
+        const pElement = visibleElements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
+        if (pElement) snippet = pElement.textContent.trim().substring(0, 100) + '...';
+        
+        const pageContainer = visibleElements.find(el => el.matches('[data-page]'));
+        if (pageContainer) snippet = `Bookmark on Page ${pageContainer.dataset.page}`;
 
         if (!state.bookmarks[state.currentFile]) state.bookmarks[state.currentFile] = [];
-        
-        const isDuplicate = state.bookmarks[state.currentFile].some(bm => bm.scrollY === scrollY);
-        if (isDuplicate) {
-            alert("Bookmark already exists at this location.");
-            return;
-        }
+        if (state.bookmarks[state.currentFile].some(bm => bm.scrollY === scrollY)) return;
 
-        state.bookmarks[state.currentFile].push(newBookmark);
+        state.bookmarks[state.currentFile].push({
+            id: `bookmark-${Date.now()}`,
+            file: state.currentFile,
+            scrollY,
+            snippet
+        });
         saveBookmarks();
         renderAllBookmarks();
     }
@@ -752,30 +604,21 @@ try {
     function renderAllBookmarks() {
         bookmarksList.innerHTML = '';
         const allBookmarks = Object.values(state.bookmarks).flat().sort((a, b) => a.file.localeCompare(b.file));
-
         if (allBookmarks.length === 0) {
             bookmarksList.innerHTML = '<li>No bookmarks yet.</li>';
             return;
         }
-
         allBookmarks.forEach(bookmark => {
             const li = document.createElement('li');
             li.classList.toggle('active-file', bookmark.file === state.currentFile);
-            const bookTitle = bookmark.file.substring(LIBRARY_ROOT.length)
-                .replace(/\.(html|pdf)$/i, '').replace(/_/g, ' ').replace(/\//g, ' / ');
-
-            li.innerHTML = `
-                <div class="bookmark-title">${bookTitle}</div>
-                <div class="bookmark-snippet">${escapeHTML(bookmark.snippet)}</div>
-            `;
+            const bookTitle = bookmark.file.substring(LIBRARY_ROOT.length).replace(/\.(html|pdf)$/i, '').replace(/_/g, ' ').replace(/\//g, ' / ');
+            li.innerHTML = `<div class="bookmark-title">${bookTitle}</div><div class="bookmark-snippet">${escapeHTML(bookmark.snippet)}</div>`;
             li.addEventListener('click', () => {
                 state.targetScrollY = bookmark.scrollY;
                 if (state.currentFile !== bookmark.file) {
                     loadFile(bookmark.file);
-                } else {
-                    if (contentFrame.contentWindow) {
-                        contentFrame.contentWindow.scrollTo({ top: bookmark.scrollY, behavior: 'smooth' });
-                    }
+                } else if (contentFrame.contentWindow) {
+                    contentFrame.contentWindow.scrollTo({ top: bookmark.scrollY, behavior: 'smooth' });
                 }
             });
             bookmarksList.appendChild(li);
@@ -783,7 +626,7 @@ try {
     }
 
     function clearAllBookmarks() {
-        if (confirm("Are you sure you want to delete all bookmarks? This cannot be undone.")) {
+        if (confirm("Delete all bookmarks? This cannot be undone.")) {
             state.bookmarks = {};
             saveBookmarks();
             renderAllBookmarks();
@@ -791,24 +634,8 @@ try {
     }
 
     // --- DATA PERSISTENCE & UTILITY FUNCTIONS ---
-    function saveData(key, data) {
-        try {
-            localStorage.setItem(key, JSON.stringify(data));
-        } catch (e) {
-            console.error("Failed to save data to localStorage", e);
-        }
-    }
-
-    function loadData(key) {
-        try {
-            const saved = localStorage.getItem(key);
-            return saved ? JSON.parse(saved) : {};
-        } catch (e) {
-            console.error("Failed to load data from localStorage", e);
-            return {};
-        }
-    }
-
+    function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+    function loadData(key) { return JSON.parse(localStorage.getItem(key) || '{}'); }
     function saveSettings() { saveData('beansReaderSettings', state.settings); }
     function loadSettings() { Object.assign(state.settings, loadData('beansReaderSettings')); }
     function saveAnnotations() { saveData('beansReaderAnnotations', state.annotations); }
@@ -819,27 +646,22 @@ try {
     function getPathTo(node, doc) {
         if (node.id) return `//*[@id='${node.id}']`;
         if (node === doc.body) return '/html/body';
+        let parent = node.parentNode;
+        if (!parent) return '';
+
         if (node.nodeType !== Node.ELEMENT_NODE) {
-            let nodeIndex = 0;
-            let child = node;
-            while ((child = child.previousSibling) != null) {
-                if (child.nodeType === node.nodeType && child.nodeName === node.nodeName) {
-                    nodeIndex++;
-                }
+            let index = 1;
+            for (let i = 0; i < parent.childNodes.length; i++) {
+                if (parent.childNodes[i] === node) return `${getPathTo(parent, doc)}/text()[${index}]`;
+                if (parent.childNodes[i].nodeType === node.nodeType && parent.childNodes[i].nodeName === node.nodeName) index++;
             }
-            const parentPath = getPathTo(node.parentNode, doc);
-            return `${parentPath}/text()[${nodeIndex + 1}]`;
         }
 
         let ix = 1;
-        let sibling = node.previousSibling;
-        while (sibling) {
-            if (sibling.nodeType === Node.ELEMENT_NODE && sibling.tagName === node.tagName) {
-                ix++;
-            }
-            sibling = sibling.previousSibling;
+        for (let sibling = node.previousSibling; sibling; sibling = sibling.previousSibling) {
+            if (sibling.nodeType === Node.ELEMENT_NODE && sibling.tagName === node.tagName) ix++;
         }
-        return `${getPathTo(node.parentNode, doc)}/${node.tagName.toLowerCase()}[${ix}]`;
+        return `${getPathTo(parent, doc)}/${node.tagName.toLowerCase()}[${ix}]`;
     }
 
     function getNodeByPath(path, doc) {
@@ -850,7 +672,7 @@ try {
             return null;
         }
     }
-    
+
     function serializeRange(range, doc) {
         return {
             startContainerPath: getPathTo(range.startContainer, doc),
@@ -864,10 +686,7 @@ try {
         try {
             const startContainer = getNodeByPath(rangeData.startContainerPath, doc);
             const endContainer = getNodeByPath(rangeData.endContainerPath, doc);
-            if (!startContainer || !endContainer) {
-                console.warn("Could not find start or end container for range", rangeData);
-                return null;
-            }
+            if (!startContainer || !endContainer) return null;
             const range = doc.createRange();
             range.setStart(startContainer, rangeData.startOffset);
             range.setEnd(endContainer, rangeData.endOffset);
@@ -887,3 +706,4 @@ try {
     // --- START THE APP ---
     initialize();
 });
+
