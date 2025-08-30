@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- USER CONFIGURATION ---
     const GITHUB_USERNAME = "beansthelightkeeper";
     const GITHUB_REPO = "libraryofbeans";
+    // ✨ EXPLANATION: This line tells the script to ONLY look for files inside the 'content/' folder in your GitHub repository.
+    // If your files are in the root directory, you would change this to: const LIBRARY_ROOT = '';
     const LIBRARY_ROOT = 'content/';
     // --- END OF CONFIGURATION ---
 
@@ -127,6 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const pdfjsLib = window.pdfjsLib;
+            // ✨ FIX: The syntax error was caused by having a second `const response = ...` line here.
+            // It has been removed to ensure `response` is only declared once.
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Failed to fetch PDF: HTTP ${response.status}`);
             
