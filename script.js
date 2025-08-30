@@ -119,67 +119,71 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function renderPdfInIframe(url) {
-        if (!window.pdfjsLib) {
-            console.warn("PDF.js not loaded, falling back to native PDF viewer");
-            contentFrame.src = url;
-            toggleReaderTools(false);
-            return;
-        }
-
-        try {
-            const pdfjsLib = window.pdfjsLib;
-            const pdf = await pdfjsLib.getDocument(url).promise;
-            const iframeDoc = contentFrame.contentDocument;
-            iframeDoc.body.innerHTML = '';
-            iframeDoc.body.style.cssText = 'margin: 0; background-color: var(--bg-primary);';
-
-            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                const page = await pdf.getPage(pageNum);
-                const scale = 1.5;
-                const viewport = page.getViewport({
-                    scale
-                });
-
-                const container = iframeDoc.createElement('div');
-                container.style.cssText = `position: relative; width: ${viewport.width}px; height: ${viewport.height}px; margin: 20px auto; box-shadow: 0 0 10px rgba(0,0,0,0.2);`;
-                container.dataset.page = pageNum;
-
-                const canvas = iframeDoc.createElement('canvas');
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-                container.appendChild(canvas);
-
-                const textLayerDiv = iframeDoc.createElement('div');
-                textLayerDiv.className = 'textLayer';
-                container.appendChild(textLayerDiv);
-
-                iframeDoc.body.appendChild(container);
-
-                const renderContext = {
-                    canvasContext: canvas.getContext('2d'),
-                    viewport: viewport,
-                };
-                await page.render(renderContext).promise;
-
-                const textContent = await page.getTextContent();
-                pdfjsLib.renderTextLayer({
-                    textContentSource: textContent,
-                    container: textLayerDiv,
-                    viewport: viewport,
-                    textDivs: []
-                });
-            }
-
-            applyAnnotationsForCurrentFile();
-            setupIframeListeners();
-        } catch (error) {
-            console.error("Error rendering PDF:", error);
-            contentFrame.src = url;
-            contentFrame.srcdoc = `<html><body><h2>Failed to render PDF</h2><p>Error: ${error.message}. Trying native viewer... <a href="${url}">Open PDF directly</a></p></body></html>`;
-            toggleReaderTools(false);
-        }
+   async function renderPdfInIframe(url) {
+    if (!window.pdfjsLib) {
+        console.warn("PDF.js not loaded, falling back to native PDF viewer");
+        contentFrame.src = url;
+        toggleReaderTools(false);
+        return;
     }
+
+    try {
+        const pdfjsLib = window.pdfjsLib;
+        const pdf = await pdfjsLib.getDocument(url).promise;
+        const iframeDoc = contentFrame.contentDocument;
+        iframeDoc.body.innerHTML = '';
+        iframeDoc.body.style.cssText = 'margin: 0; background-color: var(--bg-primary);';
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+            const scale = 1.5;
+            const viewport = page.getViewport({ scale });
+
+            const container = iframeDoc.createElement('div');
+            container.style.cssText = `position: relative; width: ${viewport.width}px; height: ${viewport.height}px; margin: 20px auto; box-shadow: 0 0 10px rgba(0,0,0,0.2);`;
+            container.dataset.page = pageNum;
+
+            const canvas = iframeDoc.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            container.appendChild(canvas);
+
+            const textLayerDiv = iframeDoc.createElement('div');
+            textLayerDiv.className = 'textLayer';
+            container.appendChild(textLayerDiv);
+
+            iframeDoc.body.appendChild(container);
+
+            const renderContext = {
+                canvasContext: canvas.getContext('2d'),
+                viewport: viewport,
+            };
+            await page.render(renderContext).promise;
+
+            const textContent = await page.getTextContent();
+
+            // ✨ FIX: Use the new TextLayerBuilder API
+            // This replaces the old `pdfjsLib.renderTextLayer(...)` call.
+            const textLayer = new pdfjsLib.TextLayerBuilder({
+                textLayerDiv: textLayerDiv,
+                pageIndex: page.pageIndex,
+                viewport: viewport,
+            });
+
+            textLayer.setTextContent(textContent);
+            textLayer.render();
+            // --- End of Fix ---
+        }
+
+        applyAnnotationsForCurrentFile();
+        setupIframeListeners();
+    } catch (error) {
+        console.error("Error rendering PDF:", error);
+        contentFrame.src = url;
+        contentFrame.srcdoc = `<html><body><h2>Failed to render PDF</h2><p>Error: ${error.message}. Trying native viewer... <a href="${url}">Open PDF directly</a></p></body></html>`;
+        toggleReaderTools(false);
+    }
+}
 
     function onIframeLoad() {
         if (!state.currentFile || state.currentFile.toLowerCase().endsWith('.pdf')) {
