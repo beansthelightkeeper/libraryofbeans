@@ -4,49 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gematria Ciphers</title>
-    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="icon" type="image/png" href="../icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Arimo&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../header.css">
     <link rel="stylesheet" href="gematria.css">
 </head>
-<body data-theme="dark">
-    <nav class="main-nav">
-        <div class="nav-links">
-            <a href="gematria.html">Calculator</a>
-            <a href="delta.html">Delta</a>
-            <a href="statistics.html">Statistics</a>
-            <a href="ciphers.html" class="active">Ciphers</a>
+<body data-theme="light">
+    <!-- Your custom header goes here -->
+    <div class="site-header-main">
+        <div class="header-column">
+            <h4>MY SITE</h4>
+            <ul>
+                <li><a href="gematria.html">Home</a></li>
+                <li><a href="ciphers.html">Ciphers</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
         </div>
-        <button id="theme-toggle" class="theme-toggle-button"></button>
-    </nav>
-
-    <div class="container">
-        <header class="site-header">
-             <h1>Available Cipher Systems</h1>
-             <p>A comprehensive, dynamic list of all calculation methods used in this application.</p>
-        </header>
-
-        <nav id="internal-nav-container" class="internal-nav">
-            <!-- Internal page navigation links will be generated here -->
-        </nav>
-       
-        <main id="cipher-list-container" class="main-content">
-            <!-- Cipher list with explanations will be dynamically generated here -->
-        </main>
+        <div class="theme-toggle-container">
+            <button id="theme-toggle"></button>
+        </div>
     </div>
-
-    <footer class="site-footer">
-        <div class="nav-links">
-            <a href="gematria.html">Calculator</a>
-            <a href="delta.html">Delta</a>
-            <a href="statistics.html">Statistics</a>
-            <a href="ciphers.html" class="active">Ciphers</a>
-        </div>
+    
+    <div class="container">
+        <div class="ad-pillar"></div>
+        <section class="content">
+            <header class="site-header">
+                <h1 class="main-title">Available Cipher Systems</h1>
+                <p class="subtitle">A comprehensive list of all calculation methods.</p>
+            </header>
+            
+            <nav id="internal-nav-container" class="internal-nav">
+                <!-- Internal page navigation links will be generated here -->
+            </nav>
+           
+            <main id="cipher-list-container" class="main-content">
+                <!-- Cipher list with explanations will be dynamically generated here -->
+            </main>
+        </section>
+        <div class="ad-pillar"></div>
+    </div>
+    
+    <footer>
+        &copy; 2025 Library of Beans
     </footer>
     
-    <script src="firebase-config.js"></script>
+    <script src="theme-toggle.js"></script>
     <script type="module" src="ciphers.js"></script>
 </body>
 </html>
-

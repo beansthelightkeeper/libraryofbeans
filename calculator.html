@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">        
+    <head>        
+        <meta charset="utf-8">        
+        <meta http-equiv="x-ua-compatible" content="ie=edge">        
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">        
+        <title>Gematria Calculator Results</title>        
+        <link rel="icon" type="image/png" href="../icon.png" />        
+        <link type="text/css" href="../header.css" rel="stylesheet">
+        <link type="text/css" href="gematria.css" rel="stylesheet">
+    </head>    
+    <body data-theme="light">
+        <!-- Your custom header goes here -->
+        <div class="site-header-main">
+            <div class="header-column">
+                <h4>MY SITE</h4>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+            <div class="theme-toggle-container">
+                <button id="theme-toggle"></button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="ad-pillar"></div>
+            <article class="content">                
+                <div class="search-area">
+                    <h1 class="main-title">Gematria Calculation for: <span id="word-display"></span></h1>
+                    <p class="subtitle">Results for your phrase</p>
+                    
+                    <form id="gematria-form" action="gematria.html" method="GET">    
+                        <div class="info-text">(Type in a word or a number to calculate gematria values)</div>    
+                        <input type="search" name="word" id="word-input" tabindex="0" placeholder="Insert phrase" maxlength="200" /><br>
+                        <input type="submit" tabindex="1" value="Calculate Gematria" /><br><br>    
+                        <label for="view_rude"><input type="checkbox" id="view_rude" name="view_rude" /> View Rude Words</label>
+                    </form>
+                </div>                
+
+                <div id="results-area">
+                    <!-- Dynamic results will be injected here by JavaScript -->
+                    <p>Calculation results will appear here.</p>
+                </div>
+            </article>
+            <div class="ad-pillar"></div>
+        </div> 
+        <footer>            
+            <p>&copy; 2025 My Site</p>
+        </footer>
+        <script src="theme-toggle.js"></script>
+        <script src="calculator.js"></script>
+    </body>
+</html>

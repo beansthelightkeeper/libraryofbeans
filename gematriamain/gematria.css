@@ -1,139 +1,205 @@
-/* --- Gematrix.org Inspired Theme --- */
+/* --- General Page Structure --- */
 body {
-    background-color: #fff;
-    color: #333;
-    font-family: 'Arimo', Arial, sans-serif;
-    padding: 0;
+    font-family: 'Arimo', sans-serif;
+    background-color: #f7f3f1;
+    color: #4d465a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
     margin: 0;
-    font-size: 14px;
-}
-
-a {
-    color: #C8A2C8; /* Custom Lilac color for links */
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
 }
 
 .container {
     display: flex;
     justify-content: center;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.content {
     width: 100%;
-    max-width: 800px; /* Constrain the main content width */
-    padding: 10px;
-}
-
-.ad-pillar {
     flex-grow: 1;
 }
 
-/* --- Search Area --- */
+.content {
+    max-width: 900px;
+    width: 100%;
+    padding: 20px;
+}
+
+.ad-pillar {
+    width: 160px;
+    background-color: transparent;
+}
+
+/* --- Main Header Container --- */
+.site-header-main {
+    display: flex;
+    justify-content: center;
+    gap: 3rem; /* Spacing between columns */
+    padding: 2rem 4rem;
+    border-bottom: 1px solid rgba(200, 162, 200, 0.2);
+    position: relative;
+    background-color: transparent; /* Make it blend with the page */
+}
+
+.header-column {
+    padding: 0 1rem;
+}
+
+.header-column h4 {
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #c8a2c8; /* Lilac - Default for dark mode */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+.header-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.header-column li {
+    padding: 0.3rem 0;
+}
+
+.header-column a {
+    color: #e0d8f0; /* Default for dark mode */
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 400;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.header-column a:hover {
+    color: #fff;
+    text-shadow: 0 0 8px rgba(200, 162, 200, 0.9); /* Lilac glow */
+}
+
+/* --- Theme Toggle Button --- */
+.theme-toggle-container {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+}
+
+#theme-toggle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid #888;
+    cursor: pointer;
+    background-color: #fff;
+}
+body[data-theme='dark'] #theme-toggle {
+    background-color: #000;
+    border-color: #555;
+}
+
+/* --- Light Mode Overrides for Readability --- */
+body:not([data-theme='dark']) .header-column h4 {
+    color: #4d465a; /* Dark Lilac Grey for headings */
+}
+
+body:not([data-theme='dark']) .header-column a {
+    color: #5c546b; /* Dark Lilac Grey for links */
+}
+
+body:not([data-theme='dark']) .header-column a:hover {
+    color: #2a2431; /* Even darker on hover */
+    text-shadow: none;
+}
+
+/* --- Page Content Styling --- */
 .search-area {
     text-align: center;
-    padding: 20px;
-    border: 1px solid #ddd;
     margin-bottom: 20px;
 }
 
 .search-area img {
-    border-radius: 50%;
-    margin-bottom: 15px;
+    width: 100px;
+    height: auto;
+    margin-bottom: 10px;
 }
 
-.search-area h1 {
+.main-title {
     font-size: 24px;
-    color: #663399; /* A darker purple for the title */
-    margin: 0 0 5px 0;
+    color: #8a2be2;
+    text-shadow: 1px 1px 1px #d3d3d3;
+    margin: 5px 0;
 }
 
-.search-area h2 {
-    font-size: 16px;
-    font-weight: normal;
-    color: #555;
-    margin: 0 0 15px 0;
+.subtitle {
+    font-size: 18px;
+    color: #333;
+    margin-top: 0;
 }
 
 .info-text {
-    margin-bottom: 15px;
-    font-size: 13px;
+    font-size: 14px;
+    color: #666;
+    margin: 10px 0;
+}
+
+#gematria-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 #text-input {
-    width: 80%;
-    max-width: 400px;
+    width: 300px;
     padding: 8px;
-    font-size: 16px;
+    margin-bottom: 10px;
     border: 1px solid #ccc;
+    border-radius: 4px;
     text-align: center;
 }
 
 input[type="submit"] {
-    margin-top: 10px;
     padding: 8px 16px;
-    font-size: 14px;
+    border: 1px solid #999;
+    background-color: #e0e0e0;
     cursor: pointer;
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
-/* --- Results Area --- */
-#results-area {
-    width: 100%;
-}
-
+/* --- Results Table Styling --- */
 .results-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
+    margin-top: 20px;
 }
 
 .results-table caption {
-    font-size: 18px;
     font-weight: bold;
-    padding: 10px;
-    text-align: left;
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 10px;
+    color: #333;
 }
 
 .results-table th, .results-table td {
     border: 1px solid #ddd;
     padding: 8px;
-    text-align: left;
+    text-align: center;
 }
 
 .results-table th {
-    background-color: #f7f7f7;
+    background-color: #f2f2f2;
+    font-weight: bold;
 }
 
-.results-table tbody tr:nth-child(even) {
-    background-color: #fdfdfd;
+.results-table tr:nth-child(even) {
+    background-color: #f9f9f9;
 }
 
-#current-search-results {
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: #f0f8ff;
-    border: 1px solid #e0efff;
-    border-radius: 4px;
+.results-table a {
+    color: #0000ff;
+    text-decoration: underline;
 }
 
-#current-search-results:empty {
-    display: none; /* Hide the box when there's no current result */
-}
-
-/* --- Footer --- */
-footer {
+.social-buttons {
     text-align: center;
-    padding: 20px;
-    margin-top: 20px;
-    border-top: 1px solid #ddd;
-    font-size: 12px;
-    color: #777;
+    margin: 20px 0;
 }
-

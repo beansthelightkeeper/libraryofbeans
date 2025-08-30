@@ -26,20 +26,19 @@
 
         <section class="content">
             <div class="search-area">
-                <img src="https://placehold.co/100x100/CCCCCC/808080?text=Seal" alt="Rambam Seal" />
-                <h1>Gematria Calculator Statistics</h1>
-                <h2>Statistics for Gimatria phrases</h2>
+                <h1 class="main-title">Gematria Calculator Statistics</h1>
+                <p class="subtitle">Statistics for Gematria Phrases</p>
                 
-                <form id="gematria-form">
-                    <div class="info-text">
+                <form id="gematria-form" action="calculator.html" method="GET">
+                    <p class="info-text">
                         (Type in a word or a number e.g. 
                         <a href="#" class="example-link">God</a>, 
                         <a href="#" class="example-link">Devil</a>, 
                         <a href="#" class="example-link">100</a>, 
                         <a href="#" class="example-link">666</a> 
                         - To calculate gematria values)
-                    </div>
-                    <input type="search" id="text-input" placeholder="Insert phrase" maxlength="200" autofocus />
+                    </p>
+                    <input type="search" id="text-input" name="word" placeholder="Insert phrase" maxlength="200" autofocus />
                     <br>
                     <input type="submit" value="Calculate Gematria" />
                     <br><br>
@@ -52,6 +51,9 @@
             <div id="results-area">
                  <div id="current-search-results">
                     <!-- Results for the latest search will appear here -->
+                </div>
+                <div class="social-buttons">
+                    <div class="fb-like" data-href="https://developers.facebook.com/docs/plugins/" data-width="" data-layout="" data-action="" data-size="" data-share="true"></div>
                 </div>
                 <table class="results-table">
                     <caption>Most searched Gematria words</caption>
@@ -86,6 +88,6 @@
     <script src="../firebase-config.js"></script>
     <script type="module" src="local-db.js"></script>
     <script type="module" src="gematria.js"></script>
+    <script src="theme-toggle.js"></script>
 </body>
 </html>
-
