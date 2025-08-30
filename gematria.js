@@ -3,6 +3,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, where, getDocs, limit, writeBatch, or, doc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+// --- ADD THIS LINE ---
+import { firebaseConfig } from './firebase-config.js';
+
 // --- GLOBAL STATE & CONSTANTS ---
 const PHI = 1.618033988749895;
 const GOLDEN_ANGLE = 137.50776405;
@@ -437,4 +440,3 @@ function escapeHTML(str) {
     p.textContent = str;
     return p.innerHTML;
 }
-
