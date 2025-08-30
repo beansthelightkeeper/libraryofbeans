@@ -6,7 +6,70 @@
     <title>Library of Beans</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js"></script>
-    <link rel="stylesheet" href="iframe id="content-frame" sandbox="allow-same-origin allow-scripts"></iframe>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/web/pdf_viewer.css">
+    <script src="script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">LoB</div>
+            <div class="controls">
+                <button id="theme-toggle">✨</button>
+                <button id="minimize-toggle">↔</button>
+                <button id="rainbow-toggle">🌈</button>
+                <button id="menu-toggle">☰</button>
+            </div>
+        </header>
+        <aside class="sidebar">
+            <div class="library-section">
+                <h2 id="library-section-header">Library</h2>
+                <div id="file-list-container">Loading library...</div>
+            </div>
+            <div class="reader-tools">
+                <h2>Reader Tools</h2>
+                <div class="tool-group">
+                    <label>Font Size</label>
+                    <input type="range" id="font-size-slider" min="12" max="24" value="16">
+                </div>
+                <div class="tool-group">
+                    <label>Margin</label>
+                    <input type="range" id="margin-slider" min="5" max="20" value="10">
+                </div>
+                <div class="tool-group">
+                    <button id="double-space-toggle">Double Space</button>
+                </div>
+                <div class="tool-group">
+                    <button id="highlight-mode-toggle">Highlight</button>
+                    <button id="erase-mode-toggle">Erase</button>
+                    <div id="highlighter-colors" class="color-palette">
+                        <span class="color-swatch" data-color="yellow"></span>
+                        <span class="color-swatch" data-color="pink"></span>
+                        <span class="color-swatch" data-color="green"></span>
+                        <span class="color-swatch" data-color="blue"></span>
+                    </div>
+                </div>
+                <div class="tool-group">
+                    <button id="add-note-btn">Add Note</button>
+                    <button id="add-bookmark-btn">Add Bookmark</button>
+                </div>
+                <div class="tool-group">
+                    <h3>Notes</h3>
+                    <ul id="annotations-list"></ul>
+                    <button id="clear-annotations-btn">Clear All Notes</button>
+                </div>
+                <div class="tool-group">
+                    <h3>Bookmarks</h3>
+                    <ul id="bookmarks-list"></ul>
+                    <button id="clear-bookmarks-btn">Clear All Bookmarks</button>
+                </div>
+            </div>
+        </aside>
+        <main class="content">
+            <div id="welcome-message">
+                <h1>Welcome to the Library of Beans</h1>
+                <p>Select a document from the sidebar to begin reading.</p>
+            </div>
+            <iframe id="content-frame" sandbox="allow-same-origin allow-scripts"></iframe>
         </main>
     </div>
 </body>

@@ -78,16 +78,7 @@ body[data-theme='dark'] {
 /* --- DARK THEME DECORATION --- */
 body[data-theme='dark']::before {
     content: '𓂀 ⟁ ∞ 𝄠 𝨁 𝨄 🃟 🂡 🙨';
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%;
-    font-size: 1.5rem; opacity: 0.03; z-index: -1; pointer-events: none;
-    line-height: 2; overflow: hidden;
-    background: linear-gradient(90deg, hsl(0, 100%, 70%), hsl(60, 100%, 70%), hsl(120, 100%, 70%), hsl(180, 100%, 70%), hsl(240, 100%, 70%), hsl(300, 100%, 70%), hsl(360, 100%, 70%));
-    background-size: 400% 400%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: rainbow-bg-animation 15s linear infinite alternate;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100 Ascendant: inherit;
 }
 body[data-theme='dark'].no-fx::before {
     animation: none; color: var(--accent-dark); opacity: 0.02;
@@ -252,7 +243,7 @@ body[data-theme='dark'] #file-list-container {
 .annotation-note, .annotation-page, .bookmark-title {
     font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;
 }
-.bookmarks-list li.active-file {
+#bookmarks-list li.active-file {
     background-color: var(--button-bg);
 }
 
