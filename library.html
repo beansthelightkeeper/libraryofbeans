@@ -7,14 +7,9 @@
     <link rel="stylesheet" href="style.css">
 
     <script type="module">
-        // Use the latest stable version of PDF.js from unpkg
-        const pdfjsLib = await import('https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.mjs');
-        
-        // Point the worker to the CDN as well
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.mjs';
-        
-        // Make the library available to your script.js
-        window.pdfjsLib = pdfjsLib;
+        import * as pdfjsLib from './js/pdf.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = './js/pdf.worker.mjs';
+        window.pdfjsLib = pdfjsLib; // Makes the library available to script.js
     </script>
 </head>
 <body>
