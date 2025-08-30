@@ -4,61 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gematria Calculator</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
-    <!-- This line links to your stylesheet -->
     <link rel="stylesheet" href="gematria.css">
 </head>
 <body data-theme="dark">
 
-    <nav class="main-nav">
-        <div class="nav-links">
-            <a href="#" class="active">Calculator</a>
+    <header>
+        <div class="menu">
+            <a href="gematria.html" class="active">Calculator</a>
+            <a href="numerology.html">Numerology</a>
+            <a href="statistics.html">Statistics</a>
+            <a href="tools.html">Tools Hub</a>
+            <a href="ciphers.html">Ciphers</a>
+            <a href="delta.html">Delta</a>
+            <a href="els.html">ELS</a>
+            <a href="scanner.html">Scanner</a>
+            <a href="unfold.html">Unfold</a>
+            <a href="teslagematria.html">Tesla</a>
         </div>
-        <button id="theme-toggle" class="theme-toggle-button">🌓</button>
-    </nav>
+    </header>
 
     <div class="container">
-        <header class="site-header">
-             <div class="input-area">
-                <input type="text" id="gematria-input" placeholder="Type a word, phrase, or number...">
-                <button id="save-button" disabled>Save</button>
+        <div class="ad-pillar"></div>
+
+        <section class="content">
+            <div class="search">
+                <!-- THEME-SENSITIVE IMAGES -->
+                <img src="icon.png" alt="Gematria Light Icon" class="theme-icon-light" />
+                <img src="icondark.png" alt="Gematria Dark Icon" class="theme-icon-dark" />
+                
+                <h1>Gematria Calculator</h1>
+                <h2>With Database Matching & Analysis</h2>
+                <div class="input-area">
+                    <input type="search" id="gematria-input" placeholder="Type a word, phrase, or number..." maxlength="200" />
+                    <button id="save-button" disabled>Save</button>
+                    <button id="theme-toggle" class="theme-toggle-button">Toggle Theme</button>
+                </div>
             </div>
-        </header>
 
-        <main class="main-content">
-            <div id="results-summary" class="results-summary-bar"></div>
-            <div id="breakdown-container" class="breakdown-container"></div>
-            <div id="comparison-container" class="comparison-container"></div>
+            <div id="results">
+                <div id="results-summary"></div>
+                <div id="breakdown-container"></div>
+                <div id="db-matches-container"></div>
+            </div>
+        </section>
 
-            <details class="cipher-settings-collapsible" open>
-                <summary>Ciphers</summary>
-                <div id="cipher-settings"></div>
-            </details>
-
-            <div id="db-matches-container"></div>
-            
-            <section class="corpus-uploader">
-                <h3>Corpus Uploader</h3>
-                <p>Upload a .txt file to add its lines to the database.</p>
-                <input type="file" id="file-input" accept=".txt" style="display: none;">
-                <label for="file-input" id="upload-button" style="cursor:pointer; background-color: var(--primary-color); color: white; padding: 10px 15px; border-radius: 8px;">Choose File</label>
-                <span id="upload-status"></span>
-            </section>
-        </main>
+        <div class="ad-pillar"></div>
     </div>
 
-    <!-- Modal for Resonance Report -->
-    <div id="resonance-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <button class="modal-close-button">&times;</button>
-            <h2 id="modal-title">Resonance Report</h2>
-            <div id="modal-body"></div>
+    <footer>
+         <div class="menu">
+            <a href="gematria.html" class="active">Calculator</a>
+            <a href="numerology.html">Numerology</a>
+            <a href="statistics.html">Statistics</a>
         </div>
-    </div>
+        <div>&copy; 2025 Gematria Project</div>
+    </footer>
     
-    <!-- This line runs your script -->
     <script type="module" src="gematria.js"></script>
 </body>
 </html>

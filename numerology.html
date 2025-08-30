@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to Numerology</title>
+    <link rel="stylesheet" href="gematria.css">
+</head>
+<body>
+    <header>
+        <a href="#" onclick="return viewMenu();" class="menu-button-link">
+             <img src="https://placehold.co/32x32/ffffff/000000?text=%E2%98%B0" alt="menu button" class="menu-button" />
+        </a>
+        <div class="menu" id="menu">
+            <div class="menu-column">
+                <ul>
+                    <li><a href="gematria.html">Calculator</a></li>
+                    <li><a href="numerology.html" class="active">Numerology</a></li>
+                    <li><a href="tools.html">Tools</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+    <div class="container">
+        <section class="content static-page">
+            <h1>The Cosmic Vibration of Numbers</h1>
+            <p>
+                In the esoteric world, numbers are not merely symbols for quantity. They are seen as carriers of unique vibrations and potent archetypal energies. Numerology is the study of this mystical relationship between numbers and coinciding events, offering a key to understanding the self and the universe.
+            </p>
+
+            <h2>Your Life Path Number</h2>
+            <p>
+                The most important number in your numerology chart is the Life Path number. It reveals your life's purpose, the main lessons you are here to learn, and the central challenges you may face. It is calculated by reducing your date of birth (day, month, and year) to a single digit or a Master Number (11, 22, 33).
+            </p>
+            <p>
+                <strong>Example Calculation:</strong> For a birthday of December 25, 1990 (12-25-1990):
+                <br>
+                Month: 1 + 2 = 3
+                <br>
+                Day: 2 + 5 = 7
+                <br>
+                Year: 1 + 9 + 9 + 0 = 19  => 1 + 9 = 10 => 1 + 0 = 1
+                <br>
+                Total: 3 + 7 + 1 = 11. This is a Master Number, so we do not reduce it further. The Life Path is 11.
+            </p>
+
+            <h2>Your Destiny (Expression) Number</h2>
+            <p>
+                Derived from the letters in your full birth name, the Destiny or Expression number describes your natural talents, abilities, and potential in this lifetime. Each letter is converted to a number using a simple chart (A=1, B=2, C=3, etc.), and the totals for each name are reduced and then added together, much like the Life Path calculation. This reveals the path you are destined to walk and the personal power you hold.
+            </p>
+        </section>
+    </div>
+
+    <footer>
+        <div class="footer-line">
+            <ul>
+                <li><a href="gematria.html">Calculator</a></li>
+                <li><a href="numerology.html">Numerology</a></li>
+                <li><a href="tools.html">Tools</a></li>
+            </ul>
+        </div>
+        <div>&copy; 2025 Gematria Calculator Project</div>
+    </footer>
+    <script>
+        function viewMenu() {
+            document.getElementById('menu').classList.toggle('active');
+            return false;
+        }
+    </script>
+</body>
+</html>
