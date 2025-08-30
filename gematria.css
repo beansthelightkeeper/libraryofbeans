@@ -1,112 +1,201 @@
+/* --- THEME & GENERAL STYLES --- */
+:root {
+    /* Filter Colors (consistent across themes) */
+    --prime-color: #ffcc00;
+    --square-color: #cc66ff;
+    --palindrome-color: #00ccff;
+    --composite-color: #ff6666;
+
+    /* Dark Theme (Default) */
+    --bg-main: #1a1a1a;
+    --bg-content: #222;
+    --bg-input: #111;
+    --text-primary: #ccc;
+    --text-secondary: #888;
+    --border-color: #333;
+    --accent-color: #c8a2c8; /* Lilac */
+    --accent-hover: #b695c0; /* Darker Lilac */
+}
+
+body[data-theme='light'] {
+    --bg-main: #ffffff;
+    --bg-content: #f8f9fa;
+    --bg-input: #ffffff;
+    --text-primary: #111111;
+    --text-secondary: #555555;
+    --border-color: #dee2e6;
+    --accent-color: #8A2BE2; /* Blue Violet for light mode */
+    --accent-hover: #7B68EE; /* Medium Slate Blue */
+}
+
+
 body {
-    background-color: #000;
-    color: #f0f0f0;
-    font-family: 'Courier New', Courier, monospace;
-    text-align: center;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    padding: 0;
     margin: 0;
-    padding: 0 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 1rem 2rem;
 }
 
-h1, h2 {
-    color: #B673D0;
-    text-shadow: 0 0 5px #B673D0;
-}
-
-input[type="text"], textarea {
-    background-color: #1a1a1a;
-    color: #f0f0f0;
-    border: 1px solid #B673D0;
-    padding: 10px;
-    width: 80%;
-    margin-bottom: 10px;
-    font-family: 'Courier New', Courier, monospace;
-}
-
-input[type="text"]:focus, textarea:focus {
-    outline: none;
-    box-shadow: 0 0 10px #B673D0;
-}
-
-button {
-    background-color: transparent;
-    color: #B673D0;
-    border: 1px solid #B673D0;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-family: 'Courier New', Courier, monospace;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-button:hover {
-    background-color: #B673D0;
-    color: #000;
-}
-
-#results, #statistics-results, #els-results {
-    margin-top: 20px;
-    text-align: left;
-    border: 1px solid #B673D0;
-    padding: 20px;
-    background-color: #1a1a1a;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-th, td {
-    border: 1px solid #B673D0;
-    padding: 8px;
-    text-align: left;
-}
-
-th {
-    background-color: #B673D0;
-    color: #000;
-}
-
-/* Navigation Bar Styles */
-header {
-    background-color: #1a1a1a;
-    padding: 1rem 0;
-    border-bottom: 2px solid #B673D0;
-    margin-bottom: 2rem;
-    width: 100%;
-}
-
-nav ul {
-    list-style: none;
+/* --- NAVIGATION & FOOTER --- */
+.main-nav, .site-footer {
+    background-color: var(--bg-content);
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: center;
-    flex-wrap: wrap;
-    margin: 0;
-    padding: 0;
+    align-items: center;
+    padding: 0.5rem 1rem;
 }
-
-nav ul li a {
-    color: #f0f0f0;
+.site-footer {
+    border-top: 1px solid var(--border-color);
+    border-bottom: none;
+    margin-top: 3rem;
+    padding: 1rem;
+}
+.nav-links {
+    display: flex;
+    gap: 1.5rem;
+}
+.nav-links a {
+    color: var(--text-secondary);
     text-decoration: none;
-    padding: 1rem 1.5rem;
-    font-family: 'Courier New', Courier, monospace;
-    text-transform: uppercase;
-    transition: color 0.3s, background-color 0.3s;
-    display: block;
+    font-size: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 2px solid transparent;
+    transition: color 0.3s, border-color 0.3s;
+}
+.nav-links a:hover {
+    color: var(--text-primary);
+}
+.nav-links a.active {
+    color: var(--accent-color);
+    border-bottom: 2px solid var(--accent-color);
 }
 
-nav ul li a:hover {
-    color: #1a1a1a;
-    background-color: #D8BFD8;
+/* --- HEADER & INPUT --- */
+.input-area {
+    display: flex;
+    gap: 1rem;
+    margin: 2rem 0;
+}
+#gematria-input {
+    flex-grow: 1;
+    padding: 0.75rem;
+    font-size: 1.1rem;
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    background-color: var(--accent-color);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+button:hover {
+    background-color: var(--accent-hover);
+}
+button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
 }
 
-nav ul li a.active {
-    color: #B673D0;
+/* --- RESULTS & MATCHES --- */
+.match-table-container {
+    margin-bottom: 1.5rem;
+}
+.match-table-container summary {
+    cursor: pointer;
+    padding: 0.75rem;
+    background-color: var(--bg-content);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
     font-weight: bold;
+}
+.match-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+}
+.match-table th, .match-table td {
+    padding: 0.5rem 1rem;
+    text-align: left;
+    border-top: 1px solid var(--border-color);
+}
+.match-table tr:hover {
+    background-color: #2a2a3a;
+    cursor: pointer;
+}
+
+/* --- COMPARISON CHART --- */
+.comparison-container {
+    margin: 2rem 0;
+    padding: 1rem;
+    background-color: var(--bg-content);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+.comparison-header {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    color: var(--accent-color);
+}
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.comparison-table th, .comparison-table td {
+    border: 1px solid var(--border-color);
+    padding: 0.5rem;
+    text-align: center;
+    font-family: 'Roboto Mono', monospace;
+}
+.comparison-table th {
+    background-color: var(--bg-input);
+}
+.phrase-header {
+    background-color: var(--accent-color) !important;
+    color: #fff;
+    font-weight: bold;
+}
+.cipher-name-col {
+    text-align: right !important;
+    font-weight: bold;
+    padding-right: 1rem !important;
+}
+
+/* --- PAGINATION --- */
+.pagination-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+.pagination-controls button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+}
+.pagination-info {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Other existing styles from your file would go here */
+.results-summary-bar, .breakdown-container, .cipher-settings-collapsible, .corpus-uploader, .modal-overlay {
+    /* Assuming these styles exist and are correct */
+    margin-bottom: 1.5rem;
 }

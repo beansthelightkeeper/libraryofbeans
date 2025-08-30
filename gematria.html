@@ -38,6 +38,11 @@
                 <!-- Letter-by-letter breakdown will be injected here -->
             </div>
 
+            <!-- New container for the Gematrix-style comparison chart -->
+            <div id="comparison-container" class="comparison-container">
+                <!-- The comparison chart will be injected here when a match is clicked -->
+            </div>
+
             <details class="cipher-settings-collapsible">
                 <summary>Settings</summary>
                 <div class="main-settings-container">
@@ -66,11 +71,16 @@
                 <div id="upload-status"></div>
             </section>
         </main>
-
-        <footer class="site-footer">
-             <!-- Footer content removed to keep focus on main nav -->
-        </footer>
     </div>
+
+    <footer class="site-footer">
+        <div class="nav-links">
+            <a href="gematria.html" class="active">Calculator</a>
+            <a href="delta.html">Delta</a>
+            <a href="statistics.html">Statistics</a>
+            <a href="ciphers.html">Ciphers</a>
+        </div>
+    </footer>
 
     <!-- Modal for Resonance Report -->
     <div id="resonance-modal" class="modal-overlay" style="display: none;">
@@ -87,4 +97,3 @@
     <script type="module" src="gematria.js"></script>
 </body>
 </html>
-
