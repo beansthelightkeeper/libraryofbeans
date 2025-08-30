@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text File Processor</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Arimo">
-    <link rel="stylesheet" href="../header.css">
     <link rel="stylesheet" href="gematria.css">
+    <link rel="stylesheet" href="../header.css">
     <link rel="stylesheet" href="../footer.css">
     <script src="../header.js" defer></script> 
     <script src="../footer.js" defer></script> 
 </head>
-<body data-theme="light">
+<body>
     <div id="main-header-placeholder"></div>
     <div class="container">
         <div class="ad-pillar"></div>
@@ -19,75 +18,163 @@
             <div class="search-area" id="upload">
                 <h1 class="main-title">Text File Processor</h1>
                 <p class="subtitle">Upload and Analyze Text Files</p>
-                <p class="info-text">Upload .txt, .md, or .db files to process sentences (removes numbers, punctuation, and duplicates).</p>
+                <p class="info-text">Upload .txt, .md, or .db files to process sentences and save them to your local database.</p>
                 <div id="upload-section">
                     <input type="file" id="file-input" accept=".txt,.md,.db" multiple>
-                    <input type="submit" value="Process Files" onclick="processFiles()">
+                    <!-- Changed from an input with onclick to a button with an ID -->
+                    <button id="process-btn">Process Files</button>
                 </div>
             </div>
             <div id="results-section">
                 <table class="results-table">
-                    <caption>Top 10 Processed Sentences</caption>
-                    <tr>
-                        <th>Sentence</th>
-                        <th>Count</th>
-                    </tr>
+                    <caption>Top 10 Most Frequent Sentences</caption>
+                    <thead>
+                        <tr>
+                            <th>Sentence</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
                     <tbody id="results"></tbody>
                 </table>
             </div>
         </div>
         <div class="ad-pillar"></div>
     </div>
-    <footer>© 2025 Library of Beans</footer>
+    <footer id="main-footer-placeholder"></footer>
 
     <script type="module">
-        import { recordSearch, getTopSearches } from './local-db.js';
-        import './header.js';
+        // --- INDEXEDDB SETUP (from local-db.js) ---
+        const DB_NAME = 'GematriaStatsDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'searches';
+
+        let db;
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                if (db) {
+                    return resolve(db);
+                }
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (event) => {
+                    console.error("Database error:", event.target.error);
+                    reject("Database error");
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const dbInstance = event.target.result;
+                    if (!dbInstance.objectStoreNames.contains(STORE_NAME)) {
+                        const store = dbInstance.createObjectStore(STORE_NAME, { keyPath: 'term' });
+                        store.createIndex('count', 'count', { unique: false });
+                    }
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+            });
+        }
+
+        // --- DATABASE FUNCTIONS (from local-db.js) ---
+        async function recordSearch(term) {
+            const cleanedTerm = term.trim().toLowerCase();
+            if (!cleanedTerm) return;
+
+            try {
+                const db = await openDB();
+                const transaction = db.transaction(STORE_NAME, 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.get(cleanedTerm);
+
+                return new Promise((resolve, reject) => {
+                    request.onsuccess = () => {
+                        const data = request.result;
+                        if (data) {
+                            data.count++;
+                            store.put(data);
+                        } else {
+                            store.add({ term: cleanedTerm, count: 1 });
+                        }
+                    };
+                    transaction.oncomplete = () => resolve();
+                    transaction.onerror = (event) => reject(event.target.error);
+                });
+
+            } catch (error) {
+                console.error("Failed to record search:", error);
+            }
+        }
+
+        async function getTopSearches(limit = 10) {
+            try {
+                const db = await openDB();
+                const transaction = db.transaction(STORE_NAME, 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const index = store.index('count');
+                const allRecords = [];
+
+                return new Promise((resolve, reject) => {
+                    index.openCursor(null, 'prev').onsuccess = (event) => {
+                        const cursor = event.target.result;
+                        if (cursor && allRecords.length < limit) {
+                            allRecords.push(cursor.value);
+                            cursor.continue();
+                        } else {
+                            resolve(allRecords);
+                        }
+                    };
+                    transaction.onerror = (event) => reject(event.target.error);
+                });
+            } catch (error) {
+                console.error("Failed to get top searches:", error);
+                return [];
+            }
+        }
+
+        // --- PAGE LOGIC (from original localdb.html script) ---
+        const fileInput = document.getElementById('file-input');
+        const processBtn = document.getElementById('process-btn');
+        const resultsBody = document.getElementById('results');
 
         async function processFiles() {
-            const fileInput = document.getElementById('file-input');
-            const resultsBody = document.getElementById('results');
             resultsBody.innerHTML = '<tr><td colspan="2">Processing...</td></tr>';
-
             const files = fileInput.files;
             if (files.length === 0) {
-                resultsBody.innerHTML = '<tr><td colspan="2">No files selected.</td></tr>';
+                resultsBody.innerHTML = '<tr><td colspan="2">No files selected. Please choose one or more files.</td></tr>';
                 return;
             }
 
             const processedSentences = new Set();
-
             for (const file of files) {
-                if (!['text/plain', 'text/markdown', 'application/octet-stream'].includes(file.type) &&
-                    !file.name.endsWith('.txt') && !file.name.endsWith('.md') && !file.name.endsWith('.db')) {
-                    continue;
+                try {
+                    const text = await file.text();
+                    let sentences = text.split(/[.!?\n]+/).map(s => s.trim()).filter(s => s);
+                    sentences = sentences.map(sentence => {
+                        return sentence.replace(/[0-9]/g, '')
+                                      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()"]/g, '')
+                                      .trim()
+                                      .toLowerCase();
+                    }).filter(s => s);
+                    sentences.forEach(sentence => processedSentences.add(sentence));
+                } catch (error) {
+                    console.error(`Could not read file ${file.name}:`, error);
                 }
-
-                const text = await file.text();
-                let sentences = text.split(/[.!?\n]+/).map(s => s.trim()).filter(s => s);
-
-                sentences = sentences.map(sentence => {
-                    return sentence.replace(/[0-9]/g, '')
-                                  .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
-                                  .trim()
-                                  .toLowerCase();
-                }).filter(s => s);
-
-                sentences.forEach(sentence => processedSentences.add(sentence));
             }
 
             for (const sentence of processedSentences) {
                 await recordSearch(sentence);
             }
-
+            
+            alert(`Processing complete! ${processedSentences.size} unique sentences were saved or updated.`);
             await loadTopSearches();
         }
 
         async function loadTopSearches() {
-            const resultsBody = document.getElementById('results');
             const topSearches = await getTopSearches(10);
             if (topSearches.length === 0) {
-                resultsBody.innerHTML = '<tr><td colspan="2">No sentences stored yet.</td></tr>';
+                resultsBody.innerHTML = '<tr><td colspan="2">No sentences stored yet. Upload a file to begin.</td></tr>';
             } else {
                 resultsBody.innerHTML = topSearches.map(s => `
                     <tr>
@@ -98,8 +185,9 @@
             }
         }
 
+        processBtn.addEventListener('click', processFiles);
         loadTopSearches();
     </script>
-<footer id="main-footer-placeholder" class="mega-footer"></footer>
 </body>
 </html>
+

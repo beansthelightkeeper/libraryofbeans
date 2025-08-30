@@ -49,17 +49,17 @@ async function recordSearch(term) {
 
         const request = store.get(cleanedTerm);
 
-        request.onsuccess = () => {
-            const data = request.result;
-            if (data) {
-                data.count++;
-                store.put(data);
-            } else {
-                store.add({ term: cleanedTerm, count: 1 });
-            }
-        };
-        
         return new Promise((resolve, reject) => {
+            request.onsuccess = () => {
+                const data = request.result;
+                if (data) {
+                    data.count++;
+                    store.put(data);
+                } else {
+                    store.add({ term: cleanedTerm, count: 1 });
+                }
+            };
+            
             transaction.oncomplete = () => resolve();
             transaction.onerror = (event) => reject(event.target.error);
         });
@@ -104,6 +104,5 @@ async function getTopSearches(limit = 10) {
 }
 
 
-// Export the functions and the db instance for use in other modules
+// Export the functions for use in other modules
 export { db, openDB, recordSearch, getTopSearches };
-

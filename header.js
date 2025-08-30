@@ -60,7 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="header-col">
                     <h4>Other</h4>
                     <ul>
-                       <li><a href="/gematriamain/localdb.html">Local Database</a></li>
+                       <li><a href="/gematriamain/localdb.html">Add to Local Database</a></li>
+                       <li><a href="/gematriamain/local-db-viewer.html">Browse Local Database</a></li>
                     </ul>
                 </div>
                 <div class="header-col">
