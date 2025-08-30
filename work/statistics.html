@@ -4,63 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gematria Statistics</title>
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="gematria.css">
+    <link rel="stylesheet" href="/gematriamain/gematria.css">
+    <link rel="stylesheet" href="../header.css">
+    <link rel="stylesheet" href="../footer.css">
+    <script src="../header.js" defer></script> 
+    <script src="../footer.js" defer></script> 
+    <!-- Changed to type="module" to support Firebase imports -->
+    <script src="statistics.js" type="module"></script>
 </head>
-<body data-theme="dark">
-    <nav class="main-nav">
-        <div class="nav-links">
-            <a href="gematria.html">Calculator</a>
-            <a href="delta.html">Delta</a>
-            <a href="statistics.html" class="active">Statistics</a>
-            <a href="ciphers.html">Ciphers</a>
-        </div>
-        <button id="theme-toggle" class="theme-toggle-button"></button>
-    </nav>
-
+<body>
+    <div id="main-header-placeholder"></div>
     <div class="container">
-        <header class="site-header">
-            <h1>Gematria Statistics</h1>
-            <p>Analyze the frequency and resonance of phrases in your database</p>
-        </header>
-        
-        <main class="main-content">
-            <div class="input-area">
-                <textarea id="stats-input" placeholder="Enter a phrase to analyze..." rows="3"></textarea>
-            </div>
-
-            <div id="results-summary" class="results-summary-bar">
-                <!-- Gematria value cards will be injected here -->
-            </div>
+        <div class="ad-pillar"></div>
+        <article class="content">
+            <!-- Site Icon -->
+            <img src="https://placehold.co/100x100/1e1e1e/c8a2c8?text=S" alt="Statistics Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto; border-radius: 50%;">
             
-            <div id="breakdown-container" class="breakdown-container">
-                <!-- Letter-by-letter breakdown will be injected here -->
+            <div class="search-area">
+                <h1 class="main-title">Database Statistics</h1>
+                <p class="subtitle">An overview of search activity and database entries.</p>
+                <div style="text-align: center; margin-top: 1rem; padding: 0.5rem; background-color: #2a2a2a; border-radius: 8px;">
+                    <label for="use-localstorage" style="cursor: pointer; font-size: 0.9rem; color: #eee;">
+                        <input type="checkbox" id="use-localstorage" name="use-localstorage" style="vertical-align: middle;">
+                        Use Local Storage Instead of Firebase
+                    </label>
+                </div>
             </div>
 
-            <div id="comparison-container" class="comparison-container">
-                <!-- The comparison chart will be injected here when a match is clicked -->
+            <!-- Most Searched Words -->
+            <div id="most-searched-section" class="results-section">
+                <h2 class="results-header">Top 20 Most Searched Terms</h2>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Term</th>
+                            <th>Search Count</th>
+                        </tr>
+                    </thead>
+                    <tbody id="most-searched-body"></tbody>
+                </table>
             </div>
 
-            <div id="statistics-results-container">
-                 <!-- Match tables with statistical info will be injected here -->
+            <!-- Most Recently Searched Words -->
+            <div id="recent-searches-section" class="results-section" style="margin-top: 3rem;">
+                <h2 class="results-header">Top 20 Most Recently Searched Terms</h2>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Term</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-searches-body"></tbody>
+                </table>
             </div>
-        </main>
+
+            <!-- Most Recently Added Words -->
+            <div id="recent-additions-section" class="results-section" style="margin-top: 3rem;">
+                <h2 class="results-header">Top 20 Most Recently Added Words</h2>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Word</th>
+                            <th>Jewish</th>
+                            <th>English</th>
+                            <th>Simple</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-additions-body"></tbody>
+                </table>
+            </div>
+
+        </article>
+        <div class="ad-pillar"></div>
     </div>
-
-     <footer class="site-footer">
-        <div class="nav-links">
-            <a href="gematria.html">Calculator</a>
-            <a href="delta.html">Delta</a>
-            <a href="statistics.html" class="active">Statistics</a>
-            <a href="ciphers.html">Ciphers</a>
-        </div>
-    </footer>
-    
-    <script src="firebase-config.js"></script>
-    <script type="module" src="statistics.js"></script>
+    <footer id="main-footer-placeholder"></footer>
 </body>
 </html>
 
