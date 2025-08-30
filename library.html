@@ -3,102 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdn.jsdelivr.net https://unpkg.com 'unsafe-inline'; worker-src 'self' blob: https://unpkg.com;">
     <title>Library of Beans</title>
     <link rel="stylesheet" href="style.css">
-    
+
     <script type="module">
-      import * as pdfjsLib from './js/pdf.mjs';
-
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './js/pdf.worker.mjs';
-
-      window.pdfjsLib = pdfjsLib;
+        import * as pdfjsLib from './js/pdf.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = './js/pdf.worker.mjs';
+        window.pdfjsLib = pdfjsLib; // Makes the library available to script.js
     </script>
-    
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
-<body data-theme="dark">
-    <div class="container">
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="main-controls">
-                    <button id="theme-toggle" title="Toggle Theme"></button>
-                    <button id="rainbow-toggle" title="Rainbow Effects">FX</button>
-                    <button id="menu-toggle" title="Toggle Menu">☰</button>
-                    <button id="minimize-toggle" title="Minimize Sidebar">➤</button>
-                    <a href="https://beanscodex.com" class="home-link" title="Home">🏠</a>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <header class="sidebar-header">
+                <h1 class="logo">LoB</h1>
+                <div class="sidebar-controls">
+                    <button id="rainbow-toggle" class="control-btn" title="Toggle Rainbow FX">✨</button>
+                    <button id="minimize-toggle" class="control-btn" title="Minimize Sidebar">↔</button>
+                    <button id="theme-toggle" class="control-btn" title="Toggle Theme"></button>
+                    <button id="menu-toggle" class="control-btn mobile-only" title="Toggle Menu">☰</button>
                 </div>
-                <span class="logo">Library of Beans</span>
+            </header>
+
+            <nav class="library-nav">
+                <section class="sidebar-section">
+                    <h2 id="library-section-header">Library</h2>
+                    <div id="file-list-container" class="scrollable">
+                        <p>Loading library...</p>
+                    </div>
+                </section>
+            </nav>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="tools-and-notes">
+                <section class="sidebar-section">
+                    <h2>Reader Tools</h2>
+                    <div class="tool-group">
+                        <label for="font-size-slider">Font Size</label>
+                        <input type="range" id="font-size-slider" min="12" max="28" value="16" step="1">
+                    </div>
+                    <div class="tool-group">
+                        <label for="margin-slider">Margin</label>
+                        <input type="range" id="margin-slider" min="2" max="25" value="10" step="1">
+                    </div>
+                    <div class="tool-group">
+                        <button id="double-space-toggle" class="tool-btn">Double Space</button>
+                    </div>
+                    <div class="tool-group annotation-tools">
+                        <button id="highlight-mode-toggle" class="tool-btn" title="Highlight Text">Highlight</button>
+                        <button id="erase-mode-toggle" class="tool-btn" title="Erase Highlight">Erase</button>
+                        <div id="highlighter-colors" class="color-palette">
+                            <div class="color-swatch" data-color="yellow" style="background:var(--highlight-yellow);"></div>
+                            <div class="color-swatch" data-color="pink" style="background:var(--highlight-pink);"></div>
+                            <div class="color-swatch" data-color="green" style="background:var(--highlight-green);"></div>
+                            <div class="color-swatch" data-color="blue" style="background:var(--highlight-blue);"></div>
+                        </div>
+                    </div>
+                     <div class="tool-group">
+                        <button id="add-note-btn" class="tool-btn" disabled>Add Note</button>
+                        <button id="add-bookmark-btn" class="tool-btn">Add Bookmark</button>
+                    </div>
+                </section>
+
+                <div class="sidebar-divider"></div>
+
+                <section class="sidebar-section tab-section">
+                    <div class="tabs">
+                        <button class="tab-link active" onclick="openTab(event, 'Annotations')">Notes</button>
+                        <button class="tab-link" onclick="openTab(event, 'Bookmarks')">Bookmarks</button>
+                    </div>
+                    <div id="Annotations" class="tab-content scrollable" style="display: block;">
+                        <ul id="annotations-list"></ul>
+                        <button id="clear-annotations-btn" class="clear-btn">Clear All Notes</button>
+                    </div>
+                    <div id="Bookmarks" class="tab-content scrollable">
+                        <ul id="bookmarks-list"></ul>
+                        <button id="clear-bookmarks-btn" class="clear-btn">Clear All Bookmarks</button>
+                    </div>
+                </section>
             </div>
-            <div class="sidebar-content">
-                <div class="file-navigation">
-                    <h2 id="library-section-header">Library📖</h2>
-                    <div id="file-list-container">
-                        <ul></ul>
-                    </div>
-                </div>
-                <div class="reader-tools">
-                    <h2>Tools🛠️</h2>
-                    <div class="tool-group">
-                        <label>Layout</label>
-                        <div class="slider-container">
-                            <span>Margins</span>
-                            <input type="range" id="margin-slider" min="0" max="20" value="10">
-                        </div>
-                    </div>
-                    <div class="tool-group">
-                        <label>Font Size</label>
-                        <div class="slider-container">
-                            <span>A-</span>
-                            <input type="range" id="font-size-slider" min="12" max="24" value="16">
-                            <span>A+</span>
-                        </div>
-                    </div>
-                    <div class="tool-group">
-                        <div class="layout-controls">
-                            <button id="double-space-toggle">Double Space</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="reader-tools">
-                    <h2>Bookmarks📑</h2>
-                    <button id="clear-bookmarks-btn">Clear All</button>
-                    <ul id="bookmarks-list"></ul>
-                </div>
-                <div class="reader-tools">
-                    <h2>Annotations📝</h2>
-                    <button id="clear-annotations-btn">Clear All</button>
-                    <ul id="annotations-list"></ul>
-                </div>
-            </div>
-        </div>
-        <div class="content-viewer">
+        </aside>
+
+        <main class="main-content">
             <div id="welcome-message">
-                <div class="logo-graphic">
-                    <div class="triangle"></div>
-                    <div class="triangle"></div>
-                    <div class="triangle"></div>
-                </div>
-                <h1>Welcome to the Library of Beans</h1>
-                <p>Select a file from the library to begin.</p>
+                <h2>Welcome to the Library of Beans</h2>
+                <p>Select a document from the sidebar to begin reading.</p>
             </div>
-            <iframe id="content-frame"></iframe>
-        </div>
+            <iframe id="content-frame" name="content-frame" title="Document Content"></iframe>
+        </main>
     </div>
-    <div class="bottom-toolbar">
-        <div class="tool-group">
-            <button id="add-bookmark-btn">Bookmark</button>
-            <button id="highlight-mode-toggle">Highlight</button>
-            <button id="erase-mode-toggle">Erase</button>
-            <button id="add-note-btn">Add Note</button>
-        </div>
-        <div class="tool-group color-palette" id="highlighter-colors">
-            <div class="color-swatch" data-color="yellow"></div>
-            <div class="color-swatch" data-color="pink"></div>
-            <div class="color-swatch" data-color="green"></div>
-            <div class="color-swatch" data-color="blue"></div>
-        </div>
-    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tab-link");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
