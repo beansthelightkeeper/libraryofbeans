@@ -21,7 +21,6 @@
                 <p class="info-text">Upload .txt, .md, or .db files to process sentences and save them to your local database.</p>
                 <div id="upload-section">
                     <input type="file" id="file-input" accept=".txt,.md,.db" multiple>
-                    <!-- Changed from an input with onclick to a button with an ID -->
                     <button id="process-btn">Process Files</button>
                 </div>
             </div>
@@ -42,151 +41,98 @@
     </div>
     <footer id="main-footer-placeholder"></footer>
 
-    <script type="module">
-        // --- INDEXEDDB SETUP (from local-db.js) ---
-        const DB_NAME = 'GematriaStatsDB';
-        const DB_VERSION = 1;
-        const STORE_NAME = 'searches';
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const DB_KEY = 'gematriaSentencesDB';
 
-        let db;
+            // --- LOCALSTORAGE DATABASE FUNCTIONS ---
+            function recordSearch(term) {
+                const cleanedTerm = term.trim().toLowerCase();
+                if (!cleanedTerm) return;
 
-        function openDB() {
-            return new Promise((resolve, reject) => {
-                if (db) {
-                    return resolve(db);
-                }
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-                request.onerror = (event) => {
-                    console.error("Database error:", event.target.error);
-                    reject("Database error");
-                };
-
-                request.onupgradeneeded = (event) => {
-                    const dbInstance = event.target.result;
-                    if (!dbInstance.objectStoreNames.contains(STORE_NAME)) {
-                        const store = dbInstance.createObjectStore(STORE_NAME, { keyPath: 'term' });
-                        store.createIndex('count', 'count', { unique: false });
-                    }
-                };
-
-                request.onsuccess = (event) => {
-                    db = event.target.result;
-                    resolve(db);
-                };
-            });
-        }
-
-        // --- DATABASE FUNCTIONS (from local-db.js) ---
-        async function recordSearch(term) {
-            const cleanedTerm = term.trim().toLowerCase();
-            if (!cleanedTerm) return;
-
-            try {
-                const db = await openDB();
-                const transaction = db.transaction(STORE_NAME, 'readwrite');
-                const store = transaction.objectStore(STORE_NAME);
-                const request = store.get(cleanedTerm);
-
-                return new Promise((resolve, reject) => {
-                    request.onsuccess = () => {
-                        const data = request.result;
-                        if (data) {
-                            data.count++;
-                            store.put(data);
-                        } else {
-                            store.add({ term: cleanedTerm, count: 1 });
-                        }
-                    };
-                    transaction.oncomplete = () => resolve();
-                    transaction.onerror = (event) => reject(event.target.error);
-                });
-
-            } catch (error) {
-                console.error("Failed to record search:", error);
-            }
-        }
-
-        async function getTopSearches(limit = 10) {
-            try {
-                const db = await openDB();
-                const transaction = db.transaction(STORE_NAME, 'readonly');
-                const store = transaction.objectStore(STORE_NAME);
-                const index = store.index('count');
-                const allRecords = [];
-
-                return new Promise((resolve, reject) => {
-                    index.openCursor(null, 'prev').onsuccess = (event) => {
-                        const cursor = event.target.result;
-                        if (cursor && allRecords.length < limit) {
-                            allRecords.push(cursor.value);
-                            cursor.continue();
-                        } else {
-                            resolve(allRecords);
-                        }
-                    };
-                    transaction.onerror = (event) => reject(event.target.error);
-                });
-            } catch (error) {
-                console.error("Failed to get top searches:", error);
-                return [];
-            }
-        }
-
-        // --- PAGE LOGIC (from original localdb.html script) ---
-        const fileInput = document.getElementById('file-input');
-        const processBtn = document.getElementById('process-btn');
-        const resultsBody = document.getElementById('results');
-
-        async function processFiles() {
-            resultsBody.innerHTML = '<tr><td colspan="2">Processing...</td></tr>';
-            const files = fileInput.files;
-            if (files.length === 0) {
-                resultsBody.innerHTML = '<tr><td colspan="2">No files selected. Please choose one or more files.</td></tr>';
-                return;
-            }
-
-            const processedSentences = new Set();
-            for (const file of files) {
                 try {
-                    const text = await file.text();
-                    let sentences = text.split(/[.!?\n]+/).map(s => s.trim()).filter(s => s);
-                    sentences = sentences.map(sentence => {
-                        return sentence.replace(/[0-9]/g, '')
-                                      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()"]/g, '')
-                                      .trim()
-                                      .toLowerCase();
-                    }).filter(s => s);
-                    sentences.forEach(sentence => processedSentences.add(sentence));
+                    const dbString = localStorage.getItem(DB_KEY) || '{}';
+                    const db = JSON.parse(dbString);
+                    
+                    db[cleanedTerm] = (db[cleanedTerm] || 0) + 1;
+                    
+                    localStorage.setItem(DB_KEY, JSON.stringify(db));
                 } catch (error) {
-                    console.error(`Could not read file ${file.name}:`, error);
+                    console.error("Failed to record search in localStorage:", error);
                 }
             }
 
-            for (const sentence of processedSentences) {
-                await recordSearch(sentence);
-            }
-            
-            alert(`Processing complete! ${processedSentences.size} unique sentences were saved or updated.`);
-            await loadTopSearches();
-        }
+            function getTopSearches(limit = 10) {
+                try {
+                    const dbString = localStorage.getItem(DB_KEY) || '{}';
+                    const db = JSON.parse(dbString);
 
-        async function loadTopSearches() {
-            const topSearches = await getTopSearches(10);
-            if (topSearches.length === 0) {
-                resultsBody.innerHTML = '<tr><td colspan="2">No sentences stored yet. Upload a file to begin.</td></tr>';
-            } else {
-                resultsBody.innerHTML = topSearches.map(s => `
-                    <tr>
-                        <td>${s.term}</td>
-                        <td>${s.count}</td>
-                    </tr>
-                `).join('');
-            }
-        }
+                    const allRecords = Object.entries(db).map(([term, count]) => ({ term, count }));
 
-        processBtn.addEventListener('click', processFiles);
-        loadTopSearches();
+                    allRecords.sort((a, b) => b.count - a.count);
+
+                    return allRecords.slice(0, limit);
+                } catch (error) {
+                    console.error("Failed to get top searches from localStorage:", error);
+                    return [];
+                }
+            }
+
+            // --- PAGE LOGIC ---
+            const fileInput = document.getElementById('file-input');
+            const processBtn = document.getElementById('process-btn');
+            const resultsBody = document.getElementById('results');
+
+            async function processFiles() {
+                resultsBody.innerHTML = '<tr><td colspan="2">Processing...</td></tr>';
+                const files = fileInput.files;
+                if (files.length === 0) {
+                    resultsBody.innerHTML = '<tr><td colspan="2">No files selected. Please choose one or more files.</td></tr>';
+                    return;
+                }
+
+                const processedSentences = new Set();
+                for (const file of files) {
+                    try {
+                        const text = await file.text();
+                        let sentences = text.split(/[.!?\n]+/).map(s => s.trim()).filter(s => s);
+                        sentences = sentences.map(sentence => {
+                            return sentence.replace(/[0-9]/g, '')
+                                          .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()"]/g, '')
+                                          .trim()
+                                          .toLowerCase();
+                        }).filter(s => s);
+                        sentences.forEach(sentence => processedSentences.add(sentence));
+                    } catch (error) {
+                        console.error(`Could not read file ${file.name}:`, error);
+                    }
+                }
+
+                for (const sentence of processedSentences) {
+                    recordSearch(sentence); // Using the new localStorage function
+                }
+                
+                alert(`Processing complete! ${processedSentences.size} unique sentences were saved or updated.`);
+                loadTopSearches();
+            }
+
+            function loadTopSearches() {
+                const topSearches = getTopSearches(10); // Using the new localStorage function
+                if (topSearches.length === 0) {
+                    resultsBody.innerHTML = '<tr><td colspan="2">No sentences stored yet. Upload a file to begin.</td></tr>';
+                } else {
+                    resultsBody.innerHTML = topSearches.map(s => `
+                        <tr>
+                            <td>${s.term}</td>
+                            <td>${s.count}</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+
+            processBtn.addEventListener('click', processFiles);
+            loadTopSearches();
+        });
     </script>
 </body>
 </html>
