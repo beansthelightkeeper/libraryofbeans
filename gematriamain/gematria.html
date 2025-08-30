@@ -3,65 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gematria Calculator</title>
+    <title>Gematria Calculator Statistics</title>
     <link rel="icon" type="image/png" href="../icon.png">
+    
+    <!-- This font is not in the target, but provides a cleaner look than default Arial -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Arimo&display=swap" rel="stylesheet">
+    
     <!-- Link to shared header CSS -->
     <link rel="stylesheet" href="../header.css">
     <!-- Link to the specific CSS for this page -->
     <link rel="stylesheet" href="gematria.css">
 </head>
-<body data-theme="dark">
+<body data-theme="light"> <!-- Defaulting to light theme to match the screenshot -->
 
     <!-- The dynamic header will be inserted here -->
     <div id="main-header-placeholder"></div>
 
     <div class="container">
-        <header class="page-header">
-            <img src="https://placehold.co/100x100/333333/FFFFFF?text=LOB" alt="Seal Image" class="header-seal">
-            <h1>Gematria Calculator</h1>
-            <p class="subtitle">Enter a word or a phrase below (e.g., God, Devil, 100, 666) to calculate gematria values.</p>
-        </header>
+        <div class="ad-pillar"></div> <!-- Left pillar -->
 
-        <main class="calculator-main">
-            <div class="input-area">
-                <input type="text" id="text-input" placeholder="Insert phrase" autofocus>
-                <button id="calculate-btn">Calculate Gematria</button>
-            </div>
-             <div class="options-area">
-                <label><input type="checkbox" id="live-update-checkbox" checked> Live Update</label>
+        <section class="content">
+            <div class="search-area">
+                <img src="https://placehold.co/100x100/CCCCCC/808080?text=Seal" alt="Rambam Seal" />
+                <h1>Gematria Calculator Statistics</h1>
+                <h2>Statistics for Gimatria phrases</h2>
+                
+                <form id="gematria-form">
+                    <div class="info-text">
+                        (Type in a word or a number e.g. 
+                        <a href="#" class="example-link">God</a>, 
+                        <a href="#" class="example-link">Devil</a>, 
+                        <a href="#" class="example-link">100</a>, 
+                        <a href="#" class="example-link">666</a> 
+                        - To calculate gematria values)
+                    </div>
+                    <input type="search" id="text-input" placeholder="Insert phrase" maxlength="200" autofocus />
+                    <br>
+                    <input type="submit" value="Calculate Gematria" />
+                    <br><br>
+                    <label>
+                        <input type="checkbox" id="view-rude-words" /> View Rude Words
+                    </label>
+                </form>
             </div>
 
-            <div id="results-container" class="results-container">
-                <!-- Calculation results will be injected here -->
+            <div id="results-area">
+                 <div id="current-search-results">
+                    <!-- Results for the latest search will appear here -->
+                </div>
+                <table class="results-table">
+                    <caption>Most searched Gematria words</caption>
+                    <thead>
+                        <tr>
+                            <th>Word</th>
+                            <th>Jewish</th>
+                            <th>English</th>
+                            <th>Simple</th>
+                            <th>Searches</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-tbody">
+                        <!-- Statistics rows will be injected here from local-db -->
+                    </tbody>
+                </table>
             </div>
-            
-            <div id="breakdown-container" class="breakdown-container">
-                 <!-- Character breakdown will appear here -->
-            </div>
-        </main>
-        
-        <section class="statistics-section">
-            <h2>Most Searched Gematria Words</h2>
-            <table id="stats-table">
-                <thead>
-                    <tr>
-                        <th>Word</th>
-                        <th>Searches</th>
-                        <th>English Ordinal</th>
-                        <th>Full Reduction</th>
-                        <th>Jewish Gematria</th>
-                    </tr>
-                </thead>
-                <tbody id="stats-tbody">
-                    <!-- Statistics rows will be injected here -->
-                </tbody>
-            </table>
         </section>
 
-    </div>
+        <div class="ad-pillar"></div> <!-- Right pillar -->
+    </div> 
+
+    <footer>
+        &copy; 2025 Library of Beans
+    </footer>
 
     <!-- Set the path prefix for this subdirectory -->
     <script>
@@ -73,3 +88,4 @@
     <script type="module" src="gematria.js"></script>
 </body>
 </html>
+
