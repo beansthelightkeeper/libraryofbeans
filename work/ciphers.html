@@ -8,9 +8,11 @@
     <!-- Your links to external stylesheets -->
     <link rel="stylesheet" href="../gematriamain/gematria.css">
     <link rel="stylesheet" href="../header.css">
+    <link rel="stylesheet" href="../footer.css"> <!-- Link to your new footer CSS -->
     
     <!-- Your links to external scripts -->
     <script src="../header.js" defer></script>
+    <script src="../footer.js" defer></script>
     
     <!-- All the styling for the page and cards is placed here -->
     <style>
@@ -20,10 +22,9 @@
             color: #333;
             line-height: 1.6;
             margin: 0;
-            padding: 20px;
+            padding: 0 20px 20px 20px;
         }
 
-        /* This container holds all the main content of the page */
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -33,7 +34,6 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
-        /* This wrapper ensures content inside stacks vertically */
         .content-wrapper {
             display: flex;
             flex-direction: column;
@@ -45,18 +45,16 @@
             border-bottom: 2px solid #e0e0e0;
             padding-bottom: 10px;
             color: #1a2533;
-            width: 100%; /* Ensures headings take full width */
+            width: 100%;
         }
 
-        /* NEW: Made paragraph text smaller and cleaner */
         p {
             margin-bottom: 1.5rem;
             text-align: justify;
-            font-size: 15px; /* Slightly smaller font size */
-            color: #454545; /* Slightly softer text color */
+            font-size: 15px;
+            color: #454545;
         }
         
-        /* Container for icon links above titles */
         .icon-links {
             display: flex;
             justify-content: center;
@@ -75,7 +73,6 @@
             transform: scale(1.1);
         }
         
-        /* Styles for the quick navigation links under the main icon */
         .page-navigation {
             display: flex;
             flex-wrap: wrap;
@@ -108,7 +105,6 @@
             transform: scale(1.15);
         }
 
-        /* This is the main container for all the cards */
         .card-container {
             display: flex;
             flex-wrap: wrap;
@@ -117,7 +113,6 @@
             margin-top: 1.5rem;
         }
 
-        /* This styles each individual card */
         .card {
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
@@ -128,19 +123,17 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
         }
 
-        /* This styles the big letter inside the card */
         .card .letter {
             display: block;
             font-size: 1.2rem; 
             font-weight: bold;
-            color: #6A0DAD; /* Dark purple color */
+            color: #6A0DAD;
         }
         
         .card .hebrew-letter {
             font-size: 1.5rem; 
         }
 
-        /* This styles the number value inside the card */
         .card .value {
             display: block;
             font-size: 0.8rem; 
@@ -148,7 +141,6 @@
             margin-top: 2px;
         }
 
-        /* Styles for the "BEANS" example */
         .example-calculation {
             align-items: center;
             font-size: 2rem;
@@ -174,7 +166,6 @@
             font-weight: bold;
         }
         
-        /* Container for the large example image */
         .example-image-container {
             margin-top: 2rem;
             text-align: center;
@@ -186,19 +177,49 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+
+        .support-section {
+            width: 100%;
+            text-align: center;
+            padding-bottom: 2rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .support-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .support-button {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .support-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .patreon-button { background-color: #f96854; }
+        .github-button { background-color: #333; }
+        .x-button { background-color: #1DA1F2; }
     </style>
 </head>
 <body>
-    <!-- Your new header placeholder -->
     <header id="main-header-placeholder"></header>
     
     <div class="container">
-        <!-- The new content wrapper fixes the layout issue -->
         <div class="content-wrapper">
-            <!-- Your new icon image -->
             <img src="../icon.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto;">
             
-            <!-- Quick Navigation Links -->
             <nav class="page-navigation">
                 <a href="#jewish-gematria"><img src="../icon2.png" alt="Jewish Gematria"><span>Jewish</span></a>
                 <a href="#english-gematria"><img src="../icon4.png" alt="English Gematria"><span>English</span></a>
@@ -208,7 +229,6 @@
                 <a href="#greek-isopsephy"><img src="../icon8.png" alt="Greek Isopsephy"><span>Greek</span></a>
                 <a href="#hebrew-gematria"><img src="../icon7.png" alt="Hebrew Gematria"><span>Hebrew</span></a>
             </nav>
-
             <p>
                 Gematria is an ancient practice of numerology that assigns a specific numerical value to each letter in an alphabet. The fundamental belief is that words or phrases sharing the same numerical value hold a significant, often hidden, relationship. By converting text into numbers, Gematria seeks to decode a deeper, mystical layer of meaning embedded within language, revealing connections and insights that are not apparent on the surface. This practice is most famously rooted in Jewish mysticism (Kabbalah), but parallel systems have appeared across cultures, including Greek Isopsephy and Arabic Abjad numerals.
             </p>
@@ -429,9 +449,11 @@
             </section>
 
         </div>
-    </div>
+    </div> <!-- End of container -->
 
-    <!-- The JavaScript to build the cards is placed at the bottom -->
+    <!-- MOVE THE FOOTER PLACEHOLDER HERE -->
+    <script src="../footer.js" defer></script>
+    <!-- Card generation script -->
     <script>
         // --- Jewish Gematria Section ---
         const jewishGematriaValues = {
@@ -548,7 +570,7 @@
             }
         }
     </script>
-<div id="main-footer-placeholder"></div>
+<footer id="main-footer-placeholder" class="mega-footer"></footer>
 </body>
 </html>
 

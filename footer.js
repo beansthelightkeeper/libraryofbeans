@@ -1,34 +1,64 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Find the placeholder element for the footer
     const mainFooterPlaceholder = document.getElementById('main-footer-placeholder');
-    if (!mainFooterPlaceholder) {
-        console.warn('Footer placeholder element not found. Footer will not be rendered.');
-        return;
-    }
+    if (!mainFooterPlaceholder) return;
 
-    // 2. Inject the footer's HTML structure
+    // The footer's HTML content remains the same
     mainFooterPlaceholder.innerHTML = `
-        <footer class="mega-footer">
-            <div class="mega-footer-inner">
-                <p>&copy; ${new Date().getFullYear()} Your Website Name</p>
-                <p>Feel free to replace this text with your own footer links or information.</p>
+        <div class="footer-symbols-bg" id="footer-symbols-bg"></div>
+        <div class="mega-footer-inner">
+            <div class="footer-socials">
+                <a class="social-btn patreon-btn" href="https://ko-fi.com/beaniverse" target="_blank" rel="noopener">Donate</a>
+                <a class="social-btn github-btn" href="https://github.com/beaniverse" target="_blank" rel="noopener">GitHub</a>
+                <a class="social-btn x-btn" href="https://twitter.com/gematrix" target="_blank" rel="noopener">X</a>
             </div>
-        </footer>
+            <div id="kofi-widget"></div>
+            <p>&copy; 2025 Library of Beans. All Rights Reserved.</p>
+        </div>
     `;
+    
+    const footer = mainFooterPlaceholder.closest('.mega-footer');
 
-    // 3. Create and append the Ko-fi widget scripts to the document body
-    // This ensures they load correctly after the page structure is in place.
-    const kofiScriptMain = document.createElement('script');
-    kofiScriptMain.type = 'text/javascript';
-    kofiScriptMain.src = 'https://storage.ko-fi.com/cdn/widget/Widget_2.js';
-    
-    // The second script, which initializes the widget, should only run after the first one has loaded.
-    kofiScriptMain.onload = () => {
-        const kofiScriptInit = document.createElement('script');
-        kofiScriptInit.type = 'text/javascript';
-        kofiScriptInit.text = `kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'L3L31JCTM4');kofiwidget2.draw();`;
-        document.body.appendChild(kofiScriptInit);
-    };
-    
-    document.body.appendChild(kofiScriptMain);
+    // --- Footer Animation Logic using requestAnimationFrame ---
+    const animationBg = document.getElementById('footer-symbols-bg');
+    if (animationBg) {
+        const symbols = ["☉","☽","☾","☿","♀","♂","♃","♄","♅","♆","♔","♕","♖","♗","♘","♙","♚","♛","♜","♝","♞","♟","⚛","⚚","⚕","⚖","⚗","⚒","⚔","⚰","⚱","⚙","⚜","✡","✯","✶","✷","✸","✹","✺","✻","✼","✽","✾","✿","❀","❁","❂","❃","❄","❅","❆","❇","❈","❉","⚑","⚐","⚓","⚔","⚒","⚕","⚖","⚗","⚙","⚛","⚜","☤","☥","☦","☧","☨","☩","☪","☫","☬","☭","☮","☯","☸","⛤","⛥","⛦","⛧","⛨","⛩","⛫","⛬","⛭","⛮","⛯","⛶","⛷","⛻","⛼","⛾","⛿","✁","✂","✃","✄","✆","✇","✈","✉","✍","✎","✏","✐","✑","✒","✓","✔","✕","✖","✗","✘","✙","✚","✛","✜","✝","✞","✟","✠","✡","✢","✣","✤","✥","✦","✧","★","☆","✩","✪","✫","✬","✭","✮","✯","✰","✱","✲","✳","✴","✵","✶","✷","✸","✹","✺","✻","✼","✽","✾","❖","❧","☙","☘","♠","♡","♢","♣","♤","♥","♦","♧","⚀","⚁","⚂","⚃","⚄","⚅","☗","☖","♨","♩","♪","♫","♬","♭","♮","♯","⚆","⚇","⚈","⚉","⚊","⚋","⚌","⚍","⚎","⚏","⚐","⚑","⚒","⚓","⚔","⚕","⚖","⚗","⚘","⚙","⚚","⚛","⚜","⚝","⚞","⚟","⚠","⚢","⚣","⚤","⚥","⚦","⚧","⚨","⚩","⚬","⚭","⚮","⚯","⚰","⚱","⚲","⚳","⚴","⚵","⚶","⚷","⚸","⚹","⚺","⚻","⚼","⚿","⛀","⛁","⛂","⛃","⛏","⛑","⛒","⛓","⛕","⛖","⛗","⛘","⛙","⛚","⛛","⛜","⛝","⛞","⛡","⛢","⛣","⛤","⛥","⛦","⛧","⛨","⛩","⛪","⛫","⛬","⛭","⛮","⛯","⛰","⛱","⛶","⛷","⛻","⛼","⛾","⛿"];
+        let lastSpawnTime = 0;
+
+        function animateFooter(currentTime) {
+            const isRainbow = footer.classList.contains('rainbow-mode');
+            const spawnInterval = isRainbow ? 100 : 250;
+
+            if (currentTime - lastSpawnTime > spawnInterval) {
+                lastSpawnTime = currentTime;
+                if (animationBg.childElementCount < 35) {
+                    spawnFooterSymbol();
+                }
+            }
+            requestAnimationFrame(animateFooter);
+        }
+
+        function spawnFooterSymbol() {
+            const symbol = document.createElement('span');
+            symbol.className = 'footer-symbol';
+            symbol.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+            symbol.style.left = `${Math.random() * 98}%`;
+            symbol.style.top = `${Math.random() * 100}%`;
+            symbol.style.fontSize = `${Math.random() * 1.5 + 1.5}rem`;
+            symbol.style.opacity = 0;
+            animationBg.appendChild(symbol);
+
+            setTimeout(() => { symbol.style.opacity = 1; }, 100);
+            setTimeout(() => {
+                symbol.style.opacity = 0;
+                setTimeout(() => {
+                    if (animationBg.contains(symbol)) {
+                        animationBg.removeChild(symbol);
+                    }
+                }, 3000);
+            }, Math.random() * 3000 + 2000);
+        }
+        
+        requestAnimationFrame(animateFooter);
+    }
 });
+

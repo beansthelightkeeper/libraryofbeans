@@ -1,46 +1,83 @@
-/* Universal Footer Styles - Designed to match header.css */
-
+/* Universal Footer Styles */
 .mega-footer {
-    width: 100%; /* Use 100% instead of 100vw to avoid horizontal scroll issues */
-    background: #fff;
-    box-shadow: 0 -2px 12px rgba(0,0,0,0.08); /* Shadow on the top edge */
-    border-top: 2px solid #c8a2c8; /* Lilac border on top */
-    margin-top: auto; /* Pushes footer to the bottom of the content */
-    padding: 2rem 1rem;
+    width: 100%;
+    background-color: #1a2533;
+    color: #f4f7f9;
+    padding: 2rem 0;
+    margin-top: 20px;
     text-align: center;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.footer-symbols-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.footer-symbol {
+    position: absolute;
+    opacity: 0;
+    color: rgba(200, 129, 230, 0.2); /* Default subtle color */
+    transition: opacity 2s ease-in-out;
 }
 
 .mega-footer-inner {
-    max-width: 1200px;
+    max-width: 900px;
     margin: 0 auto;
-    color: #4d465a;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 1;
 }
 
-.mega-footer-inner p {
-    margin: 0.5rem 0;
+.footer-socials {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
-.mega-footer-inner a {
-    color: #8a2be2;
+.social-btn {
+    color: #fff;
     text-decoration: none;
     font-weight: bold;
-    transition: color 0.2s;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.mega-footer-inner a:hover {
-    color: #4d465a;
+.social-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
-/* Dark theme support for the footer */
-body[data-theme='dark'] .mega-footer {
-    background: #222;
-    border-top: 2px solid #c8a2c8;
+.patreon-btn { background-color: #f96854; }
+.github-btn { background-color: #333; }
+.x-btn { background-color: #1DA1F2; }
+
+.mega-footer-inner p {
+    margin: 0;
+    font-size: 14px;
+    color: #aaa;
 }
 
-body[data-theme='dark'] .mega-footer-inner {
-    color: #fff;
+/* NEW: Rainbow Mode for Footer Symbols */
+@keyframes rainbow-text-animation {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
 }
 
-body[data-theme='dark'] .mega-footer-inner a:hover {
-    color: #c8a2c8;
+.mega-footer.rainbow-mode .footer-symbol {
+    color: #ff7b7b; /* Start color */
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.7); /* Brighter glow */
+    animation: rainbow-text-animation 4s linear infinite;
+    opacity: 0.5 !important; /* Make them more visible in rainbow mode */
 }
+
