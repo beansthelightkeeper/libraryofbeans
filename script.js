@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const GITHUB_USERNAME = "beansthelightkeeper";
     const GITHUB_REPO = "libraryofbeans";
     const LIBRARY_ROOT = 'content/';
-    // --- END OF CONFIGURATION ---
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB threshold for annotations
 
     // --- DOM Elements ---
     const themeToggle = document.getElementById('theme-toggle');
@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn("PDF.js library not loaded. PDFs will use native viewer.");
         } else {
             console.log("PDF.js library loaded successfully.");
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.js';
         }
         loadSettings();
         loadAnnotations();
@@ -127,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const iframeDoc = contentFrame.contentDocument;
             iframeDoc.body.innerHTML = '';
             iframeDoc.body.style.cssText = 'margin: 0; background-color: var(--bg-primary);';
+            const textLayerPromises = [];
 
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                 const page = await pdf.getPage(pageNum);
@@ -155,17 +157,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 await page.render(renderContext).promise;
 
                 const textContent = await page.getTextContent();
-
-                const textLayer = new pdfjsLib.TextLayerBuilder({
-                    textLayerDiv: textLayerDiv,
-                    pageIndex: page.pageIndex,
+                textLayerDiv.style.setProperty('--scale-factor', viewport.scale);
+                textLayerDiv.style.left = '0px';
+                textLayerDiv.style.top = '0px';
+                textLayerDiv.style.height = `${viewport.height}px`;
+                textLayerDiv.style.width = `${viewport.width}px`;
+                const textLayerPromise = pdfjsLib.renderTextLayer({
+                    textContentSource: textContent,
+                    container: textLayerDiv,
                     viewport: viewport,
-                });
-
-                textLayer.setTextContent(textContent);
-                textLayer.render();
+                    textDivs: []
+                }).promise;
+                textLayerPromises.push(textLayerPromise);
             }
 
+            await Promise.all(textLayerPromises);
             applyAnnotationsForCurrentFile();
             setupIframeListeners();
         } catch (error) {
@@ -324,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .map(item => {
                     const relativePath = item.path.substring(LIBRARY_ROOT.length);
                     const displayName = relativePath.replace(/\.(html|pdf)$/i, '').replace(/_/g, ' ').replace(/\//g, ' / ');
-                    return { name: displayName, path: item.path };
+                    return { name: displayName, path: item.path, size: item.size || 0 };
                 })
                 .sort((a, b) => a.name.localeCompare(b.name));
             renderFileList(flatFileList);
@@ -354,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 a.innerHTML = `<span class="file-icon" title="${file.name}">${getIconForText(file.name)}</span><span class="file-name">${file.name}</span>`;
                 a.onclick = (e) => {
                     e.preventDefault();
-                    loadFile(file.path);
+                    loadFile(file.path, file.size);
                 };
                 li.appendChild(a);
                 ul.appendChild(li);
@@ -366,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fileListContainer.appendChild(ul);
     }
 
-    async function loadFile(fullPath) {
+    async function loadFile(fullPath, fileSize = 0) {
         if (state.currentFile === fullPath) return;
         state.currentFile = fullPath;
         welcomeMessage.style.display = 'none';
@@ -376,12 +382,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (fileLink) fileLink.parentElement.classList.add('active');
 
         const isPdf = fullPath.toLowerCase().endsWith('.pdf');
-        toggleReaderTools(isPdf ? !!window.pdfjsLib : true);
+        const allowAnnotations = fileSize <= MAX_FILE_SIZE && (isPdf ? !!window.pdfjsLib : true);
+        toggleReaderTools(allowAnnotations);
 
         try {
-            // This now correctly loads files relative to your website, not the CDN.
-            const url = fullPath; 
-
+            const url = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${GITHUB_REPO}@main/${fullPath}`;
             if (isPdf) {
                 contentFrame.srcdoc = ' ';
                 contentFrame.src = 'about:blank';
@@ -390,7 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const htmlContent = await response.text();
-                // For HTML files, we load them into srcdoc to keep them sandboxed
                 contentFrame.src = 'about:blank';
                 contentFrame.srcdoc = htmlContent;
             }
@@ -413,7 +417,6 @@ document.addEventListener('DOMContentLoaded', () => {
             fontSizeSlider, doubleSpaceToggle, marginSlider
         ];
         toolsToToggle.forEach(tool => tool.disabled = !enabled);
-
         colorSwatches.classList.toggle('disabled', !enabled);
         if (!enabled) {
             state.isHighlightModeActive = false;
@@ -421,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
             applySettings();
         }
     }
-    
+
     function toggleHighlightMode() {
         state.isHighlightModeActive = !state.isHighlightModeActive;
         if (state.isHighlightModeActive) state.isEraseModeActive = false;
@@ -582,7 +585,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const pElement = visibleElements.find(el => el.tagName === 'P' && el.textContent.trim().length > 10);
         if (pElement) snippet = pElement.textContent.trim().substring(0, 100) + '...';
 
-        const pageContainer = visibleElements.find(el => el.matches('[data-page]'));
+        const pageContainer = visibleElements.find(el => el.matches('[
+
+data-page]'));
         if (pageContainer) snippet = `Bookmark on Page ${pageContainer.dataset.page}`;
 
         if (!state.bookmarks[state.currentFile]) state.bookmarks[state.currentFile] = [];
