@@ -1,8 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, where, getDocs, limit, writeBatch, or, doc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { firebaseConfig } from './firebase-config.js';
 
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+// The firebaseConfig is now imported from the firebase-config.js file.
 
 let CIPHERS = {};
 const PHI = 1.618033988749895;
@@ -86,6 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (error) {
         console.error("Firebase initialization failed:", error);
+        alert("Firebase initialization failed. Please ensure your firebaseConfig in gematria.js is correct.");
         return;
     }
 
@@ -287,7 +289,6 @@ async function processAndUploadFile() {
         if (lines.length === 0) { uploadStatus.textContent = "File is empty."; return; }
         uploadStatus.textContent = `Processing ${lines.length} entries...`;
         
-        // Firebase allows a maximum of 500 operations in a single batch.
         const batchSize = 499;
         for (let i = 0; i < lines.length; i += batchSize) {
             const batch = writeBatch(db);
@@ -331,3 +332,4 @@ function escapeHTML(str) {
     p.textContent = str;
     return p.innerHTML;
 }
+
