@@ -6,8 +6,15 @@
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdn.jsdelivr.net https://unpkg.com 'unsafe-inline'; worker-src 'self' blob: https://unpkg.com;">
     <title>Library of Beans</title>
     <link rel="stylesheet" href="style.css">
-    <script src="js/pdf.min.js" onload="console.log('pdf.min.js loaded successfully');" onerror="console.error('Failed to load pdf.min.js');"></script>
-    <script src="js/pdf.worker.min.js" onload="console.log('pdf.worker.min.js loaded successfully');" onerror="console.error('Failed to load pdf.worker.min.js');"></script>
+    
+    <script type="module">
+      import * as pdfjsLib from './js/pdf.mjs';
+
+      pdfjsLib.GlobalWorkerOptions.workerSrc = './js/pdf.worker.mjs';
+
+      window.pdfjsLib = pdfjsLib;
+    </script>
+    
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body data-theme="dark">
