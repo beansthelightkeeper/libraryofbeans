@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gematria Ciphers - Explained</title>
+    <title>Gematria Ciphers</title>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="gematria.css">
 </head>
 <body data-theme="dark">
-
     <nav class="main-nav">
         <div class="nav-links">
             <a href="gematria.html">Calculator</a>
@@ -23,74 +22,31 @@
     </nav>
 
     <div class="container">
-        <header class="gematria-header">
-            <h1>The Ciphers of Gematria</h1>
-            <p>An overview of the systems used in this database.</p>
+        <header class="site-header">
+             <h1>Available Cipher Systems</h1>
+             <p>A comprehensive, dynamic list of all calculation methods used in this application.</p>
         </header>
 
-        <main class="main-content text-content">
-            <div class="internal-nav">
-                <a href="#simple">Simple</a> |
-                <a href="#english">English</a> |
-                <a href="#jewish">Jewish</a> |
-                <a href="#chaldean">Chaldean</a> |
-                <a href="#reverse">Reverse</a>
-            </div>
-
-            <section id="simple">
-                <h2>Simple Gematria</h2>
-                <p>Simple Gematria, also known as English Ordinal Gematria, is the most straightforward and commonly used cipher in the English-speaking world. It operates on a simple principle: each letter of the alphabet is assigned a number based on its position.</p>
-                <p>The calculation is as follows: <strong>A=1, B=2, C=3, ..., Z=26</strong>. The value of a word or phrase is found by simply summing the values of its letters. For example, the word "CAB" would be calculated as 3 (C) + 1 (A) + 2 (B) = 6.</p>
-                <p>This system's directness makes it an excellent entry point for numerological analysis and for finding foundational connections between words.</p>
-            </section>
-
-            <section id="english">
-                <h2>English Gematria</h2>
-                <p>English Gematria is a straightforward extension of the Simple Gematria system. To calculate the value of a word or phrase in this cipher, you first find its value using Simple Gematria (A=1, B=2, etc.) and then multiply the total sum by 6.</p>
-                <p>The formula is: <strong>Value = (Simple Gematria Value) x 6</strong>. For example, the word "CAB" has a Simple value of 6. Its English Gematria value would be 6 x 6 = 36. This cipher is believed to create a higher vibrational equivalent of the ordinal values, often revealing connections that are not apparent in the base system.</p>
-            </section>
-
-            <section id="jewish">
-                <h2>Jewish Gematria</h2>
-                <p>Jewish Gematria, sometimes referred to as Hebrew Mispar Gadol adapted for the English alphabet, uses a system where the values of the letters increase in increments of 1, 10, and 100. This method assigns more weight to letters further down the alphabet, reflecting the structure of the Hebrew alphabet's numerology.</p>
-                <p>The assignments are as follows:</p>
-                <ul>
-                    <li><strong>1-9:</strong> A=1, B=2, ..., I=9</li>
-                    <li><strong>10-90:</strong> J=10, K=20, ..., R=90</li>
-                    <li><strong>100-800:</strong> S=100, T=200, ..., Z=800</li>
-                </ul>
-                <p>This cipher often uncovers deeper, more esoteric links between concepts, similar to those found in traditional Hebrew kabbalistic practices.</p>
-            </section>
-
-            <section id="chaldean">
-                <h2>Chaldean Gematria</h2>
-                <p>Chaldean Gematria is an ancient system that originated in Babylonia. Unlike other systems, it is based on the phonetic sounds of letters and only uses the numbers 1 through 8. The letter 'I' is not used in the number assignments, as it was considered sacred or too powerful. The value of a word is determined by the specific numbers assigned to each letter, which are not sequential.</p>
-                <p>The assignments are:</p>
-                <ul>
-                    <li><strong>1:</strong> A, I, J, Q, Y</li>
-                    <li><strong>2:</strong> B, K, R</li>
-                    <li><strong>3:</strong> C, G, L, S</li>
-                    <li><strong>4:</strong> D, M, T</li>
-                    <li><strong>5:</strong> E, H, N, X</li>
-                    <li><strong>6:</strong> U, V, W</li>
-                    <li><strong>7:</strong> O, Z</li>
-                    <li><strong>8:</strong> F, P</li>
-                </ul>
-                <p>This system is often used in divination and name analysis, as it is thought to reflect the vibrational essence of a word rather than just its written form.</p>
-            </section>
-
-            <section id="reverse">
-                <h2>Reverse Gematria Ciphers</h2>
-                <p>Reverse Gematria is not a single cipher, but rather a principle that can be applied to many other ciphers. The core concept is to reverse the alphabet before calculating the value. For example, in <strong>Reverse Simple Gematria</strong>, the alphabet is flipped so that <strong>A=26, B=25, C=24, ..., Z=1</strong>.</p>
-                <p>The value of a word is then calculated using the same summing method as the original cipher, but with these inverted letter values. This method is used to find "opposite" or "hidden" meanings and connections, providing a shadow perspective to the standard calculation.</p>
-            </section>
+        <nav id="internal-nav-container" class="internal-nav">
+            <!-- Internal page navigation links will be generated here -->
+        </nav>
+       
+        <main id="cipher-list-container" class="main-content">
+            <!-- Cipher list with explanations will be dynamically generated here -->
         </main>
-
-        <footer class="site-footer">
-             <!-- Footer content can be added here if needed -->
-        </footer>
     </div>
+
+    <footer class="site-footer">
+        <div class="nav-links">
+            <a href="gematria.html">Calculator</a>
+            <a href="delta.html">Delta</a>
+            <a href="statistics.html">Statistics</a>
+            <a href="ciphers.html" class="active">Ciphers</a>
+        </div>
+    </footer>
     
+    <script src="firebase-config.js"></script>
     <script type="module" src="ciphers.js"></script>
 </body>
 </html>
+

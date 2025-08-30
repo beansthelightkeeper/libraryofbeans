@@ -7,27 +7,26 @@
     --composite-color: #ff6666;
 
     /* Dark Theme (Default) */
-    --bg-main: #1a1a1a;
-    --bg-content: #222;
-    --bg-input: #111;
-    --text-primary: #ccc;
-    --text-secondary: #888;
+    --bg-main: #121212;
+    --bg-content: #1e1e1e;
+    --bg-input: #2a2a2a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
     --border-color: #333;
     --accent-color: #c8a2c8; /* Lilac */
-    --accent-hover: #b695c0; /* Darker Lilac */
+    --accent-hover: #d8bfd8; /* Lighter Lilac */
 }
 
 body[data-theme='light'] {
-    --bg-main: #ffffff;
-    --bg-content: #f8f9fa;
+    --bg-main: #f4f4f9;
+    --bg-content: #ffffff;
     --bg-input: #ffffff;
-    --text-primary: #111111;
+    --text-primary: #1c1c1e;
     --text-secondary: #555555;
-    --border-color: #dee2e6;
+    --border-color: #e0e0e6;
     --accent-color: #8A2BE2; /* Blue Violet for light mode */
-    --accent-hover: #7B68EE; /* Medium Slate Blue */
+    --accent-hover: #9370DB; /* Medium Purple */
 }
-
 
 body {
     background-color: var(--bg-main);
@@ -61,6 +60,8 @@ body {
 }
 .nav-links {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 1.5rem;
 }
 .nav-links a {
@@ -79,123 +80,76 @@ body {
     border-bottom: 2px solid var(--accent-color);
 }
 
-/* --- HEADER & INPUT --- */
-.input-area {
+/* --- CIPHERS PAGE STYLES --- */
+.internal-nav {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 1rem;
-    margin: 2rem 0;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
 }
-#gematria-input {
-    flex-grow: 1;
-    padding: 0.75rem;
-    font-size: 1.1rem;
+.internal-nav a {
+    text-decoration: none;
+    color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    transition: background-color 0.2s, color 0.2s;
+}
+.internal-nav a:hover {
     background-color: var(--bg-input);
     color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
 }
-button {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    background-color: var(--accent-color);
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+#cipher-list-container section {
+    margin-bottom: 3rem;
+    scroll-margin-top: 20px; /* Offset for sticky nav */
 }
-button:hover {
-    background-color: var(--accent-hover);
+#cipher-list-container h2 {
+    color: var(--accent-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
 }
-button:disabled {
-    background-color: #555;
-    cursor: not-allowed;
-}
-
-/* --- RESULTS & MATCHES --- */
-.match-table-container {
-    margin-bottom: 1.5rem;
-}
-.match-table-container summary {
-    cursor: pointer;
-    padding: 0.75rem;
+.cipher-card {
     background-color: var(--bg-content);
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    font-weight: bold;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
 }
-.match-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 0.5rem;
+.cipher-card h3 {
+    margin-top: 0;
 }
-.match-table th, .match-table td {
-    padding: 0.5rem 1rem;
-    text-align: left;
+.example-container {
+    margin-top: 1rem;
+    padding-top: 1rem;
     border-top: 1px solid var(--border-color);
 }
-.match-table tr:hover {
-    background-color: #2a2a3a;
-    cursor: pointer;
-}
-
-/* --- COMPARISON CHART --- */
-.comparison-container {
-    margin: 2rem 0;
-    padding: 1rem;
-    background-color: var(--bg-content);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-}
-.comparison-header {
-    text-align: center;
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-    color: var(--accent-color);
-}
-.comparison-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-.comparison-table th, .comparison-table td {
-    border: 1px solid var(--border-color);
-    padding: 0.5rem;
-    text-align: center;
-    font-family: 'Roboto Mono', monospace;
-}
-.comparison-table th {
-    background-color: var(--bg-input);
-}
-.phrase-header {
-    background-color: var(--accent-color) !important;
-    color: #fff;
+.example-label {
     font-weight: bold;
-}
-.cipher-name-col {
-    text-align: right !important;
-    font-weight: bold;
-    padding-right: 1rem !important;
-}
-
-/* --- PAGINATION --- */
-.pagination-controls {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1rem;
-}
-.pagination-controls button {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.9rem;
-}
-.pagination-info {
-    font-size: 0.9rem;
     color: var(--text-secondary);
+    margin-right: 1rem;
 }
 
-/* Other existing styles from your file would go here */
-.results-summary-bar, .breakdown-container, .cipher-settings-collapsible, .corpus-uploader, .modal-overlay {
-    /* Assuming these styles exist and are correct */
-    margin-bottom: 1.5rem;
+
+/* --- Other Component Styles (Shared) --- */
+.input-area, .delta-input-grid, #gematria-input, button, .breakdown-container, .breakdown-cipher-card, .match-table-container, .comparison-container, .pagination-controls, .corpus-uploader, .cipher-settings-collapsible {
+    /* Using styles from previous versions */
 }
+
+.input-area { display: flex; gap: 1rem; margin: 2rem 0; }
+#gematria-input, #stats-input, #delta-input-1, #delta-input-2, textarea { flex-grow: 1; padding: 0.75rem; font-size: 1.1rem; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; font-family: 'Inter', sans-serif; box-shadow: none; outline: none; width: 100%; box-sizing: border-box; }
+#gematria-input:focus, #stats-input:focus, #delta-input-1:focus, #delta-input-2:focus, textarea:focus { border-color: var(--accent-color); }
+button { padding: 0.75rem 1.5rem; font-size: 1rem; background-color: var(--accent-color); color: #fff; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }
+button:hover { background-color: var(--accent-hover); }
+button:disabled { background-color: #555; cursor: not-allowed; }
+.breakdown-container h3 { margin-top: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+.breakdown-cipher-card { background-color: var(--bg-content); border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem; margin-bottom: 1rem; }
+.breakdown-cipher-card h4 { margin: 0 0 1rem 0; color: var(--accent-color); }
+.breakdown-calculation { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.char-value { display: flex; flex-direction: column; align-items: center; font-family: 'Roboto Mono', monospace; }
+.char-value .char { font-size: 1.2rem; font-weight: bold; }
+.char-value .value { font-size: 0.8rem; color: var(--text-secondary); }
+.operator { font-size: 1.2rem; color: var(--text-secondary); }
+.total { font-size: 1.5rem; font-weight: bold; color: var(--accent-color); }
+
