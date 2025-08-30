@@ -3,37 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home of Beans</title>
+    <title>Library of Beans - An Esoteric Archive</title>
+    
+    <link rel="icon" type="image/png" href="favicon_io/favicon-32x32.png">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="header.css">
     <link rel="stylesheet" href="homepage.css">
 </head>
-<body>
-    <div class="background-glyphs"></div>
+<body data-theme="dark">
+
+    <!-- Esoteric Background Animation -->
+    <div class="background-animation">
+        <div class="glyph">א</div>
+        <div class="glyph">ב</div>
+        <div class="glyph">ג</div>
+        <div class="glyph">ד</div>
+        <div class="glyph">ה</div>
+        <div class="glyph">ו</div>
+        <div class="glyph">ז</div>
+        <div class="glyph">ח</div>
+        <div class="glyph">ט</div>
+        <div class="glyph">י</div>
+        <div class="glyph">☤</div>
+        <div class="glyph">☥</div>
+        <div class="glyph">☧</div>
+        <div class="glyph">☩</div>
+        <div class="glyph">♁</div>
+    </div>
+
+    <!-- The dynamic header will be inserted here -->
+    <div id="main-header-placeholder"></div>
+
     <div class="container">
         <header class="main-header">
-            <h1>Home of Beans</h1>
-            <p>A Metaphysical Exploration into Reality</p>
+            <div class="seal-container">
+                <img src="https://placehold.co/150x150/1a1a1a/c8a2c8?text=LoB" alt="Library of Beans Seal" class="seal-image"/>
+            </div>
+            <h1>The Library of Beans</h1>
+            <p class="subtitle">An Archive of Esoteric Knowledge & Gematric Sciences</p>
         </header>
 
-        <nav class="main-nav">
-            <a href="library.html" class="nav-card">
-                <div class="card-icon">📖</div>
-                <h2>Library of Beans</h2>
-                <p>An interactive reader for your digital collection. Highlight, bookmark, and organize your texts.</p>
+        <main class="portal-grid">
+            <a href="gematriamain/gematria.html" class="portal-card">
+                <div class="portal-icon"><h3>אבג</h3></div>
+                <div class="portal-content">
+                    <h2>Gematria Calculator</h2>
+                    <p>Unlock the numerical mysteries of words and phrases. Explore the core principles of sacred mathematics.</p>
+                </div>
             </a>
-            <a href="gematria.html" class="nav-card">
-                <div class="card-icon">🔢</div>
-                <h2>Gematria Database</h2>
-                <p>A calculator and database for exploring the mystical numerical values of words and phrases.</p>
+            <a href="library.html" class="portal-card">
+                <div class="portal-icon"><h3>☨</h3></div>
+                <div class="portal-content">
+                    <h2>Digital Athenaeum</h2>
+                    <p>Enter the library to peruse your personal collection of texts, manuscripts, and esoteric works.</p>
+                </div>
             </a>
-            <a href="work.html" class="nav-card">
-                <div class="card-icon">💡</div>
-                <h2>My Work & Ideas</h2>
-                <p>A personal collection of projects, writings, and explorations into various subjects.</p>
+            <a href="tools/tools.html" class="portal-card">
+                <div class="portal-icon"><h3>⚙︎</h3></div>
+                <div class="portal-content">
+                    <h2>Alchemist's Workshop</h2>
+                    <p>Access a suite of tools for textual analysis, pattern recognition, and symbolic exploration.</p>
+                </div>
             </a>
-        </nav>
+            <a href="localdb.html" class="portal-card">
+                <div class="portal-icon"><h3>⚿</h3></div>
+                <div class="portal-content">
+                    <h2>Personal Grimoire</h2>
+                    <p>Upload and manage your own collection of texts, creating a private, searchable database.</p>
+                </div>
+            </a>
+        </main>
     </div>
+
+    <!-- Set the path prefix for the root directory -->
+    <script>
+        window.pathPrefix = '.';
+    </script>
+    <script src="header.js"></script>
+
 </body>
 </html>

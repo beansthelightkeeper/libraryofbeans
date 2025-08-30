@@ -1,116 +1,166 @@
-/* --- KEYFRAME ANIMATIONS FOR RAINBOW THEME --- */
-@keyframes rainbow-bg-animation {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
+/* --- Esoteric Homepage Styles --- */
+:root {
+    --bg-color: #120c18;
+    --text-color: #e0d8f0;
+    --primary-glow: rgba(200, 162, 200, 0.7); /* Lilac Glow */
+    --secondary-glow: rgba(0, 188, 212, 0.6);
+    --card-bg: rgba(26, 18, 36, 0.85);
+    --border-color: rgba(200, 162, 200, 0.3);
 }
 
-/* --- GENERAL STYLES --- */
 body {
-    background-color: #0d1117;
-    color: #c9d1d9;
-    font-family: 'Nunito', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Cormorant Garamond', serif;
     margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    overflow: hidden;
-    position: relative;
+    overflow-x: hidden;
 }
 
-.background-glyphs {
-    content: '𓂀 ⟁ ∞ 𝄠 𝨁 𝨄 🃟 🂡 🙨 𓂀 ⟁ ∞ 𝄠 𝨁 𝨄 🃟 🂡 🙨 𓂀 ⟁ ∞ 𝄠 𝨁 𝨄 🃟 🂡 🙨';
-    position: fixed; top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    font-size: 2.5rem;
-    opacity: 0.05; z-index: 1; pointer-events: none;
-    line-height: 2; word-wrap: break-word; overflow: hidden;
-    background: linear-gradient(90deg, hsl(0, 100%, 70%), hsl(60, 100%, 70%), hsl(120, 100%, 70%), hsl(180, 100%, 70%), hsl(240, 100%, 70%), hsl(300, 100%, 70%), hsl(360, 100%, 70%));
-    background-size: 400% 400%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: rainbow-bg-animation 20s linear infinite alternate;
+.background-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
 }
+
+.glyph {
+    position: absolute;
+    color: var(--primary-glow);
+    font-size: 20px;
+    opacity: 0;
+    animation: floatUp 15s infinite linear;
+    user-select: none;
+}
+
+/* --- Keyframe Animation for Floating Glyphs --- */
+@keyframes floatUp {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+    }
+    10%, 90% {
+        opacity: 0.2;
+    }
+    100% {
+        transform: translateY(-10vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Staggering animations for different glyphs */
+.glyph:nth-child(1) { left: 5%; animation-delay: -2s; }
+.glyph:nth-child(2) { left: 15%; animation-delay: -5s; font-size: 24px; }
+.glyph:nth-child(3) { left: 25%; animation-delay: 0s; }
+.glyph:nth-child(4) { left: 35%; animation-delay: -10s; font-size: 18px; }
+.glyph:nth-child(5) { left: 45%; animation-delay: -1s; }
+.glyph:nth-child(6) { left: 55%; animation-delay: -7s; font-size: 22px; }
+.glyph:nth-child(7) { left: 65%; animation-delay: -3s; }
+.glyph:nth-child(8) { left: 75%; animation-delay: -12s; font-size: 20px; }
+.glyph:nth-child(9) { left: 85%; animation-delay: -4s; }
+.glyph:nth-child(10) { left: 95%; animation-delay: -8s; font-size: 25px; }
+.glyph:nth-child(11) { left: 10%; animation-delay: -11s; color: var(--secondary-glow); }
+.glyph:nth-child(12) { left: 50%; animation-delay: -6s; color: var(--secondary-glow); }
+.glyph:nth-child(13) { left: 80%; animation-delay: -9s; color: var(--secondary-glow); }
+.glyph:nth-child(14) { left: 20%; animation-delay: -13s; color: var(--secondary-glow); }
+.glyph:nth-child(15) { left: 70%; animation-delay: -15s; color: var(--secondary-glow); }
+
 
 .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
     position: relative;
     z-index: 2;
-    text-align: center;
-    padding: 2rem;
 }
 
-/* --- HEADER --- */
 .main-header {
-    margin-bottom: 3rem;
+    text-align: center;
+    margin-top: 2rem;
+    margin-bottom: 4rem;
 }
+
+.seal-container {
+    margin-bottom: 1.5rem;
+}
+
+.seal-image {
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    box-shadow: 0 0 15px var(--primary-glow);
+    transition: transform 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+}
+
+.seal-image:hover {
+    transform: rotate(360deg);
+    box-shadow: 0 0 30px var(--primary-glow), 0 0 50px var(--secondary-glow);
+}
+
 
 .main-header h1 {
-    font-size: 3rem;
+    font-size: 3.5rem;
     font-weight: 700;
-    color: #00ffff;
-    text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
     margin: 0;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px var(--primary-glow);
 }
 
-.main-header p {
+.main-header .subtitle {
+    font-size: 1.2rem;
+    color: #bca0dc;
+    margin: 0.5rem 0 0 0;
     font-family: 'Roboto Mono', monospace;
-    font-size: 1rem;
-    color: #8b949e;
-    margin-top: 0.5rem;
 }
 
-/* --- NAVIGATION CARDS --- */
-.main-nav {
+.portal-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
-    max-width: 1000px;
-    margin: 0 auto;
 }
 
-.nav-card {
-    background-color: rgba(22, 27, 34, 0.8);
-    border: 1px solid #30363d;
+.portal-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 10px;
-    padding: 2rem;
+    padding: 1.5rem;
     text-decoration: none;
-    color: #c9d1d9;
+    color: var(--text-color);
+    backdrop-filter: blur(10px);
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
 }
 
-.nav-card:hover {
-    transform: translateY(-10px);
-    border-color: #00ffff;
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+.portal-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    border-color: var(--primary-glow);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px var(--primary-glow);
 }
 
-.card-icon {
+.portal-icon {
     font-size: 3rem;
-    margin-bottom: 1rem;
+    color: #c8a2c8;
+    text-shadow: 0 0 10px var(--primary-glow);
 }
 
-.nav-card h2 {
+.portal-content h2 {
+    margin: 0 0 0.5rem 0;
     font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-    color: #fff;
+    color: #e0d8f0;
 }
 
-.nav-card p {
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.9rem;
+.portal-content p {
+    margin: 0;
+    font-size: 1rem;
     line-height: 1.6;
-    color: #8b949e;
+    color: #bca0dc;
 }
 
-/* --- RESPONSIVE DESIGN --- */
-@media (max-width: 768px) {
-    .main-header h1 {
-        font-size: 2.5rem;
-    }
-    .main-nav {
-        grid-template-columns: 1fr;
-    }
+/* Ensure header links are visible on this background */
+.main-nav {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--border-color) !important;
 }
