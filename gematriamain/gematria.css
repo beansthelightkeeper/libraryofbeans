@@ -1,13 +1,13 @@
 /* --- General Page Structure --- */
 body {
-    font-family: 'Arimo', sans-serif;
-    background-color: #f7f3f1;
+    font-family: 'Arimo', 'Noto Sans Symbols', sans-serif;
     color: #4d465a;
     display: flex;
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
     margin: 0;
+    background-color: transparent; /* Transparent to show canvas background */
 }
 
 .container {
@@ -15,6 +15,11 @@ body {
     justify-content: center;
     width: 100%;
     flex-grow: 1;
+    background-color: #ffffff; /* Solid white background for content */
+}
+
+body[data-theme='dark'] .container {
+    background-color: #1d1d1d; /* Solid dark background for content */
 }
 
 .content {
@@ -28,15 +33,26 @@ body {
     background-color: transparent;
 }
 
+/* --- Glyph Canvas Styling --- */
+#glyphCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Behind all content */
+    pointer-events: none; /* Allow clicks to pass through */
+}
+
 /* --- Main Header Container --- */
 .site-header-main {
     display: flex;
     justify-content: center;
-    gap: 3rem; /* Spacing between columns */
+    gap: 3rem;
     padding: 2rem 4rem;
     border-bottom: 1px solid rgba(200, 162, 200, 0.2);
     position: relative;
-    background-color: transparent; /* Make it blend with the page */
+    background-color: transparent;
 }
 
 .header-column {
@@ -47,7 +63,7 @@ body {
     margin: 0 0 1rem 0;
     font-size: 0.9rem;
     font-weight: 700;
-    color: #c8a2c8; /* Lilac - Default for dark mode */
+    color: #c8a2c8; /* Lilac for dark mode */
     text-transform: uppercase;
     letter-spacing: 1px;
     white-space: nowrap;
@@ -64,7 +80,7 @@ body {
 }
 
 .header-column a {
-    color: #e0d8f0; /* Default for dark mode */
+    color: #e0d8f0;
     text-decoration: none;
     font-size: 1rem;
     font-weight: 400;
@@ -73,40 +89,20 @@ body {
 
 .header-column a:hover {
     color: #fff;
-    text-shadow: 0 0 8px rgba(200, 162, 200, 0.9); /* Lilac glow */
+    text-shadow: 0 0 8px rgba(200, 162, 200, 0.9);
 }
 
-/* --- Theme Toggle Button --- */
-.theme-toggle-container {
-    position: absolute;
-    top: 2rem;
-    right: 2rem;
-}
-
-#theme-toggle {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: 1px solid #888;
-    cursor: pointer;
-    background-color: #fff;
-}
-body[data-theme='dark'] #theme-toggle {
-    background-color: #000;
-    border-color: #555;
-}
-
-/* --- Light Mode Overrides for Readability --- */
+/* --- Light Mode Overrides --- */
 body:not([data-theme='dark']) .header-column h4 {
-    color: #4d465a; /* Dark Lilac Grey for headings */
+    color: #4d465a;
 }
 
 body:not([data-theme='dark']) .header-column a {
-    color: #5c546b; /* Dark Lilac Grey for links */
+    color: #5c546b;
 }
 
 body:not([data-theme='dark']) .header-column a:hover {
-    color: #2a2431; /* Even darker on hover */
+    color: #2a2431;
     text-shadow: none;
 }
 
@@ -147,7 +143,7 @@ body:not([data-theme='dark']) .header-column a:hover {
     align-items: center;
 }
 
-#text-input {
+#text-input, input[type="search"] {
     width: 300px;
     padding: 8px;
     margin-bottom: 10px;
@@ -169,6 +165,7 @@ input[type="submit"] {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .results-table caption {
@@ -202,4 +199,102 @@ input[type="submit"] {
 .social-buttons {
     text-align: center;
     margin: 20px 0;
+}
+
+/* --- Footer Styling --- */
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #ffffff; /* Match the content box */
+    width: 100%;
+    border-top: 1px solid #eee;
+}
+
+body[data-theme='dark'] footer {
+    background-color: #1d1d1d; /* Match the content box */
+    color: #e0d8f0;
+    border-top: 1px solid #333;
+}
+
+/* --- Calculation Breakdown Styling --- */
+.breakdown-container {
+    margin-bottom: 40px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fdfdfd;
+}
+
+body[data-theme='dark'] .breakdown-container {
+    border-color: #444;
+    background-color: #2c2c2c;
+}
+
+.breakdown-item {
+    margin-bottom: 20px;
+}
+
+.breakdown-item:last-child {
+    margin-bottom: 0;
+}
+
+.breakdown-item p {
+    margin-top: 0;
+    font-size: 16px;
+    text-align: center;
+}
+
+.breakdown-table {
+    width: auto;
+    border-collapse: collapse;
+    margin: 0 auto; /* This centers the table */
+}
+
+.breakdown-table td {
+    padding: 4px 8px;
+    text-align: center;
+    min-width: 30px;
+}
+
+.breakdown-letters td {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #8a2be2;
+}
+
+body[data-theme='dark'] .breakdown-letters td {
+    color: #c8a2c8;
+}
+
+.breakdown-numbers td {
+    border-top: 1px solid #ccc;
+    font-size: 1em;
+}
+
+body[data-theme='dark'] .breakdown-numbers td {
+    border-top-color: #555;
+}
+
+/* Add to gematria.css or in a <style> tag */
+.cipher-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.cipher-table th, .cipher-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+.cipher-table th {
+    background: #f3eaff;
+    color: #8a2be2;
+    font-size: 1.1rem;
+}
+.cipher-table tr:last-child td {
+    border-bottom: none;
 }

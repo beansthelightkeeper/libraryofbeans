@@ -1,158 +1,74 @@
-/* --- General Page Structure --- */
-body {
-    font-family: 'Arimo', sans-serif;
-    background-color: #f7f3f1;
-    color: #4d465a;
+.mega-header {
+    width: 100vw;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    border-bottom: 2px solid #c8a2c8;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.mega-header-inner {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
+    flex-wrap: wrap;
+    justify-content: flex-start;   /* left-justified */
+    align-items: flex-start;
+    max-width: 1200px;             /* center the columns in a box */
+    margin: 0 auto;                /* center the box itself */
+    padding: 0.5rem 1rem;
+    gap: 2rem;
+}
+.header-col {
+    min-width: 160px;
+}
+.header-col h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    color: #8a2be2;
+}
+.header-col ul {
+    list-style: none;
+    padding: 0;
     margin: 0;
 }
-
-.container {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    flex-grow: 1;
+.header-col li {
+    margin-bottom: 0.3rem;
 }
-
-.content {
-    max-width: 900px;
-    width: 100%;
-    padding: 20px;
+.header-col a {
+    text-decoration: none;
+    color: #4d465a;
+    font-weight: bold;
+    transition: color 0.2s;
 }
-
-.ad-pillar {
-    width: 160px;
-    background-color: transparent;
+.header-col a:hover {
+    color: #8a2be2;
 }
-
-/* --- Main Header Container --- */
-.site-header-main {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem; /* Reduced spacing for 4 columns */
-    padding: 2rem 4rem;
-    border-bottom: 1px solid rgba(200, 162, 200, 0.2);
-    position: relative;
-    background-color: transparent;
-}
-
-.header-column {
-    padding: 0 1rem;
-}
-
-/* --- Theme Toggle Button --- */
 .theme-toggle-container {
-    position: absolute;
-    top: 2rem;
-    right: 2rem;
+    margin-left: auto;
+    align-self: flex-start;
+    padding-top: 0.5rem;
 }
-
 #theme-toggle {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     border: 1px solid #888;
     cursor: pointer;
     background-color: #fff;
+    font-size: 1.5rem;
+    transition: background 0.2s;
+}
+body[data-theme='dark'] .mega-header {
+    background: #222;
+    border-bottom: 2px solid #c8a2c8;
+}
+body[data-theme='dark'] .header-col a {
+    color: #fff;
 }
 body[data-theme='dark'] #theme-toggle {
-    background-color: #000;
+    background-color: #222;
+    color: #fff;
     border-color: #555;
 }
-
-/* --- Page Content Styling --- */
-.search-area {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.search-area img {
-    width: 100px;
-    height: auto;
-    margin-bottom: 10px;
-}
-
-.main-title {
-    font-size: 24px;
-    color: #8a2be2;
-    text-shadow: 1px 1px 1px #d3d3d3;
-    margin: 5px 0;
-}
-
-.subtitle {
-    font-size: 18px;
-    color: #333;
-    margin-top: 0;
-}
-
-.info-text {
-    font-size: 14px;
-    color: #666;
-    margin: 10px 0;
-}
-
-#gematria-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-#text-input {
-    width: 300px;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    text-align: center;
-}
-
-input[type="submit"] {
-    padding: 8px 16px;
-    border: 1px solid #999;
-    background-color: #e0e0e0;
-    cursor: pointer;
-    border-radius: 4px;
-}
-
-/* --- Results Table Styling --- */
-.results-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-.results-table caption {
-    font-weight: bold;
-    font-size: 18px;
-    text-align: center;
-    margin-bottom: 10px;
-    color: #333;
-}
-
-.results-table th, .results-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-}
-
-.results-table th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-}
-
-.results-table tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-.results-table a {
-    color: #0000ff;
-    text-decoration: underline;
-}
-
-.social-buttons {
-    text-align: center;
-    margin: 20px 0;
+body[data-theme='dark'] .header-col h4 {
+    color: #c8a2c8;
 }

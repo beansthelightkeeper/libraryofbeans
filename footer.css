@@ -1,0 +1,46 @@
+/* Universal Footer Styles - Designed to match header.css */
+
+.mega-footer {
+    width: 100%; /* Use 100% instead of 100vw to avoid horizontal scroll issues */
+    background: #fff;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08); /* Shadow on the top edge */
+    border-top: 2px solid #c8a2c8; /* Lilac border on top */
+    margin-top: auto; /* Pushes footer to the bottom of the content */
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.mega-footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    color: #4d465a;
+}
+
+.mega-footer-inner p {
+    margin: 0.5rem 0;
+}
+
+.mega-footer-inner a {
+    color: #8a2be2;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+
+.mega-footer-inner a:hover {
+    color: #4d465a;
+}
+
+/* Dark theme support for the footer */
+body[data-theme='dark'] .mega-footer {
+    background: #222;
+    border-top: 2px solid #c8a2c8;
+}
+
+body[data-theme='dark'] .mega-footer-inner {
+    color: #fff;
+}
+
+body[data-theme='dark'] .mega-footer-inner a:hover {
+    color: #c8a2c8;
+}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text File Processor</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Arimo">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="gematria.css">
+</head>
+<body data-theme="light">
+    <div id="main-header-placeholder"></div>
+    <div class="container">
+        <div class="ad-pillar"></div>
+        <div class="content">
+            <div class="search-area" id="upload">
+                <h1 class="main-title">Text File Processor</h1>
+                <p class="subtitle">Upload and Analyze Text Files</p>
+                <p class="info-text">Upload .txt, .md, or .db files to process sentences (removes numbers, punctuation, and duplicates).</p>
+                <div id="upload-section">
+                    <input type="file" id="file-input" accept=".txt,.md,.db" multiple>
+                    <input type="submit" value="Process Files" onclick="processFiles()">
+                </div>
+            </div>
+            <div id="results-section">
+                <table class="results-table">
+                    <caption>Top 10 Processed Sentences</caption>
+                    <tr>
+                        <th>Sentence</th>
+                        <th>Count</th>
+                    </tr>
+                    <tbody id="results"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="ad-pillar"></div>
+    </div>
+    <footer>© 2025 Library of Beans</footer>
+
+    <script type="module">
+        import { recordSearch, getTopSearches } from './local-db.js';
+        import './header.js';
+
+        async function processFiles() {
+            const fileInput = document.getElementById('file-input');
+            const resultsBody = document.getElementById('results');
+            resultsBody.innerHTML = '<tr><td colspan="2">Processing...</td></tr>';
+
+            const files = fileInput.files;
+            if (files.length === 0) {
+                resultsBody.innerHTML = '<tr><td colspan="2">No files selected.</td></tr>';
+                return;
+            }
+
+            const processedSentences = new Set();
+
+            for (const file of files) {
+                if (!['text/plain', 'text/markdown', 'application/octet-stream'].includes(file.type) &&
+                    !file.name.endsWith('.txt') && !file.name.endsWith('.md') && !file.name.endsWith('.db')) {
+                    continue;
+                }
+
+                const text = await file.text();
+                let sentences = text.split(/[.!?\n]+/).map(s => s.trim()).filter(s => s);
+
+                sentences = sentences.map(sentence => {
+                    return sentence.replace(/[0-9]/g, '')
+                                  .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+                                  .trim()
+                                  .toLowerCase();
+                }).filter(s => s);
+
+                sentences.forEach(sentence => processedSentences.add(sentence));
+            }
+
+            for (const sentence of processedSentences) {
+                await recordSearch(sentence);
+            }
+
+            await loadTopSearches();
+        }
+
+        async function loadTopSearches() {
+            const resultsBody = document.getElementById('results');
+            const topSearches = await getTopSearches(10);
+            if (topSearches.length === 0) {
+                resultsBody.innerHTML = '<tr><td colspan="2">No sentences stored yet.</td></tr>';
+            } else {
+                resultsBody.innerHTML = topSearches.map(s => `
+                    <tr>
+                        <td>${s.term}</td>
+                        <td>${s.count}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        loadTopSearches();
+    </script>
+</body>
+</html>

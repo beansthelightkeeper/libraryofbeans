@@ -4,90 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gematria Calculator Statistics</title>
-    <link rel="icon" type="image/png" href="../icon.png">
-    
-    <!-- This font is not in the target, but provides a cleaner look than default Arial -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Arimo&display=swap" rel="stylesheet">
-    
-    <!-- Link to shared header CSS -->
-    <link rel="stylesheet" href="../header.css">
-    <!-- Link to the specific CSS for this page -->
+    <link href="https://fonts.googleapis.com/css2?family=Arimo&family=Noto+Sans+Symbols&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="gematria.css">
 </head>
-<body data-theme="light"> <!-- Defaulting to light theme to match the screenshot -->
+<body data-theme="dark">
+    <canvas id="glyphCanvas"></canvas>
 
-    <!-- The dynamic header will be inserted here -->
-    <div id="main-header-placeholder"></div>
+    <header id="main-header-placeholder"></header>
 
     <div class="container">
-        <div class="ad-pillar"></div> <!-- Left pillar -->
-
-        <section class="content">
+        <div class="content">
             <div class="search-area">
-                <h1 class="main-title">Gematria Calculator Statistics</h1>
-                <p class="subtitle">Statistics for Gematria Phrases</p>
-                
+                <img src="icon.png" alt="Site Logo">
+                <h1 class="main-title">Gematria Calculator</h1>
+                <h2 class="subtitle">Discover the numerical value of words and phrases</h2>
+                <p class="info-text">
+                    (Type in a word or a number e.g. God, Devil, 100, 666)
+                </p>
                 <form id="gematria-form" action="calculator.html" method="GET">
-                    <p class="info-text">
-                        (Type in a word or a number e.g. 
-                        <a href="#" class="example-link">God</a>, 
-                        <a href="#" class="example-link">Devil</a>, 
-                        <a href="#" class="example-link">100</a>, 
-                        <a href="#" class="example-link">666</a> 
-                        - To calculate gematria values)
-                    </p>
-                    <input type="search" id="text-input" name="word" placeholder="Insert phrase" maxlength="200" autofocus />
-                    <br>
-                    <input type="submit" value="Calculate Gematria" />
-                    <br><br>
-                    <label>
-                        <input type="checkbox" id="view-rude-words" /> View Rude Words
-                    </label>
+                    <input type="text" id="text-input" name="word" placeholder="Enter word or phrase" required>
+                    <input type="submit" value="Calculate">
                 </form>
+                <p><a href="#">View Rude Words</a></p>
             </div>
 
-            <div id="results-area">
-                 <div id="current-search-results">
-                    <!-- Results for the latest search will appear here -->
-                </div>
-                <div class="social-buttons">
-                    <div class="fb-like" data-href="https://developers.facebook.com/docs/plugins/" data-width="" data-layout="" data-action="" data-size="" data-share="true"></div>
-                </div>
-                <table class="results-table">
-                    <caption>Most searched Gematria words</caption>
-                    <thead>
-                        <tr>
-                            <th>Word</th>
-                            <th>Jewish</th>
-                            <th>English</th>
-                            <th>Simple</th>
-                            <th>Searches</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stats-tbody">
-                        <!-- Statistics rows will be injected here from local-db -->
-                    </tbody>
-                </table>
+            <div class="social-buttons">
+                <a href="#" class="social-button">Twitter</a>
+                <a href="#" class="social-button">Facebook</a>
             </div>
-        </section>
 
-        <div class="ad-pillar"></div> <!-- Right pillar -->
-    </div> 
+            <table class="results-table">
+                <caption>Most Searched Gematria Words</caption>
+                <thead>
+                    <tr>
+                        <th>Word</th>
+                        <th>Jewish</th>
+                        <th>English</th>
+                        <th>Simple</th>
+                        <th>Searches</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="calculator.html?word=God">God</a></td>
+                        <td>26</td>
+                        <td>204</td>
+                        <td>34</td>
+                        <td>1234</td>
+                    </tr>
+                    <tr>
+                        <td><a href="calculator.html?word=Devil">Devil</a></td>
+                        <td>47</td>
+                        <td>318</td>
+                        <td>53</td>
+                        <td>987</td>
+                    </tr>
+                     <tr>
+                        <td><a href="calculator.html?word=Love">Love</a></td>
+                        <td>95</td>
+                        <td>318</td>
+                        <td>53</td>
+                        <td>1111</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <footer>
-        &copy; 2025 Library of Beans
+        <p>© 2025 Library of Beans</p>
     </footer>
 
-    <!-- Set the path prefix for this subdirectory -->
-    <script>
-        window.pathPrefix = '..';
-    </script>
-    <script src="../header.js"></script>
-    <script src="../firebase-config.js"></script>
-    <script type="module" src="local-db.js"></script>
-    <script type="module" src="gematria.js"></script>
-    <script src="theme-toggle.js"></script>
+    <script src="loader.js"></script>
+    <script src="gematria.js"></script>
 </body>
 </html>

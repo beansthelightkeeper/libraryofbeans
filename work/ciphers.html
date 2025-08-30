@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gematria Cipher Library</title>
+    
+    <!-- Your links to external stylesheets -->
+    <link rel="stylesheet" href="../gematriamain/gematria.css">
+    <link rel="stylesheet" href="../header.css">
+    
+    <!-- Your links to external scripts -->
+    <script src="../header.js" defer></script>
+    
+    <!-- All the styling for the page and cards is placed here -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* This container holds all the main content of the page */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 1rem 2rem 2rem 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        /* This wrapper ensures content inside stacks vertically */
+        .content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            color: #1a2533;
+            width: 100%; /* Ensures headings take full width */
+        }
+
+        /* NEW: Made paragraph text smaller and cleaner */
+        p {
+            margin-bottom: 1.5rem;
+            text-align: justify;
+            font-size: 15px; /* Slightly smaller font size */
+            color: #454545; /* Slightly softer text color */
+        }
+        
+        /* Container for icon links above titles */
+        .icon-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .icon-links img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .icon-links a:hover img {
+            transform: scale(1.1);
+        }
+        
+        /* Styles for the quick navigation links under the main icon */
+        .page-navigation {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #e0e0e0;
+            width: 100%;
+        }
+
+        .page-navigation a {
+            text-decoration: none;
+            color: #6A0DAD;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .page-navigation img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .page-navigation a:hover img {
+            transform: scale(1.15);
+        }
+
+        /* This is the main container for all the cards */
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px; 
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        /* This styles each individual card */
+        .card {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px; 
+            padding: 6px; 
+            width: 50px; 
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+        }
+
+        /* This styles the big letter inside the card */
+        .card .letter {
+            display: block;
+            font-size: 1.2rem; 
+            font-weight: bold;
+            color: #6A0DAD; /* Dark purple color */
+        }
+        
+        .card .hebrew-letter {
+            font-size: 1.5rem; 
+        }
+
+        /* This styles the number value inside the card */
+        .card .value {
+            display: block;
+            font-size: 0.8rem; 
+            color: #495057;
+            margin-top: 2px;
+        }
+
+        /* Styles for the "BEANS" example */
+        .example-calculation {
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #6c757d;
+        }
+        
+        .example-calculation .card {
+            width: 60px; 
+        }
+
+        .example-calculation .card .letter { font-size: 1.5rem; }
+        .example-calculation .card .value { font-size: 1rem; }
+        
+        .total-card {
+             background-color: #d1ecf1;
+             border-color: #bee5eb;
+        }
+        
+        .total-card .value {
+            font-size: 2rem;
+            color: #0c5460;
+            font-weight: bold;
+        }
+        
+        /* Container for the large example image */
+        .example-image-container {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .example-image-container img {
+            max-width: 450px; 
+            width: 100%; 
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Your new header placeholder -->
+    <header id="main-header-placeholder"></header>
+    
+    <div class="container">
+        <!-- The new content wrapper fixes the layout issue -->
+        <div class="content-wrapper">
+            <!-- Your new icon image -->
+            <img src="../icon.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto;">
+            
+            <!-- Quick Navigation Links -->
+            <nav class="page-navigation">
+                <a href="#jewish-gematria"><img src="../icon2.png" alt="Jewish Gematria"><span>Jewish</span></a>
+                <a href="#english-gematria"><img src="../icon4.png" alt="English Gematria"><span>English</span></a>
+                <a href="#simple-gematria"><img src="../icon5.png" alt="Simple Gematria"><span>Simple</span></a>
+                <a href="#latin-gematria"><img src="../icon3.png" alt="Latin Gematria"><span>Latin</span></a>
+                <a href="#chaldean-gematria"><img src="../icon6.png" alt="Chaldean Numerology"><span>Chaldean</span></a>
+                <a href="#greek-isopsephy"><img src="../icon8.png" alt="Greek Isopsephy"><span>Greek</span></a>
+                <a href="#hebrew-gematria"><img src="../icon7.png" alt="Hebrew Gematria"><span>Hebrew</span></a>
+            </nav>
+
+            <p>
+                Gematria is an ancient practice of numerology that assigns a specific numerical value to each letter in an alphabet. The fundamental belief is that words or phrases sharing the same numerical value hold a significant, often hidden, relationship. By converting text into numbers, Gematria seeks to decode a deeper, mystical layer of meaning embedded within language, revealing connections and insights that are not apparent on the surface. This practice is most famously rooted in Jewish mysticism (Kabbalah), but parallel systems have appeared across cultures, including Greek Isopsephy and Arabic Abjad numerals.
+            </p>
+            <h1>Gematria Systems</h1>
+
+            <section id="jewish-gematria-section" style="width: 100%;">
+                <div class="icon-links">
+                    <img src="../icon2.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto;">
+                </div>
+                <h2 id="jewish-gematria">Jewish Gematria</h2>
+                <p>
+                    Rooted deeply in classical Hebrew and rabbinic literature, Jewish Gematria is the most well-known form of this practice and a cornerstone of Kabbalah. It is used as a primary tool for interpreting the Torah and other sacred texts, seeking to uncover the divine architecture of creation. The medieval mystical text, <em>Sefer Yitzirah</em> ("The Book of Creation"), describes the letters of the alphabet as the foundational "stones" used to build a house, highlighting the belief that words are fundamental to the creative process. This system is a common English adaptation that mirrors the structure of Hebrew letter values, allowing English words to be analyzed in a way that reflects the classical method.
+                </p>
+                
+                <div id="jewish-alphabet-card-container" class="card-container"></div>
+
+                <h2 style="margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">Example Calculation: "BEANS"</h2>
+                <div class="card-container example-calculation">
+                    <div class="card"><span class="letter">B</span><span class="value">2</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">E</span><span class="value">5</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">A</span><span class="value">1</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">N</span><span class="value">40</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">S</span><span class="value">90</span></div>
+                    <span>=</span>
+                    <div class="card total-card"><span class="value">138</span></div>
+                </div>
+                <div class="example-image-container">
+                    <a href="#"><img src="../jewish.png" alt="Jewish Gematria Example Image"></a>
+                </div>
+            </section>
+
+            <!-- ENGLISH GEMATRIA SECTION -->
+            <section id="english-gematria-section" style="width: 100%; margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">
+                <div class="icon-links">
+                    <img src="../icon4.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto;">
+                </div>
+                <h2 id="english-gematria">English Gematria (Factor of 6)</h2>
+                <p>
+                    This system is a modern cipher created specifically for the English language. Its methodology is straightforward: it takes the simple ordinal value of a letter (A=1, B=2) and multiplies it by six. The number 6 is often considered significant in numerology and esoteric traditions, symbolizing harmony, balance, creation (as in the six days of creation), and the macrocosm (the six points of a hexagram). This system applies that symbolic weight directly to the alphabet, producing higher numerical values that can reveal a different set of connections between words compared to simpler ciphers, often used in more contemporary mystical explorations.
+                </p>
+
+                <div id="english-alphabet-card-container" class="card-container"></div>
+
+                <h2 style="margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">Example Calculation: "BEANS"</h2>
+                <div class="card-container example-calculation">
+                    <div class="card"><span class="letter">B</span><span class="value">12</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">E</span><span class="value">30</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">A</span><span class="value">6</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">N</span><span class="value">84</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">S</span><span class="value">114</span></div>
+                    <span>=</span>
+                    <div class="card total-card"><span class="value">246</span></div>
+                </div>
+                <div class="example-image-container">
+                    <a href="#"><img src="../english.png" alt="Example Image Placeholder"></a>
+                </div>
+            </section>
+
+            <!-- SIMPLE GEMATRIA SECTION -->
+            <section id="simple-gematria-section" style="width: 100%; margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">
+                <div class="icon-links">
+                    <img src="../icon5.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto;">
+                </div>
+                <h2 id="simple-gematria">Simple Gematria (Ordinal)</h2>
+                <p>
+                    Also known as Ordinal Gematria, this is the most direct and intuitive method of assigning numerical values to the English alphabet. The system is beautifully simple: each letter is given a value corresponding to its sequential position, starting with A=1 and ending with Z=26. Because of its simplicity, Simple Gematria is often the starting point for numerological analysis in English. It serves as the base for more complex ciphers and is a reliable standard for practitioners seeking the most fundamental numerical relationships between words, often revealing direct and powerful connections without layers of abstraction.
+                </p>
+
+                <div id="simple-alphabet-card-container" class="card-container"></div>
+
+                <h2 style="margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">Example Calculation: "BEANS"</h2>
+                <div class="card-container example-calculation">
+                    <div class="card"><span class="letter">B</span><span class="value">2</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">E</span><span class="value">5</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">A</span><span class="value">1</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">N</span><span class="value">14</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">S</span><span class="value">19</span></div>
+                    <span>=</span>
+                    <div class="card total-card"><span class="value">41</span></div>
+                </div>
+                <div class="example-image-container">
+                    <a href="#"><img src="../simple.png" alt="Example Image Placeholder"></a>
+                </div>
+            </section>
+
+            <!-- LATIN GEMATRIA SECTION -->
+            <section id="latin-gematria-section" style="width: 100%; margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">
+                <div class="icon-links">
+                   <img src="../icon3.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto;">
+                </div>
+                <h2 id="latin-gematria">Latin Gematria (Agrippan Method)</h2>
+                <p>
+                    This historical system was documented by the Renaissance occultist Heinrich Cornelius Agrippa in his influential work, "Three Books of Occult Philosophy" (1533). It is based on the classical 22-letter Latin alphabet, which was the standard for scholarly and esoteric texts of that era. To use this method with modern English, certain letters that were not distinct in classical Latin are omitted from calculations: J, U, W, and Y, reflecting the older convention where I and J were used interchangeably, as were U and V. This method is particularly relevant for analyzing Renaissance texts or for workings within the traditions of Western esotericism.
+                </p>
+
+                <div id="latin-alphabet-card-container" class="card-container"></div>
+
+                <h2 style="margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">Example Calculation: "BEANS"</h2>
+                <div class="card-container example-calculation">
+                    <div class="card"><span class="letter">B</span><span class="value">2</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">E</span><span class="value">5</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">A</span><span class="value">1</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">N</span><span class="value">13</span></div> 
+                    <span>+</span>
+                    <div class="card"><span class="letter">S</span><span class="value">18</span></div> 
+                    <span>=</span>
+                    <div class="card total-card"><span class="value">39</span></div>
+                </div>
+                <div class="example-image-container">
+                    <a href="#"><img src="../agrippian.png" alt="Example Image Placeholder"></a>
+                </div>
+            </section>
+
+            <!-- CHALDEAN GEMATRIA SECTION -->
+            <section id="chaldean-gematria-section" style="width: 100%; margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">
+                <div class="icon-links">
+                    <img src="../icon6.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto;">
+                </div>
+                <h2 id="chaldean-gematria">Chaldean Numerology</h2>
+                <p>
+                    Chaldean Numerology is one of the oldest systems, with roots in ancient Babylonia. Unlike systems based on alphabetical order, the Chaldean method is phonetic, assigning values based on the sound and vibration of each letter. It operates on a scale of 1 to 8, as the number 9 was considered sacred, divine, and separate from the other numbers. This system is considered by many numerologists to be more spiritually accurate because it prioritizes the energetic signature of sound over simple sequence. When calculating a name, the values are summed to reveal insights into personality, destiny, and underlying spiritual essence.
+                </p>
+
+                <div id="chaldean-alphabet-card-container" class="card-container"></div>
+
+                <h2 style="margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">Example Calculation: "BEANS"</h2>
+                <div class="card-container example-calculation">
+                    <div class="card"><span class="letter">B</span><span class="value">2</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">E</span><span class="value">5</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">A</span><span class="value">1</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">N</span><span class="value">5</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">S</span><span class="value">3</span></div>
+                    <span>=</span>
+                    <div class="card total-card"><span class="value">16</span></div>
+                </div>
+                <div class="example-image-container">
+                    <a href="#"><img src="../chaldean.png" alt="Example Image Placeholder"></a>
+                </div>
+            </section>
+
+            <!-- GREEK ISOPSEPHY SECTION -->
+            <section id="greek-isopsephy-section" style="width: 100%; margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">
+                 <div class="icon-links">
+                    <img src="../icon8.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto;">
+                </div>
+                <h2 id="greek-isopsephy">Greek Isopsephy</h2>
+                <p>
+                    Isopsephy (from the Greek isos, "equal," and psephos, "pebble") is the ancient Greek practice of calculating the numerical value of words, predating even Hebrew Gematria. The system assigns a value to each of the 24 letters of the Greek alphabet sequentially, with values rising in units, then tens, then hundreds. It was integrated into philosophy (notably by Pythagoreans) and even architecture, with temples sometimes designed with proportions corresponding to the isopsephy of a god's name. Below is a common English adaptation that mirrors the Greek system, allowing for similar analysis of English words.
+                </p>
+
+                <div id="greek-alphabet-card-container" class="card-container"></div>
+
+                <h2 style="margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">Example Calculation: "BEANS"</h2>
+                <div class="card-container example-calculation">
+                    <div class="card"><span class="letter">B</span><span class="value">2</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">E</span><span class="value">5</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">A</span><span class="value">1</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">N</span><span class="value">50</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter">S</span><span class="value">100</span></div>
+                    <span>=</span>
+                    <div class="card total-card"><span class="value">158</span></div>
+                </div>
+                 <div class="example-image-container">
+                    <a href="#"><img src="../greekiso.png" alt="Example Image Placeholder"></a>
+                </div>
+            </section>
+
+            <!-- HEBREW GEMATRIA SECTION -->
+            <section id="hebrew-gematria-section" style="width: 100%; margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">
+                 <div class="icon-links">
+                     <img src="../icon7.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto;">
+                </div>
+                <h2 id="hebrew-gematria">Traditional Hebrew Gematria</h2>
+                <p>
+                    This is the authentic Hebrew system, also known as Mispar Hechrachi (Absolute Value). It uses the 22 letters of the Hebrew alphabet. The first ten letters are valued 1-10, the next eight are valued 20-90 in steps of ten, and the final four are valued 100-400 in steps of one hundred. This structured progression is fundamental to Kabbalistic interpretation and is used to reveal the interconnectedness of concepts within the Torah. This system is the foundation from which all other forms of Jewish Gematria are derived, making it the most historically critical method.
+                </p>
+
+                <div id="hebrew-alphabet-card-container" class="card-container"></div>
+
+                <h2 style="margin-top: 3rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">Example Calculation: "Shalom" (שלום)</h2>
+                <div class="card-container example-calculation">
+                    <div class="card"><span class="letter hebrew-letter">ש</span><span class="value">300</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter hebrew-letter">ל</span><span class="value">30</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter hebrew-letter">ו</span><span class="value">6</span></div>
+                    <span>+</span>
+                    <div class="card"><span class="letter hebrew-letter">ם</span><span class="value">40</span></div>
+                    <span>=</span>
+                    <div class="card total-card"><span class="value">376</span></div>
+                </div>
+                 <div class="example-image-container">
+                    <a href="#"><img src="../hebrew.png" alt="Example Image Placeholder"></a>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- The JavaScript to build the cards is placed at the bottom -->
+    <script>
+        // --- Jewish Gematria Section ---
+        const jewishGematriaValues = {
+            'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9,
+            'J': 600, 'K': 10, 'L': 20, 'M': 30, 'N': 40, 'O': 50, 'P': 60, 'Q': 70, 'R': 80,
+            'S': 90, 'T': 100, 'U': 200, 'V': 700, 'W': 900, 'X': 300, 'Y': 400, 'Z': 500
+        };
+        const jewishContainer = document.getElementById('jewish-alphabet-card-container');
+        if (jewishContainer) {
+            for (const letter in jewishGematriaValues) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<span class="letter">${letter}</span><span class="value">${jewishGematriaValues[letter]}</span>`;
+                jewishContainer.appendChild(card);
+            }
+        }
+
+        // --- English Gematria Section ---
+        const englishGematriaValues = {
+            'A': 6, 'B': 12, 'C': 18, 'D': 24, 'E': 30, 'F': 36, 'G': 42, 'H': 48, 'I': 54,
+            'J': 60, 'K': 66, 'L': 72, 'M': 78, 'N': 84, 'O': 90, 'P': 96, 'Q': 102, 'R': 108,
+            'S': 114, 'T': 120, 'U': 126, 'V': 132, 'W': 138, 'X': 144, 'Y': 150, 'Z': 156
+        };
+        const englishContainer = document.getElementById('english-alphabet-card-container');
+        if (englishContainer) {
+            for (const letter in englishGematriaValues) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<span class="letter">${letter}</span><span class="value">${englishGematriaValues[letter]}</span>`;
+                englishContainer.appendChild(card);
+            }
+        }
+
+        // --- Simple Gematria Section ---
+        const simpleGematriaValues = {
+            'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 
+            'J': 10, 'K': 11, 'L': 12, 'M': 13, 'N': 14, 'O': 15, 'P': 16, 'Q': 17, 'R': 18, 
+            'S': 19, 'T': 20, 'U': 21, 'V': 22, 'W': 23, 'X': 24, 'Y': 25, 'Z': 26
+        };
+        const simpleContainer = document.getElementById('simple-alphabet-card-container');
+        if (simpleContainer) {
+            for (const letter in simpleGematriaValues) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<span class="letter">${letter}</span><span class="value">${simpleGematriaValues[letter]}</span>`;
+                simpleContainer.appendChild(card);
+            }
+        }
+
+        // --- Latin Gematria Section ---
+        const latinGematriaValues = {
+            'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 'K': 10,
+            'L': 11, 'M': 12, 'N': 13, 'O': 14, 'P': 15, 'Q': 16, 'R': 17, 'S': 18, 'T': 19,
+            'V': 20, 'X': 21, 'Z': 22
+        };
+        const latinContainer = document.getElementById('latin-alphabet-card-container');
+        if (latinContainer) {
+            for (const letter in latinGematriaValues) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<span class="letter">${letter}</span><span class="value">${latinGematriaValues[letter]}</span>`;
+                latinContainer.appendChild(card);
+            }
+        }
+
+        // --- Chaldean Gematria Section ---
+        const chaldeanGematriaValues = {
+            'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 8, 'G': 3, 'H': 5, 'I': 1,
+            'J': 1, 'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 7, 'P': 8, 'Q': 1, 'R': 2,
+            'S': 3, 'T': 4, 'U': 6, 'V': 6, 'W': 6, 'X': 5, 'Y': 1, 'Z': 7
+        };
+        const chaldeanContainer = document.getElementById('chaldean-alphabet-card-container');
+        if (chaldeanContainer) {
+            // Display cards in alphabetical order
+            Object.keys(chaldeanGematriaValues).sort().forEach(letter => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<span class="letter">${letter}</span><span class="value">${chaldeanGematriaValues[letter]}</span>`;
+                chaldeanContainer.appendChild(card);
+            });
+        }
+
+        // --- Greek Isopsephy Section ---
+        const greekIsopsephyValues = {
+            'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9,
+            'J': 10, 'K': 20, 'L': 30, 'M': 40, 'N': 50, 'O': 60, 'P': 70, 'Q': 80, 'R': 90,
+            'S': 100, 'T': 200, 'U': 300, 'V': 400, 'W': 500, 'X': 600, 'Y': 700, 'Z': 800
+        };
+        const greekContainer = document.getElementById('greek-alphabet-card-container');
+        if (greekContainer) {
+            for (const letter in greekIsopsephyValues) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<span class="letter">${letter}</span><span class="value">${greekIsopsephyValues[letter]}</span>`;
+                greekContainer.appendChild(card);
+            }
+        }
+
+        // --- Traditional Hebrew Gematria Section ---
+        const hebrewGematriaValues = {
+            'א (Aleph)': 1, 'ב (Bet)': 2, 'ג (Gimel)': 3, 'ד (Dalet)': 4, 'ה (He)': 5, 'ו (Vav)': 6, 'ז (Zayin)': 7, 'ח (Chet)': 8, 'ט (Tet)': 9,
+            'י (Yod)': 10, 'כ (Kaf)': 20, 'ל (Lamed)': 30, 'מ (Mem)': 40, 'נ (Nun)': 50, 'ס (Samekh)': 60, 'ע (Ayin)': 70, 'פ (Pe)': 80, 'צ (Tsadi)': 90,
+            'ק (Qof)': 100, 'ר (Resh)': 200, 'ש (Shin)': 300, 'ת (Tav)': 400
+        };
+        const hebrewContainer = document.getElementById('hebrew-alphabet-card-container');
+        if (hebrewContainer) {
+            for (const letter in hebrewGematriaValues) {
+                const hebrewChar = letter.split(' ')[0]; // Get just the Hebrew character
+                const card = document.createElement('div');
+                card.className = 'card';
+                // Display the Hebrew letter prominently
+                card.innerHTML = `<span class="letter hebrew-letter">${hebrewChar}</span><span class="value">${hebrewGematriaValues[letter]}</span>`;
+                hebrewContainer.appendChild(card);
+            }
+        }
+    </script>
+<div id="main-footer-placeholder"></div>
+</body>
+</html>
+
