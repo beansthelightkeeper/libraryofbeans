@@ -106,3 +106,4 @@ async function getTopSearches(limit = 10) {
 
 // Export the functions and the db instance for use in other modules
 export { db, openDB, recordSearch, getTopSearches };
+
