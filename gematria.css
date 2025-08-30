@@ -80,76 +80,162 @@ body {
     border-bottom: 2px solid var(--accent-color);
 }
 
-/* --- CIPHERS PAGE STYLES --- */
-.internal-nav {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
-    padding: 1rem 0;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid var(--border-color);
-}
-.internal-nav a {
-    text-decoration: none;
-    color: var(--text-secondary);
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    transition: background-color 0.2s, color 0.2s;
-}
-.internal-nav a:hover {
-    background-color: var(--bg-input);
+/* --- HEADER & INPUT --- */
+.site-header h1 {
     color: var(--text-primary);
 }
-#cipher-list-container section {
-    margin-bottom: 3rem;
-    scroll-margin-top: 20px; /* Offset for sticky nav */
+#gematria-input, #stats-input, #delta-input-1, #delta-input-2, textarea {
+    flex-grow: 1;
+    padding: 0.75rem;
+    font-size: 1.1rem;
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+    box-shadow: none;
+    outline: none; /* Removed outline */
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease-in-out; /* Added transition for focus */
 }
-#cipher-list-container h2 {
-    color: var(--accent-color);
+#gematria-input:focus, #stats-input:focus, #delta-input-1:focus, #delta-input-2:focus, textarea:focus {
+    border-color: var(--accent-color); /* Focus indicator is now just the border color */
+}
+
+button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    background-color: var(--accent-color);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+button:hover {
+    background-color: var(--accent-hover);
+}
+button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.input-area {
+    display: flex;
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+/* --- DETAILED BREAKDOWN --- */
+.breakdown-container h3 {
+    margin-top: 2rem;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 0.5rem;
 }
-.cipher-card {
+.breakdown-cipher-card {
     background-color: var(--bg-content);
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    padding: 1.5rem;
+    padding: 1rem;
     margin-bottom: 1rem;
 }
-.cipher-card h3 {
-    margin-top: 0;
+.breakdown-cipher-card h4 {
+    margin: 0 0 1rem 0;
+    color: var(--accent-color);
 }
-.example-container {
-    margin-top: 1rem;
-    padding-top: 1rem;
+.breakdown-calculation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+.char-value {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Roboto Mono', monospace;
+}
+.char-value .char {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+.char-value .value {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+.operator {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+}
+.total {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+/* --- RESULTS TABLES --- */
+.match-table-container summary {
+    font-weight: normal;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+.match-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.match-table th, .match-table td {
+    padding: 0.5rem 1rem;
+    text-align: left;
     border-top: 1px solid var(--border-color);
 }
-.example-label {
-    font-weight: bold;
+.match-table thead {
     color: var(--text-secondary);
-    margin-right: 1rem;
+}
+.match-table tr:hover {
+    background-color: var(--bg-input);
+    cursor: pointer;
+}
+
+/* --- CIPHER SETTINGS PANEL --- */
+.cipher-settings-collapsible { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color); }
+.cipher-settings-collapsible summary { cursor: pointer; font-size: 1.2rem; }
+#cipher-settings {
+    column-count: 2;
+    column-gap: 2rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: var(--bg-content);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-top: 1rem;
+}
+#cipher-settings label {
+    display: block;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+}
+@media (min-width: 768px) {
+    #cipher-settings {
+        column-count: 3;
+    }
+}
+@media (min-width: 1024px) {
+    #cipher-settings {
+        column-count: 4;
+    }
 }
 
 
-/* --- Other Component Styles (Shared) --- */
-.input-area, .delta-input-grid, #gematria-input, button, .breakdown-container, .breakdown-cipher-card, .match-table-container, .comparison-container, .pagination-controls, .corpus-uploader, .cipher-settings-collapsible {
-    /* Using styles from previous versions */
+/* --- Other Component Styles --- */
+.comparison-container, .delta-main, .corpus-uploader { margin-top: 2rem; }
+.delta-input-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+@media(min-width: 768px) {
+    .delta-input-grid { grid-template-columns: 1fr 1fr; }
 }
-
-.input-area { display: flex; gap: 1rem; margin: 2rem 0; }
-#gematria-input, #stats-input, #delta-input-1, #delta-input-2, textarea { flex-grow: 1; padding: 0.75rem; font-size: 1.1rem; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; font-family: 'Inter', sans-serif; box-shadow: none; outline: none; width: 100%; box-sizing: border-box; }
-#gematria-input:focus, #stats-input:focus, #delta-input-1:focus, #delta-input-2:focus, textarea:focus { border-color: var(--accent-color); }
-button { padding: 0.75rem 1.5rem; font-size: 1rem; background-color: var(--accent-color); color: #fff; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }
-button:hover { background-color: var(--accent-hover); }
-button:disabled { background-color: #555; cursor: not-allowed; }
-.breakdown-container h3 { margin-top: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
-.breakdown-cipher-card { background-color: var(--bg-content); border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem; margin-bottom: 1rem; }
-.breakdown-cipher-card h4 { margin: 0 0 1rem 0; color: var(--accent-color); }
-.breakdown-calculation { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
-.char-value { display: flex; flex-direction: column; align-items: center; font-family: 'Roboto Mono', monospace; }
-.char-value .char { font-size: 1.2rem; font-weight: bold; }
-.char-value .value { font-size: 0.8rem; color: var(--text-secondary); }
-.operator { font-size: 1.2rem; color: var(--text-secondary); }
-.total { font-size: 1.5rem; font-weight: bold; color: var(--accent-color); }
+.delta-main table { width: 100%; border-collapse: collapse; }
+.delta-main th, .delta-main td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+.delta-main th { font-weight: bold; }
+.delta-main .delta-value { font-weight: bold; color: var(--accent-color); }
 

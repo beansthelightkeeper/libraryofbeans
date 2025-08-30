@@ -3,9 +3,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, where, getDocs, limit, writeBatch, or, doc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// --- ADD THIS LINE ---
-import { firebaseConfig } from './firebase-config.js';
-
 // --- GLOBAL STATE & CONSTANTS ---
 const PHI = 1.618033988749895;
 const GOLDEN_ANGLE = 137.50776405;
@@ -122,6 +119,12 @@ function buildGematriaCiphers() {
 document.addEventListener('DOMContentLoaded', async () => {
     CIPHERS = buildGematriaCiphers();
     
+    // This check is crucial for pages that might not have firebase-config.js
+    if (typeof firebaseConfig === 'undefined') {
+        console.error("Firebase config is not defined. Please ensure firebase-config.js is loaded.");
+        return;
+    }
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
@@ -147,16 +150,15 @@ function calculateGematria(text) {
     const cleanedText = text.toLowerCase().replace(/[^a-z]/g, '');
 
     for (const name in CIPHERS) {
+        values[name] = CIPHERS[name](text);
         // This is a simplified breakdown for display, not used by the main ciphers
-        if (name === "English Ordinal" || name === "Reverse Ordinal" || name === "Full Reduction" || name === "Jewish Gematria") {
-             values[name] = CIPHERS[name](text);
+        if (["English Ordinal", "Reverse Ordinal", "Full Reduction", "Jewish Gematria"].includes(name)) {
              breakdown[name] = [];
              for(const char of cleanedText) {
+                 // Create a temporary single-character cipher function for the breakdown
                  const tempCipher = { [name]: CIPHERS[name] };
                  breakdown[name].push({ char, value: tempCipher[name](char) });
              }
-        } else {
-            values[name] = CIPHERS[name](text);
         }
     }
     return { values, breakdown };
@@ -299,37 +301,6 @@ function displayPaginatedMatches(cipher, matches, value) {
     });
 }
 
-function displayComparisonChart(original, resonant) {
-    const chartCiphers = ["English Ordinal", "Jewish Gematria", "Full Reduction"];
-    let html = `<h3 class="comparison-header">Comparison: "${original.phrase}" vs "${resonant.phrase}"</h3>`;
-    html += '<table class="comparison-table"><tr><th>Cipher</th>';
-    
-    const originalBreakdownSimple = calculateGematria(original.phrase).breakdown["English Ordinal"];
-    const resonantBreakdownSimple = calculateGematria(resonant.phrase).breakdown["English Ordinal"];
-
-    originalBreakdownSimple.forEach(b => html += `<th>${escapeHTML(b.char)}</th>`);
-    html += `<th class="phrase-header">${escapeHTML(original.phrase)}</th>`;
-    resonantBreakdownSimple.forEach(b => html += `<th>${escapeHTML(b.char)}</th>`);
-    html += `<th class="phrase-header">${escapeHTML(resonant.phrase)}</th></tr>`;
-
-    chartCiphers.forEach(cipher => {
-        if (!CIPHERS[cipher]) return;
-        const originalData = calculateGematria(original.phrase);
-        const resonantData = calculateGematria(resonant.phrase);
-        
-        html += `<tr><td class="cipher-name-col">${cipher}</td>`;
-        if (originalData.breakdown[cipher]) originalData.breakdown[cipher].forEach(b => html += `<td>${b.value}</td>`);
-        html += `<td><strong>${originalData.values[cipher]}</strong></td>`;
-        if (resonantData.breakdown[cipher]) resonantData.breakdown[cipher].forEach(b => html += `<td>${b.value}</td>`);
-        html += `<td><strong>${resonantData.values[cipher]}</strong></td></tr>`;
-    });
-
-    html += '</table>';
-    comparisonContainer.innerHTML = html;
-    comparisonContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-
 // --- EVENT HANDLERS & HELPERS ---
 async function handleMatchClick(event, db) {
     const row = event.target.closest('tr[data-phrase]');
@@ -338,9 +309,10 @@ async function handleMatchClick(event, db) {
     const resonantPhrase = row.dataset.phrase;
     
     gematriaInput.value = resonantPhrase;
-    await handleInputChange(db);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    await handleInputChange(db); // This re-runs the calculation and display for the new phrase
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top to see new results
 
+    // Increment search count for the clicked phrase
     const q = query(collection(db, "phrases"), where("phrase", "==", resonantPhrase), limit(1));
     const snapshot = await getDocs(q);
     if (!snapshot.empty) {
@@ -440,3 +412,4 @@ function escapeHTML(str) {
     p.textContent = str;
     return p.innerHTML;
 }
+
