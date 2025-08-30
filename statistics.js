@@ -1,96 +1,231 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+// --- Firebase Imports ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs, limit, or } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// This script assumes 'firebaseConfig' is loaded from firebase-config.js
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// --- DOM Elements ---
-const recentTableBody = document.querySelector("#recent-table tbody");
-const popularTableBody = document.querySelector("#popular-table tbody");
-const themeToggleButton = document.getElementById('theme-toggle');
-
-// --- Theme Management ---
-const ICONS = {
-    sun: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`,
-    moon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
+// --- GLOBAL STATE & CONSTANTS ---
+const CIPHERS = {
+    "English Ordinal": (char) => "abcdefghijklmnopqrstuvwxyz".indexOf(char) + 1,
+    "Reverse Ordinal": (char) => 26 - "abcdefghijklmnopqrstuvwxyz".indexOf(char),
+    "Full Reduction": (char) => (("abcdefghijklmnopqrstuvwxyz".indexOf(char)) % 9) + 1,
+    "Reverse Full Reduction": (char) => 9 - (("abcdefghijklmnopqrstuvwxyz".indexOf(char)) % 9),
 };
+const ENTRIES_PER_PAGE = 25;
+let currentPages = {}; // state for pagination
 
-function applyTheme(theme) {
-    document.body.dataset.theme = theme;
-    themeToggleButton.innerHTML = theme === 'dark' ? ICONS.sun : ICONS.moon;
-    localStorage.setItem('gematria-theme', theme);
-}
+// --- DOM ELEMENTS ---
+const statsInput = document.getElementById('stats-input');
+const resultsSummary = document.getElementById('results-summary');
+const breakdownContainer = document.getElementById('breakdown-container');
+const statisticsResultsContainer = document.getElementById('statistics-results-container');
+const comparisonContainer = document.getElementById('comparison-container');
 
-function toggleTheme() {
-    const currentTheme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
-    applyTheme(currentTheme);
-}
+// --- INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', async () => {
+    // Assuming firebaseConfig is loaded from firebase-config.js
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    await signInAnonymously(auth);
 
-// --- Firestore Data Fetching ---
+    statsInput.addEventListener('input', debounce(() => handleInputChange(db), 300));
+    statisticsResultsContainer.addEventListener('click', (e) => handleMatchClick(e, db));
+});
 
-/**
- * Fetches entries from Firestore based on a specific ordering.
- * @param {string} orderByField - The field to order by (e.g., 'timestamp').
- * @param {number} resultLimit - The max number of results to fetch.
- * @returns {Array} An array of entry objects.
- */
-async function fetchEntries(orderByField, resultLimit = 10) {
-    try {
-        const entriesRef = collection(db, 'entries');
-        const q = query(entriesRef, orderBy(orderByField, 'desc'), limit(resultLimit));
-        const querySnapshot = await getDocs(q);
-        
-        const entries = [];
-        querySnapshot.forEach((doc) => {
-            entries.push(doc.data());
-        });
-        return entries;
+// --- CORE FUNCTIONS ---
 
-    } catch (error) {
-        console.error(`Error fetching entries ordered by ${orderByField}:`, error);
-        return []; // Return empty array on error
+function calculateGematria(text) {
+    const values = {};
+    const breakdown = {};
+    const cleanedText = text.toLowerCase().replace(/[^a-z]/g, '');
+
+    for (const name in CIPHERS) {
+        values[name] = 0;
+        breakdown[name] = [];
+        for (const char of cleanedText) {
+            const value = CIPHERS[name](char);
+            values[name] += value;
+            breakdown[name].push({ char, value });
+        }
     }
+    return { values, breakdown };
 }
 
-/**
- * Populates a table with word/value data.
- * @param {HTMLElement} tableBody - The tbody element to populate.
- * @param {Array} entries - The data to display.
- */
-function populateTable(tableBody, entries) {
-    // Clear existing rows
-    tableBody.innerHTML = '';
-
-    if (entries.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="2">No data available.</td></tr>';
+async function handleInputChange(db) {
+    const inputText = statsInput.value.trim();
+    comparisonContainer.innerHTML = ''; // Clear comparison on new input
+    if (!inputText) {
+        resultsSummary.innerHTML = '';
+        breakdownContainer.innerHTML = '';
+        statisticsResultsContainer.innerHTML = '';
         return;
     }
 
-    entries.forEach(entry => {
-        const row = tableBody.insertRow();
-        const cellWord = row.insertCell();
-        const cellValue = row.insertCell();
+    const { values, breakdown } = calculateGematria(inputText);
+    displaySummary(values);
+    displayBreakdown(breakdown);
+    await findAndDisplayMatches(db, values);
+}
 
-        cellWord.textContent = entry.word;
-        cellValue.textContent = entry.value;
+async function findAndDisplayMatches(db, values) {
+    statisticsResultsContainer.innerHTML = '';
+    const activeCiphers = Object.keys(CIPHERS);
+
+    const queries = activeCiphers.map(cipher => 
+        where(`values.${cipher}`, "==", values[cipher])
+    );
+
+    const mainQuery = query(collection(db, "phrases"), or(...queries));
+    const querySnapshot = await getDocs(mainQuery);
+    
+    const matchesByCipher = {};
+    activeCiphers.forEach(cipher => { matchesByCipher[cipher] = []; });
+
+    querySnapshot.forEach(doc => {
+        const data = doc.data();
+        activeCiphers.forEach(cipher => {
+            if (data.values[cipher] === values[cipher]) {
+                // Avoid adding the input phrase itself to its own match list
+                if (data.phrase.toLowerCase() !== statsInput.value.trim().toLowerCase()) {
+                    matchesByCipher[cipher].push(data.phrase);
+                }
+            }
+        });
+    });
+
+    for (const cipher of activeCiphers) {
+        currentPages[cipher] = 1; // Reset page for each new search
+        displayPaginatedMatches(cipher, matchesByCipher[cipher], values[cipher]);
+    }
+}
+
+// --- DISPLAY FUNCTIONS ---
+
+function displaySummary(values) {
+    let html = '';
+    for (const cipher in values) {
+        html += `<div class="summary-card"><strong>${cipher}:</strong> ${values[cipher]}</div>`;
+    }
+    resultsSummary.innerHTML = html;
+}
+
+function displayBreakdown(breakdown) {
+    let html = '<h3>Breakdown</h3>';
+    for (const cipher in breakdown) {
+        html += `<div><strong>${cipher}:</strong> ${breakdown[cipher].map(b => `${b.char}(${b.value})`).join(' + ')}</div>`;
+    }
+    breakdownContainer.innerHTML = html;
+}
+
+function displayPaginatedMatches(cipher, matches, value) {
+    const containerId = `matches-${cipher.replace(/\s+/g, '-')}`;
+    let container = document.getElementById(containerId);
+    if (!container) {
+        container = document.createElement('div');
+        container.id = containerId;
+        container.className = 'match-table-container';
+        statisticsResultsContainer.appendChild(container);
+    }
+    
+    const totalPages = Math.ceil(matches.length / ENTRIES_PER_PAGE);
+    const currentPage = currentPages[cipher] || 1;
+    const start = (currentPage - 1) * ENTRIES_PER_PAGE;
+    const end = start + ENTRIES_PER_PAGE;
+    const paginatedMatches = matches.slice(start, end);
+
+    let tableHtml = `
+        <details open>
+            <summary>${cipher} (${value}) - ${matches.length} matches found</summary>
+            <table class="match-table">
+    `;
+    if (paginatedMatches.length > 0) {
+        paginatedMatches.forEach(match => {
+            tableHtml += `<tr data-phrase="${escapeHTML(match)}"><td>${escapeHTML(match)}</td></tr>`;
+        });
+    } else {
+        tableHtml += '<tr><td>No other phrases with this value found in the database.</td></tr>';
+    }
+    tableHtml += '</table>';
+    
+    if (totalPages > 1) {
+        tableHtml += `
+            <div class="pagination-controls">
+                <button data-cipher="${cipher}" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
+                <span class="pagination-info">Page ${currentPage} of ${totalPages}</span>
+                <button data-cipher="${cipher}" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+            </div>
+        `;
+    }
+    tableHtml += '</details>';
+    container.innerHTML = tableHtml;
+
+    container.querySelectorAll('.pagination-controls button').forEach(button => {
+        button.addEventListener('click', () => {
+            currentPages[cipher] = parseInt(button.dataset.page);
+            displayPaginatedMatches(cipher, matches, value);
+        });
     });
 }
 
-// --- Main Execution ---
-
-document.addEventListener('DOMContentLoaded', async () => {
-    // Set initial theme
-    const savedTheme = localStorage.getItem('gematria-theme') || 'dark';
-    applyTheme(savedTheme);
-
-    // Add event listener for theme toggle
-    themeToggleButton.addEventListener('click', toggleTheme);
+function displayComparisonChart(original, resonant) {
+    const activeCiphers = Object.keys(CIPHERS);
+    let html = `<h3 class="comparison-header">Comparison: "${original.phrase}" vs "${resonant.phrase}"</h3>`;
+    html += '<table class="comparison-table"><tr><th>Cipher</th>';
     
-    // Fetch and display data
-    const recentEntries = await fetchEntries('timestamp');
-    populateTable(recentTableBody, recentEntries);
+    original.breakdown[activeCiphers[0]].forEach(b => html += `<th>${escapeHTML(b.char)}</th>`);
+    html += `<th class="phrase-header">${escapeHTML(original.phrase)}</th>`;
 
-    const popularEntries = await fetchEntries('searchCount');
-    populateTable(popularTableBody, popularEntries);
-});
+    resonant.breakdown[activeCiphers[0]].forEach(b => html += `<th>${escapeHTML(b.char)}</th>`);
+    html += `<th class="phrase-header">${escapeHTML(resonant.phrase)}</th></tr>`;
+
+    activeCiphers.forEach(cipher => {
+        html += `<tr><td class="cipher-name-col">${cipher}</td>`;
+        original.breakdown[cipher].forEach(b => html += `<td>${b.value}</td>`);
+        html += `<td><strong>${original.values[cipher]}</strong></td>`;
+        resonant.breakdown[cipher].forEach(b => html += `<td>${b.value}</td>`);
+        html += `<td><strong>${resonant.values[cipher]}</strong></td></tr>`;
+    });
+
+    html += '</table>';
+    comparisonContainer.innerHTML = html;
+    comparisonContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+
+// --- EVENT HANDLERS & HELPERS ---
+
+async function handleMatchClick(event, db) {
+    const row = event.target.closest('tr[data-phrase]');
+    if (!row) return;
+
+    const originalPhrase = statsInput.value.trim();
+    const resonantPhrase = row.dataset.phrase;
+
+    const originalData = calculateGematria(originalPhrase);
+    
+    const q = query(collection(db, "phrases"), where("phrase", "==", resonantPhrase), limit(1));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return;
+    
+    const resonantDbData = snapshot.docs[0].data();
+    const resonantCalcData = calculateGematria(resonantPhrase);
+
+    displayComparisonChart(
+        { phrase: originalPhrase, ...originalData },
+        { phrase: resonantPhrase, values: resonantDbData.values, breakdown: resonantCalcData.breakdown }
+    );
+}
+
+function debounce(func, delay) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+function escapeHTML(str) {
+    const p = document.createElement("p");
+    p.textContent = str;
+    return p.innerHTML;
+}

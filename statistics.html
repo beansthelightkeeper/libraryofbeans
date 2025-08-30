@@ -3,87 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Statistics - Gematria Database</title>
+    <title>Gematria Statistics</title>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="gematria.css">
-    <style>
-        /* Make the header icon smaller */
-        .header-icon {
-            width: 48px;
-            height: 48px;
-            object-fit: contain; /* Ensures the image scales nicely within the new size */
-        }
-    </style>
 </head>
 <body data-theme="dark">
-    <div class="background-glyphs"></div>
-    <div class="container">
-        <header class="gematria-header">
-            <a href="gematria.html" class="home-link" title="Return to Calculator">
-                <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M12 8v1"/><path d="M12 15v1"/><path d="M8 12h1"/><path d="M15 12h1"/></svg>
-            </a>
-            <img src="icon.png" alt="BeansCodex Icon" class="header-icon">
-            <h1>Database Statistics</h1>
-            <p>Most searched and recently added entries.</p>
-            <button id="theme-toggle" class="theme-toggle-button"></button>
-        </header>
+    <nav class="main-nav">
+        <div class="nav-links">
+            <a href="gematria.html">Calculator</a>
+            <a href="delta.html">Delta</a>
+            <a href="statistics.html" class="active">Statistics</a>
+            <a href="ciphers.html">Ciphers</a>
+        </div>
+        <button id="theme-toggle" class="theme-toggle-button"></button>
+    </nav>
 
-        <main class="statistics-main">
-            <div class="stats-grid">
-                <div class="sidebar-widget">
-                    <h3>Recently Added</h3>
-                    <div class="collapsible-content" style="display: block;">
-                        <table class="sidebar-table" id="recent-table">
-                            <thead>
-                                <tr>
-                                    <th>Word</th>
-                                    <th>Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Data will be populated by script -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="sidebar-widget">
-                    <h3>Most Searched</h3>
-                    <div class="collapsible-content" style="display: block;">
-                        <table class="sidebar-table" id="popular-table">
-                             <thead>
-                                 <tr>
-                                     <th>Word</th>
-                                     <th>Value</th>
-                                 </tr>
-                             </thead>
-                            <tbody>
-                                <!-- Data will be populated by script -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <div class="container">
+        <header class="site-header">
+            <h1>Gematria Statistics</h1>
+            <p>Analyze the frequency and resonance of phrases in your database</p>
+        </header>
+        
+        <main class="main-content">
+            <div class="input-area">
+                <textarea id="stats-input" placeholder="Enter a phrase to analyze..." rows="3"></textarea>
+            </div>
+
+            <div id="results-summary" class="results-summary-bar">
+                <!-- Gematria value cards will be injected here -->
+            </div>
+            
+            <div id="breakdown-container" class="breakdown-container">
+                <!-- Letter-by-letter breakdown will be injected here -->
+            </div>
+
+            <div id="comparison-container" class="comparison-container">
+                <!-- The comparison chart will be injected here when a match is clicked -->
+            </div>
+
+            <div id="statistics-results-container">
+                 <!-- Match tables with statistical info will be injected here -->
             </div>
         </main>
-
-        <footer class="site-footer">
-            <div class="footer-links">
-                <a href="statistics.html">Statistics</a>
-                <details class="admin-collapsible">
-                    <summary>Admin Panel</summary>
-                    <div id="admin-panel" class="collapsible-content">
-                        <p class="settings-info">This panel is managed on the main page.</p>
-                    </div>
-                </details>
-            </div>
-        </footer>
     </div>
+
+     <footer class="site-footer">
+        <div class="nav-links">
+            <a href="gematria.html">Calculator</a>
+            <a href="delta.html">Delta</a>
+            <a href="statistics.html" class="active">Statistics</a>
+            <a href="ciphers.html">Ciphers</a>
+        </div>
+    </footer>
     
-    <!-- Non-module script to make firebaseConfig global -->
     <script src="firebase-config.js"></script>
-    <!-- Module script for page logic -->
     <script type="module" src="statistics.js"></script>
 </body>
 </html>

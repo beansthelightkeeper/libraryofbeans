@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIALIZATION ---
     function initialize() {
         // Debug PDF.js loading
-        if (!window['pdfjs-dist/build/pdf']) {
+       if (!window.pdfjsLib) {
             console.warn("PDF.js library not loaded. PDFs will use native viewer.");
         } else {
             console.log("PDF.js library loaded successfully.");
@@ -120,18 +120,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderPdfInIframe(url) {
         // Check if PDF.js is loaded
-        if (!window['pdfjs-dist/build/pdf']) {
-            console.warn("PDF.js not loaded, falling back to native PDF viewer");
-            contentFrame.src = url;
-            contentFrame.srcdoc = `<html><body><h2>Loading PDF in native viewer...</h2><p>If this fails, ensure the PDF exists at <a href="${url}">${url}</a></p></body></html>`;
-            toggleReaderTools(false); // Disable tools for native viewer
-            return;
-        }
+        // Check if PDF.js is loaded
+            if (!window.pdfjsLib) {
+             console.warn("PDF.js not loaded, falling back to native PDF viewer");
+    //...
+    return;
+}
 
-        try {
-            const pdfjsLib = window['pdfjs-dist/build/pdf'];
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.min.js';
+try {
+    const pdfjsLib = window.pdfjsLib; // Use the globally set library
+    // The workerSrc is now set in library.html, so we can remove the line below
+    // pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.min.js'; 
 
+    const response = await fetch(url);
+    //...
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Failed to fetch PDF: HTTP ${response.status}`);
             const pdf = await pdfjsLib.getDocument(url).promise;
