@@ -60,16 +60,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="header-col">
                     <h4>Other</h4>
                     <ul>
-                       <li><a href="/gematriamain/localdb.html">Add to Local Database</a></li>
-                       <li><a href="/gematriamain/local-db-viewer.html">Browse Local Database</a></li>
+                       <li><a href="/gematriamain/localdb.html">Local Database</a></li>
                     </ul>
                 </div>
                 <div class="header-col">
                     <h4>External</h4>
                     <ul>
                         <li><a href="https://www.gematrix.org" target="_blank">Gematrix.org</a></li>
-                        <li><a href="https://chrome.google.com/webstore/detail/gematria-calculator-gemat/gabklpcbgpilmpfpbingloinmdpojagl?hl=en-US&utm_source=chrome-ntp- launcher" target="_blank" style="color:red;">Chrome App</a></li>
-                        <li><a href="https://gematrixorg.tumblr.com" target="_blank">Tumblr</a></li>
                         <li><a href="https://twitter.com/princesspastry_" target="_blank">Twitter</a></li>
                     </ul>
                 </div>
