@@ -1,4 +1,5 @@
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// firebase-config.js
+
 const firebaseConfig = {
   apiKey: "AIzaSyDDfoBX9ZkIWOJBLgJ9v5vVvRVYC2JYV0w",
   authDomain: "gematria-3ef50.firebaseapp.com",
@@ -10,5 +11,4 @@ const firebaseConfig = {
   measurementId: "G-9JD1E3H0C2"
 };
 
-firebase.initializeApp(firebaseConfig);
-
+export { firebaseConfig };

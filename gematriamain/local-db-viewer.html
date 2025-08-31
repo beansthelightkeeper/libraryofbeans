@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Gematria DB Viewer</title>
+    <link rel="stylesheet" href="gematria.css">
+    <link rel="stylesheet" href="../header.css">
+    <link rel="stylesheet" href="../footer.css">
+    <script src="../header.js" defer></script> 
+    <script src="../footer.js" defer></script> 
+</head>
+<body>
+    <header id="main-header-placeholder"></header>
+
+    <div class="container">
+        <div class="ad-pillar"></div>
+        <article class="content">
+            <img src="../icon.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto; border-radius: 50%;">
+            
+            <div class="search-area">
+                <h1 class="main-title">Local Database Viewer</h1>
+                <a href="calculator.html">Back to Gematria Calculator</a>
+            </div>                
+
+            <div id="results-area">
+                <p>Loading database...</p>
+            </div>
+        </article>
+        <div class="ad-pillar"></div>
+    </div> 
+
+    <footer id="main-footer-placeholder"></footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const resultsArea = document.getElementById('results-area');
+
+            // --- Gematria Cipher Definitions (copied from calculator.js) ---
+            const ciphers = {
+                simple: { 'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9, 'j': 10, 'k': 11, 'l': 12, 'm': 13, 'n': 14, 'o': 15, 'p': 16, 'q': 17, 'r': 18, 's': 19, 't': 20, 'u': 21, 'v': 22, 'w': 23, 'x': 24, 'y': 25, 'z': 26 },
+                english: { 'a': 6, 'b': 12, 'c': 18, 'd': 24, 'e': 30, 'f': 36, 'g': 42, 'h': 48, 'i': 54, 'j': 60, 'k': 66, 'l': 72, 'm': 78, 'n': 84, 'o': 90, 'p': 96, 'q': 102, 'r': 108, 's': 114, 't': 120, 'u': 126, 'v': 132, 'w': 138, 'x': 144, 'y': 150, 'z': 156 },
+                jewish: { 'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9, 'j': 600, 'k': 10, 'l': 20, 'm': 30, 'n': 40, 'o': 50, 'p': 60, 'q': 70, 'r': 80, 's': 90, 't': 100, 'u': 200, 'v': 700, 'w': 900, 'x': 300, 'y': 400, 'z': 500 }
+            };
+
+            function calculateGematria(text) {
+                const lowerText = text.toLowerCase().replace(/[^a-z]/g, '');
+                let simple = 0, english = 0, jewish = 0;
+
+                for (const char of lowerText) {
+                    if (ciphers.simple[char]) {
+                        simple += ciphers.simple[char];
+                        english += ciphers.english[char];
+                        jewish += ciphers.jewish[char];
+                    }
+                }
+                return { simple, english, jewish };
+            }
+
+            /**
+             * Retrieves all entries from localStorage.
+             */
+            function getAllEntries() {
+                const data = localStorage.getItem('wordDatabase');
+                return data ? JSON.parse(data) : [];
+            }
+
+            /**
+             * Displays all database entries in a table.
+             */
+            function displayAllEntries() {
+                const entries = getAllEntries();
+
+                if (!resultsArea) return;
+                
+                if (entries.length === 0) {
+                    resultsArea.innerHTML = '<p style="text-align:center;">No words found in the local database.</p>';
+                    return;
+                }
+
+                // Sort entries alphabetically by term
+                entries.sort((a, b) => a.word.localeCompare(b.word));
+
+                let tablesHtml = `
+                    <table class="results-table">
+                        <caption>All Words in Local Database (${entries.length} entries)</caption>
+                        <thead>
+                            <tr>
+                                <th>Word/Phrase</th>
+                                <th>Jewish</th>
+                                <th>English</th>
+                                <th>Simple</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${entries.map(entry => {
+                                const values = calculateGematria(entry.word);
+                                return `
+                                    <tr>
+                                        <td><a href="calculator.html?word=${encodeURIComponent(entry.word)}">${entry.word}</a></td>
+                                        <td>${values.jewish}</td>
+                                        <td>${values.english}</td>
+                                        <td>${values.simple}</td>
+                                    </tr>
+                                `
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                resultsArea.innerHTML = tablesHtml;
+            }
+
+            // --- Initial Load ---
+            displayAllEntries();
+        });
+    </script>
+</body>
+</html>

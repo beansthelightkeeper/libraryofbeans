@@ -7,31 +7,32 @@
     <link rel="stylesheet" href="/gematriamain/gematria.css">
     <link rel="stylesheet" href="../header.css">
     <link rel="stylesheet" href="../footer.css">
-    <script src="../header.js" defer></script> 
-    <script src="../footer.js" defer></script> 
-    <!-- Changed to type="module" to support Firebase imports -->
+    <script src="../header.js" defer></script>
+    <script src="../footer.js" defer></script>
+    
+    <!-- Scripts now load as modules -->
     <script src="statistics.js" type="module"></script>
+    <!-- Make sure this points to your single firebase config file -->
+    <script src="../firebase-config2.js" type="module"></script>
 </head>
 <body>
     <div id="main-header-placeholder"></div>
     <div class="container">
         <div class="ad-pillar"></div>
         <article class="content">
-            <!-- Site Icon -->
             <img src="../icon.png" alt="Statistics Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto; border-radius: 50%;">
             
             <div class="search-area">
                 <h1 class="main-title">Database Statistics</h1>
                 <p class="subtitle">An overview of search activity and database entries.</p>
-                <div style="text-align: center; margin-top: 1rem; padding: 0.5rem; background-color: lab(100% 0.01 -0.01 / 0); border-radius: 8px;">
-                    <label for="use-localstorage" style="cursor: pointer; font-size: 0.9rem; color: #000000;">
-                        <input type="checkbox" id="use-localstorage" name="use-localstorage" style="vertical-align: middle;">
+                <div style="text-align: center; margin-top: 1rem;">
+                    <label for="use-localstorage" style="cursor: pointer;">
+                        <input type="checkbox" id="use-localstorage" name="use-localstorage">
                         Use Local Storage Instead of Firebase
                     </label>
                 </div>
             </div>
 
-            <!-- Most Searched Words -->
             <div id="most-searched-section" class="results-section">
                 <h2 class="results-header">Top 20 Most Searched Terms</h2>
                 <table class="results-table">
@@ -45,7 +46,6 @@
                 </table>
             </div>
 
-            <!-- Most Recently Searched Words -->
             <div id="recent-searches-section" class="results-section" style="margin-top: 3rem;">
                 <h2 class="results-header">Top 20 Most Recently Searched Terms</h2>
                 <table class="results-table">
@@ -58,7 +58,6 @@
                 </table>
             </div>
 
-            <!-- Most Recently Added Words -->
             <div id="recent-additions-section" class="results-section" style="margin-top: 3rem;">
                 <h2 class="results-header">Top 20 Most Recently Added Words</h2>
                 <table class="results-table">
@@ -80,4 +79,3 @@
     <footer id="main-footer-placeholder"></footer>
 </body>
 </html>
-

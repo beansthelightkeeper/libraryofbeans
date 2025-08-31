@@ -12,13 +12,15 @@
     <script src="../header.js" defer></script> 
     <script src="../footer.js" defer></script> 
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-    <!-- Your configuration and main script -->
-    <script src="../firebase-config.js" defer></script>
-    <script src="calculator.js" defer></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        // Make sure your firebase-config.js exports the firebaseConfig object
+        import { firebaseConfig } from '../firebase-config.js';
+        // Initialize Firebase and make it globally accessible for our other script
+        window.firebaseApp = initializeApp(firebaseConfig);
+    </script>
+    
+    <script src="calculator.js" type="module"></script>
 </head>    
 <body>
     <header id="main-header-placeholder"></header>
@@ -26,7 +28,6 @@
     <div class="container">
         <div class="ad-pillar"></div>
         <article class="content">
-            <!-- Site Icon (above the main title) -->
             <img src="../icon.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto; border-radius: 50%;">
             
             <div class="search-area">
