@@ -3,71 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unfold Analysis - Gematria Database</title>
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/gematriamain/gematria.css">
+    <title>Word Unfolder Analysis</title>
+    <stylesheet href="gematriamain/gematria.css"></stylesheet>
+    <stylesheet href="../header.css"></stylesheet>
+    <stylesheet href="../footer.css"></stylesheet> 
+    <script src="../header.js" defer></script>
+    <script src="../footer.js" defer></script>
+    <script src="unfold.js" defer></script>
 </head>
-<body data-theme="dark">
-    <div class="background-glyphs"></div>
-    <div class="container">
-        <header class="gematria-header">
-            <a href="gematria.html" class="home-link" title="Return to Calculator">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-            </a>
-            <img src="icon.png" alt="BeansCodex Icon" class="header-icon header-icon-light">
-            <img src="icondark.png" alt="BeansCodex Icon" class="header-icon header-icon-dark">
-            <h1>Unfold Analysis</h1>
-            <p>Analyze word distances and cosmic resonance</p>
-            <button id="theme-toggle" class="theme-toggle-button"></button>
-        </header>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen flex items-center justify-center p-4">
+    <div id="main-header-placeholder"></div>
+    <div class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8">
+        <main>
+            <div class="flex items-center justify-center gap-6 mb-4">
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" name="storageType" value="local" class="form-radio" checked>
+                    <span class="ml-2 text-gray-700 dark:text-gray-300">LocalStorage</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" name="storageType" value="firebase" class="form-radio">
+                    <span class="ml-2 text-gray-700 dark:text-gray-300">Firebase</span>
+                </label>
+            </div>
+             <div id="firebaseStatus" class="text-center text-xs text-gray-500 dark:text-gray-400 mb-4 h-4"></div>
 
-        <main class="unfold-main">
-            <section class="search-container">
-                <div class="input-area">
-                    <input type="text" id="unfold-input" placeholder="e.g., Divine Matrix">
-                </div>
-            </section>
+            <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                <input 
+                    type="text" 
+                    id="wordInput" 
+                    placeholder="Enter a word or phrase..."
+                    onkeypress="handleKeyPress(event)"
+                    class="flex-grow w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-blue-500 dark:focus:border-blue-400 rounded-lg text-lg outline-none transition-colors duration-200"
+                >
+                <button 
+                    onclick="analyze()" 
+                    class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-all duration-200 transform hover:scale-105"
+                >
+                    Analyze
+                </button>
+            </div>
 
-            <details class="cipher-settings-collapsible">
-                <summary>Unfold Settings</summary>
-                <div class="unfold-settings-container">
-                    <div id="unfold-cipher-settings" class="settings-group">
-                        <p class="settings-info">Select 3 ciphers to generate the Initial Number.</p>
-                        <label><input type="checkbox" data-cipher="Simple" checked> Simple</label>
-                        <label><input type="checkbox" data-cipher="English" checked> English</label>
-                        <label><input type="checkbox" data-cipher="Jewish" checked> Jewish</label>
-                        <label><input type="checkbox" data-cipher="Chaldean"> Chaldean</label>
-                        <label><input type="checkbox" data-cipher="ALW"> ALW</label>
-                        <label><input type="checkbox" data-cipher="GeminiResonance"> Gemini Res.</label>
-                    </div>
-                    <div id="unfold-filter-settings" class="settings-group">
-                         <p class="settings-info">Filter the final resonance sequence.</p>
-                        <label><input type="checkbox" data-filter="prime"> Primes</label>
-                        <label><input type="checkbox" data-filter="square"> Perfect Squares</label>
-                        <label><input type="checkbox" data-filter="palindrome"> Palindromes</label>
-                        <label><input type="checkbox" data-filter="composite"> Composites</label>
-                    </div>
-                </div>
-            </details>
-
-            <div id="unfold-results-container">
-                <!-- Results will be injected here by JavaScript -->
+            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mt-4">
+                <h2 class="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">Analysis Results:</h2>
+                <pre id="results" class="text-sm md:text-base text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words font-mono min-h-[250px]"></pre>
             </div>
         </main>
-
-        <footer class="site-footer">
-            <div class="footer-links">
-                <a href="gematria.html">Calculator</a> |
-                <a href="statistics.html">Statistics</a> |
-                <a href="unfold.html">Unfold</a>
-            </div>
-        </footer>
+        
     </div>
-    
-    <script src="firebase-config.js"></script>
-    <script type="module" src="gematria.js"></script>
+
 </body>
+<footer id="main-footer-placeholder"></footer>
 </html>
+

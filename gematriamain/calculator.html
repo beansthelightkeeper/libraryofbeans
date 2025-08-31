@@ -11,7 +11,14 @@
     <link rel="stylesheet" href="../footer.css">
     <script src="../header.js" defer></script> 
     <script src="../footer.js" defer></script> 
-    <script src="calculator.js" defer></script> 
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <!-- Your configuration and main script -->
+    <script src="../firebase-config.js" defer></script>
+    <script src="calculator.js" defer></script>
 </head>    
 <body>
     <header id="main-header-placeholder"></header>
@@ -26,6 +33,8 @@
                 <h1 class="main-title">Gematria Calculation for: <span id="word-display" style="color: #c8a2c8;"></span></h1>
                 
                 <form id="gematria-form">    
+                    <label for="use_localstorage"><input type="checkbox" id="use_localstorage" name="use_localstorage" /> Use Local Storage</label>
+                    <br><br>
                     <input type="search" name="word" id="word-input" placeholder="Try another phrase" maxlength="200" /><br><br>
                     <input type="submit" value="Calculate" />
                     <button type="button" id="save-word-btn">Save Word to Database</button><br><br>

@@ -1,6 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Expanded local database to make finding matches more likely.
-    let wordDatabase = [
+    let wordDatabase = null; // Will be populated from either Firebase or localStorage
+
+    // --- Gematria Cipher Definitions ---
+    const ciphers = {
+        simple: { 'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9, 'j': 10, 'k': 11, 'l': 12, 'm': 13, 'n': 14, 'o': 15, 'p': 16, 'q': 17, 'r': 18, 's': 19, 't': 20, 'u': 21, 'v': 22, 'w': 23, 'x': 24, 'y': 25, 'z': 26 },
+        english: { 'a': 6, 'b': 12, 'c': 18, 'd': 24, 'e': 30, 'f': 36, 'g': 42, 'h': 48, 'i': 54, 'j': 60, 'k': 66, 'l': 72, 'm': 78, 'n': 84, 'o': 90, 'p': 96, 'q': 102, 'r': 108, 's': 114, 't': 120, 'u': 126, 'v': 132, 'w': 138, 'x': 144, 'y': 150, 'z': 156 },
+        jewish: { 'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9, 'j': 600, 'k': 10, 'l': 20, 'm': 30, 'n': 40, 'o': 50, 'p': 60, 'q': 70, 'r': 80, 's': 90, 't': 100, 'u': 200, 'v': 700, 'w': 900, 'x': 300, 'y': 400, 'z': 500 }
+    };
+    
+    const wordDisplay = document.getElementById('word-display');
+    const wordInput = document.getElementById('word-input');
+    const resultsArea = document.getElementById('results-area');
+    const saveWordBtn = document.getElementById('save-word-btn');
+    const gematriaForm = document.getElementById('gematria-form');
+    const useLocalStorageCheckbox = document.getElementById('use_localstorage');
+    const saveStatus = document.getElementById('save-status');
+
+    // Default data if no other source is available
+    const defaultData = [
         { word: 'God', jewish: 26, english: 204, simple: 34 },
         { word: 'Dog', jewish: 26, english: 162, simple: 27 },
         { word: 'Jesus', jewish: 75, english: 444, simple: 74 },
@@ -19,18 +36,27 @@ document.addEventListener('DOMContentLoaded', () => {
         { word: 'Spirit', jewish: 198, english: 522, simple: 87 }
     ];
 
-    // --- Gematria Cipher Definitions ---
-    const ciphers = {
-        simple: { 'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9, 'j': 10, 'k': 11, 'l': 12, 'm': 13, 'n': 14, 'o': 15, 'p': 16, 'q': 17, 'r': 18, 's': 19, 't': 20, 'u': 21, 'v': 22, 'w': 23, 'x': 24, 'y': 25, 'z': 26 },
-        english: { 'a': 6, 'b': 12, 'c': 18, 'd': 24, 'e': 30, 'f': 36, 'g': 42, 'h': 48, 'i': 54, 'j': 60, 'k': 66, 'l': 72, 'm': 78, 'n': 84, 'o': 90, 'p': 96, 'q': 102, 'r': 108, 's': 114, 't': 120, 'u': 126, 'v': 132, 'w': 138, 'x': 144, 'y': 150, 'z': 156 },
-        jewish: { 'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9, 'j': 600, 'k': 10, 'l': 20, 'm': 30, 'n': 40, 'o': 50, 'p': 60, 'q': 70, 'r': 80, 's': 90, 't': 100, 'u': 200, 'v': 700, 'w': 900, 'x': 300, 'y': 400, 'z': 500 }
-    };
-    
-    const wordDisplay = document.getElementById('word-display');
-    const wordInput = document.getElementById('word-input');
-    const resultsArea = document.getElementById('results-area');
-    const saveWordBtn = document.getElementById('save-word-btn');
-    const gematriaForm = document.getElementById('gematria-form');
+    /**
+     * Loads the word database based on the checkbox state.
+     */
+    async function loadDatabase() {
+        // Check if the checkbox element exists before accessing its checked property
+        const useLocalStorage = useLocalStorageCheckbox ? useLocalStorageCheckbox.checked : false;
+
+        if (useLocalStorage) {
+            const data = localStorage.getItem('wordDatabase');
+            wordDatabase = data ? JSON.parse(data) : defaultData;
+        } else {
+            // Assume Firebase is initialized and ready
+            try {
+                const snapshot = await firebase.database().ref('words').once('value');
+                wordDatabase = snapshot.val() ? Object.values(snapshot.val()) : defaultData;
+            } catch (error) {
+                console.error("Firebase connection failed, using default data:", error);
+                wordDatabase = defaultData;
+            }
+        }
+    }
 
     /**
      * Calculates the Gematria values for a given text.
@@ -53,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Finds words in the database that match the calculated Gematria values.
      */
     function findMatches(calculatedValues, originalWord) {
+        if (!wordDatabase) return [];
         return wordDatabase.filter(entry =>
             entry.word.toLowerCase() !== originalWord.toLowerCase() &&
             (entry.simple === calculatedValues.simple ||
@@ -194,7 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Main function to perform calculation and display.
      */
-    function performCalculation(word) {
+    async function performCalculation(word) {
+        await loadDatabase(); // Ensure the database is loaded before calculating
         if (word && word.trim()) {
             const cleanWord = word.trim();
             wordDisplay.textContent = `"${cleanWord}"`;
@@ -214,8 +242,10 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Saves a new word to the temporary database.
      */
-    function saveWord() {
-        const saveStatus = document.getElementById('save-status');
+    async function saveWord() {
+        // Ensure the database is loaded before trying to use it
+        await loadDatabase();
+        
         const wordToSave = wordInput.value.trim();
 
         if (wordToSave) {
@@ -232,10 +262,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     english: calculatedValues.english,
                     simple: calculatedValues.simple
                 };
-                wordDatabase.push(newEntry);
-                saveStatus.textContent = `Successfully saved "${wordToSave}" to the database for this session!`;
-                saveStatus.style.color = 'lightgreen';
+                
+                if (useLocalStorageCheckbox && useLocalStorageCheckbox.checked) {
+                    wordDatabase.push(newEntry);
+                    localStorage.setItem('wordDatabase', JSON.stringify(wordDatabase));
+                    saveStatus.textContent = `Successfully saved "${wordToSave}" to local storage!`;
+                    saveStatus.style.color = 'lightgreen';
+                } else {
+                    // Save to Firebase
+                    const newWordRef = firebase.database().ref('words').push();
+                    await newWordRef.set(newEntry);
+                    saveStatus.textContent = `Successfully saved "${wordToSave}" to Firebase!`;
+                    saveStatus.style.color = 'lightgreen';
+                }
 
+                // Re-run the calculation to update the list
                 const urlParams = new URLSearchParams(window.location.search);
                 const currentWord = urlParams.get('word');
                 if (currentWord && currentWord.trim().toLowerCase() === wordToSave.toLowerCase()) {
@@ -266,10 +307,25 @@ document.addEventListener('DOMContentLoaded', () => {
         saveWordBtn.addEventListener('click', saveWord);
     }
     
+    // Listen for changes on the new checkbox
+    if (useLocalStorageCheckbox) {
+        useLocalStorageCheckbox.addEventListener('change', async (event) => {
+            // Save the state of the checkbox
+            localStorage.setItem('useLocalStorage', event.target.checked);
+            
+            // Reload the database based on the new state
+            await loadDatabase();
+            
+            // Re-perform calculation for the current word
+            const initialUrlParams = new URLSearchParams(window.location.search);
+            const initialWord = initialUrlParams.get('word');
+            performCalculation(initialWord);
+        });
+    }
+    
     // --- Initial Load ---
     // Check for a word in the URL when the page first loads
     const initialUrlParams = new URLSearchParams(window.location.search);
     const initialWord = initialUrlParams.get('word');
     performCalculation(initialWord);
 });
-
