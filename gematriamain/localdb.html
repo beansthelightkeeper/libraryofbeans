@@ -26,8 +26,16 @@
                     <button id="process-btn">Process Files</button>
                     <p id="processing-status"></p>
                 </div>
+                <div class="search-box">
+                    <input type="search" id="db-search" placeholder="Search local database...">
+                    <input type="submit" id="search-submit" value="Calculate/Add">
+                </div>
                 <a href="calculator.html">Back to Gematria Calculator</a>
-            </div>                
+            </div> 
+
+            <div id="search-results-area">
+                <!-- This is where the calculation and matches will be displayed -->
+            </div>
 
             <div id="results-area">
                 <p>Loading database...</p>
@@ -60,7 +68,7 @@
         }
         .pagination-btn {
             background-color: white;
-            color: #333;
+            color: black;
             border: 1px solid #333;
             width: 35px;
             height: 35px;
@@ -71,41 +79,44 @@
             transition: all 0.2s ease-in-out;
             font-weight: bold;
             font-family: monospace;
-            transform: rotate(45deg);
-        }
-        .pagination-btn::after {
-            content: attr(data-text);
-            transform: rotate(-45deg);
-            color: #333;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
         }
         .pagination-btn:hover {
             background-color: #c8a2c8;
             border-color: #c8a2c8;
         }
-        .pagination-btn:hover::after {
-             color: black;
-        }
         .pagination-btn.active {
             background-color: #c8a2c8;
             border-color: #c8a2c8;
         }
-        .pagination-btn.active::after {
-            color: black;
+
+        .search-box {
+            margin-top: 20px;
+        }
+
+        #db-search {
+            width: 100%;
+            max-width: 400px;
+            padding: 8px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
         }
     </style>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-
             const resultsArea = document.getElementById('results-area');
+            const searchResultsArea = document.getElementById('search-results-area');
             const fileInput = document.getElementById('file-input');
             const processBtn = document.getElementById('process-btn');
             const processingStatus = document.getElementById('processing-status');
             const paginationControls = document.getElementById('pagination-controls');
+            const dbSearchInput = document.getElementById('db-search');
+            const searchSubmitBtn = document.getElementById('search-submit');
             const WORDS_PER_PAGE = 25;
             let currentPage = 1;
+            let currentWords = []; // To store the currently displayed words (filtered or all)
 
             // --- Gematria Cipher Definitions (copied from calculator.js) ---
             const ciphers = {
@@ -135,6 +146,20 @@
                 const data = localStorage.getItem('wordDatabase');
                 return data ? JSON.parse(data) : [];
             }
+            
+            /**
+             * Filters the entries based on a search term.
+             */
+            function filterEntries(searchTerm) {
+                const allEntries = getAllEntries();
+                if (!searchTerm) {
+                    return allEntries;
+                }
+                const lowerSearchTerm = searchTerm.toLowerCase();
+                return allEntries.filter(entry =>
+                    entry.word.toLowerCase().includes(lowerSearchTerm)
+                );
+            }
 
             /**
              * Deletes a word from the local database and re-renders the table.
@@ -143,34 +168,35 @@
                 let words = getAllEntries();
                 words = words.filter(entry => entry.word.toLowerCase() !== wordToDelete.toLowerCase());
                 localStorage.setItem('wordDatabase', JSON.stringify(words));
-                displayAllEntries(currentPage); // Re-render the table
+                displayAllEntries(filterEntries(dbSearchInput.value), currentPage); // Re-render the table with the current search filter
             }
 
             /**
              * Displays all database entries in a table.
              */
-            function displayAllEntries(page = 1) {
+            function displayAllEntries(entries, page = 1) {
                 currentPage = page;
-                const entries = getAllEntries();
                 if (!resultsArea) return;
+
+                currentWords = entries;
                 
-                if (entries.length === 0) {
+                if (currentWords.length === 0) {
                     resultsArea.innerHTML = '<p style="text-align:center;">No words found in the local database. Upload a file to begin.</p>';
                     paginationControls.innerHTML = '';
                     return;
                 }
 
                 // Sort entries alphabetically by word
-                entries.sort((a, b) => a.word.localeCompare(b.word));
+                currentWords.sort((a, b) => a.word.localeCompare(b.word));
 
                 // Calculate the entries for the current page
                 const startIndex = (currentPage - 1) * WORDS_PER_PAGE;
                 const endIndex = startIndex + WORDS_PER_PAGE;
-                const entriesForPage = entries.slice(startIndex, endIndex);
+                const entriesForPage = currentWords.slice(startIndex, endIndex);
 
                 let tablesHtml = `
                     <table class="results-table">
-                        <caption>All Words in Local Database (${entries.length} entries)</caption>
+                        <caption>All Words in Local Database (${currentWords.length} entries)</caption>
                         <thead>
                             <tr>
                                 <th>Word/Phrase</th>
@@ -198,7 +224,7 @@
                 `;
                 
                 resultsArea.innerHTML = tablesHtml;
-                createPaginationControls(entries.length);
+                createPaginationControls(currentWords.length);
 
                 // Add event listeners to the new delete buttons
                 document.querySelectorAll('.delete-btn').forEach(button => {
@@ -211,6 +237,97 @@
                     });
                 });
             }
+            
+            /**
+             * Creates the HTML for a single calculation breakdown.
+             */
+            function createBreakdownHtml(word, cipherName, totalValue) {
+                const cipherMap = ciphers[cipherName];
+                let lettersHtml = '';
+                let numbersHtml = '';
+                
+                for (const char of word.toLowerCase().replace(/[^a-z]/g, '')) {
+                    if (cipherMap[char]) {
+                        lettersHtml += `<td>${char}</td>`;
+                        numbersHtml += `<td>${cipherMap[char]}</td>`;
+                    }
+                }
+                
+                const title = cipherName.charAt(0).toUpperCase() + cipherName.slice(1);
+
+                return `
+                    <div class="breakdown-item">
+                        <p><strong>"${word}"</strong> in <strong>${title} Gematria</strong> equals <strong>${totalValue}</strong>:</p>
+                        <table class="breakdown-table">
+                            <tbody>
+                                <tr class="breakdown-letters">${lettersHtml}</tr>
+                                <tr class="breakdown-numbers">${numbersHtml}</tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            /**
+             * Finds matches in local storage database.
+             */
+            function findLocalMatches(calculatedValues, originalWord) {
+                const localDb = getAllEntries();
+                if (!localDb) return [];
+                return localDb.filter(entry =>
+                    entry.word.toLowerCase() !== originalWord.toLowerCase() &&
+                    (entry.simple === calculatedValues.simple ||
+                        entry.english === calculatedValues.english ||
+                        entry.jewish === calculatedValues.jewish)
+                );
+            }
+
+            /**
+             * Displays a detailed calculation for a single word.
+             */
+            function displayCalculationAndMatches(word) {
+                const calculatedValues = calculateGematria(word);
+                const localMatches = findLocalMatches(calculatedValues, word);
+                
+                let breakdownContainer = `<div class="breakdown-container">`;
+                breakdownContainer += createBreakdownHtml(word, 'jewish', calculatedValues.jewish);
+                breakdownContainer += createBreakdownHtml(word, 'english', calculatedValues.english);
+                breakdownContainer += createBreakdownHtml(word, 'simple', calculatedValues.simple);
+                breakdownContainer += `</div>`;
+
+                let tablesHtml = `
+                    <div style="text-align:center; margin-top: 2rem;">
+                        <h2 class="results-header">Local Database Matches</h2>
+                    </div>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Word/Phrase</th>
+                                <th>Count</th>
+                                <th>Jewish</th>
+                                <th>English</th>
+                                <th>Simple</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${localMatches.length > 0 ? 
+                                localMatches.map(match => `
+                                    <tr>
+                                        <td><a href="calculator.html?word=${encodeURIComponent(match.word)}">${match.word}</a></td>
+                                        <td>${match.count || 1}</td>
+                                        <td>${match.jewish}</td>
+                                        <td>${match.english}</td>
+                                        <td>${match.simple}</td>
+                                    </tr>
+                                `).join('') :
+                                `<tr><td colspan="5" style="text-align:center; padding: 2rem; color: #888;">No matching words found in local storage.</td></tr>`
+                            }
+                        </tbody>
+                    </table>
+                `;
+                
+                searchResultsArea.innerHTML = breakdownContainer + tablesHtml;
+            }
 
             /**
              * Creates and displays the pagination controls.
@@ -222,13 +339,13 @@
                 if (totalPages > 1) {
                     for (let i = 1; i <= totalPages; i++) {
                         const pageBtn = document.createElement('button');
-                        pageBtn.setAttribute('data-text', i);
+                        pageBtn.textContent = i;
                         pageBtn.classList.add('pagination-btn');
                         if (i === currentPage) {
                             pageBtn.classList.add('active');
                         }
                         pageBtn.addEventListener('click', () => {
-                            displayAllEntries(i);
+                            displayAllEntries(currentWords, i);
                         });
                         paginationControls.appendChild(pageBtn);
                     }
@@ -272,13 +389,18 @@
              * Records a word in localStorage, updating the count if it already exists.
              */
             function recordWord(word) {
-                const words = getAllEntries();
+                let words = getAllEntries();
                 const existingWordIndex = words.findIndex(entry => entry.word.toLowerCase() === word.toLowerCase());
                 
-                if (existingWordIndex > -1) {
+                const exists = existingWordIndex > -1;
+                
+                if (exists) {
                     words[existingWordIndex].count = (words[existingWordIndex].count || 1) + 1;
                 } else {
-                    words.push({ word: word, count: 1 });
+                    const newEntry = { word: word, ...calculateGematria(word) };
+                    words.push(newEntry);
+                    // Show a confirmation message
+                    showConfirmModal(`"${word}" has been added to your local database.`, () => {});
                 }
                 
                 localStorage.setItem('wordDatabase', JSON.stringify(words));
@@ -336,15 +458,41 @@
                     }
 
                     processingStatus.textContent = `Processing complete! ${totalSentences} sentences were saved or updated.`;
-                    displayAllEntries(1);
+                    displayAllEntries(getAllEntries(), 1);
                 };
             }
 
             // Event listeners
             processBtn.addEventListener('click', processFiles);
 
+            // Handle the search input for full calculation
+            searchSubmitBtn.addEventListener('click', () => {
+                const searchTerm = dbSearchInput.value.trim();
+                if (searchTerm) {
+                    recordWord(searchTerm);
+                    displayCalculationAndMatches(searchTerm);
+                }
+            });
+            
+            dbSearchInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const searchTerm = dbSearchInput.value.trim();
+                    if (searchTerm) {
+                        recordWord(searchTerm);
+                        displayCalculationAndMatches(searchTerm);
+                    }
+                }
+            });
+
+            // Handle the search input for live filtering
+            dbSearchInput.addEventListener('input', () => {
+                const filteredEntries = filterEntries(dbSearchInput.value);
+                displayAllEntries(filteredEntries, 1);
+            });
+
             // Initial load
-            displayAllEntries();
+            displayAllEntries(getAllEntries());
         });
     </script>
 </body>

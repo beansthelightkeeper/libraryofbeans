@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
      * Loads the word database based on the checkbox state.
      */
     async function loadDatabase() {
-        // Check if the checkbox element exists before accessing its checked property
         const useLocalStorage = useLocalStorageCheckbox ? useLocalStorageCheckbox.checked : false;
 
         if (useLocalStorage) {
@@ -88,6 +87,21 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
     
+    /**
+     * Finds matches in local storage database when enabled.
+     */
+    function findLocalMatches(calculatedValues, originalWord) {
+        const data = localStorage.getItem('wordDatabase');
+        if (!data) return [];
+        const localDb = JSON.parse(data);
+        return localDb.filter(entry =>
+            entry.word.toLowerCase() !== originalWord.toLowerCase() &&
+            (entry.simple === calculatedValues.simple ||
+             entry.english === calculatedValues.english ||
+             entry.jewish === calculatedValues.jewish)
+        );
+    }
+
     /**
      * Creates the HTML for a single calculation breakdown.
      */
@@ -215,6 +229,41 @@ document.addEventListener('DOMContentLoaded', () => {
             </table>
         `;
         
+        // Add local storage matches if the checkbox is checked
+        if (useLocalStorageCheckbox && useLocalStorageCheckbox.checked) {
+            const localMatches = findLocalMatches(values, word);
+            tablesHtml += `
+                <div style="text-align:center; margin-top: 2rem;">
+                    <h2 class="results-header">Local Database Matches</h2>
+                </div>
+                <table class="results-table">
+                     <thead>
+                        <tr>
+                            <th>Word/Phrase</th>
+                            <th>Count</th>
+                            <th>Jewish</th>
+                            <th>English</th>
+                            <th>Simple</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${localMatches.length > 0 ? 
+                            localMatches.map(match => `
+                                <tr>
+                                    <td><a href="calculator.html?word=${encodeURIComponent(match.word)}">${match.word}</a></td>
+                                    <td>${match.count || 1}</td>
+                                    <td>${match.jewish}</td>
+                                    <td>${match.english}</td>
+                                    <td>${match.simple}</td>
+                                </tr>
+                            `).join('') :
+                            `<tr><td colspan="5" style="text-align:center; padding: 2rem; color: #888;">No matching words found in local storage.</td></tr>`
+                        }
+                    </tbody>
+                </table>
+            `;
+        }
+
         resultsArea.innerHTML = breakdownContainer + tablesHtml;
     }
 
