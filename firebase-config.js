@@ -1,4 +1,7 @@
 // --- FIREBASE CONFIGURATION & INITIALIZATION ---
+// This file just defines the config object and initializes Firebase.
+// It does NOT use 'export'.
+
 const firebaseConfig = {
     apiKey: "AIzaSyDDfoBX9ZkIWOJBLgJ9v5vVvRVYC2JYV0w",
     authDomain: "gematria-3ef50.firebaseapp.com",
@@ -17,6 +20,5 @@ try {
     }
 } catch(e) {
     console.error("Firebase initialization error:", e);
-    // Non-blocking alert so the app can continue with local data
-    setTimeout(() => alert("Could not connect to the database. Check console for errors."), 1);
 }
+

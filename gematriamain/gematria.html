@@ -1,81 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gematria Calculator Statistics</title>
-    <link href="https://fonts.googleapis.com/css2?family=Arimo&family=Noto+Sans+Symbols&display=swap" rel="stylesheet">
+<html lang="en">        
+<head>      
+    <meta charset="utf-8">        
+    <meta http-equiv="x-ua-compatible" content="ie=edge">        
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">   
+    <title>Gematria Calculator Results</title>        
+    <link rel="icon" type="image/png" href="../icon.png" />        
     <link rel="stylesheet" href="gematria.css">
-</head>
-<body data-theme="dark">
-    <canvas id="glyphCanvas"></canvas>
+    <link rel="stylesheet" href="../header.css">
+    <link rel="stylesheet" href="../footer.css">
+    <script src="../header.js" defer></script> 
+    <script src="../footer.js" defer></script> 
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <!-- Your configuration and main script -->
+    <!-- CORRECTED the file path here to point to the parent directory -->
+    <script src="../firebase-config.js" defer></script>
+    <script src="calculator.js" defer></script>
+</head>    
+<body>
     <header id="main-header-placeholder"></header>
 
     <div class="container">
-        <div class="content">
+        <div class="ad-pillar"></div>
+        <article class="content">
+            <img src="../icon.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto; border-radius: 50%;">
+            
             <div class="search-area">
-                <img src="icon.png" alt="Site Logo">
-                <h1 class="main-title">Gematria Calculator</h1>
-                <h2 class="subtitle">Discover the numerical value of words and phrases</h2>
-                <p class="info-text">
-                    (Type in a word or a number e.g. God, Devil, 100, 666)
-                </p>
-                <form id="gematria-form" action="calculator.html" method="GET">
-                    <input type="text" id="text-input" name="word" placeholder="Enter word or phrase" required>
-                    <input type="submit" value="Calculate">
+                <h1 class="main-title">Gematria Calculation for: <span id="word-display" style="color: #c8a2c8;"></span></h1>
+                
+                <form id="gematria-form">    
+                    <label for="use_localstorage"><input type="checkbox" id="use_localstorage" name="use_localstorage" /> Use Local Storage</label>
+                    <br><br>
+                    <input type="search" name="word" id="word-input" placeholder="Try another phrase" maxlength="200" /><br><br>
+                    <input type="submit" value="Calculate" />
+                    <button type="button" id="save-word-btn">Save Word to Database</button><br><br>
+                    <label for="view_rude"><input type="checkbox" id="view_rude" name="view_rude" /> View Rude Words</label>
                 </form>
-                <p><a href="#">View Rude Words</a></p>
+                <div id="save-status"></div>
+            </div>                
+
+            <div id="results-area">
+                <p>Enter a word above to see the Gematria calculation results.</p>
             </div>
-
-            <div class="social-buttons">
-                <a href="#" class="social-button">Twitter</a>
-                <a href="#" class="social-button">Facebook</a>
-            </div>
-
-            <table class="results-table">
-                <caption>Most Searched Gematria Words</caption>
-                <thead>
-                    <tr>
-                        <th>Word</th>
-                        <th>Jewish</th>
-                        <th>English</th>
-                        <th>Simple</th>
-                        <th>Searches</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><a href="calculator.html?word=God">God</a></td>
-                        <td>26</td>
-                        <td>204</td>
-                        <td>34</td>
-                        <td>1234</td>
-                    </tr>
-                    <tr>
-                        <td><a href="calculator.html?word=Devil">Devil</a></td>
-                        <td>47</td>
-                        <td>318</td>
-                        <td>53</td>
-                        <td>987</td>
-                    </tr>
-                     <tr>
-                        <td><a href="calculator.html?word=Love">Love</a></td>
-                        <td>95</td>
-                        <td>318</td>
-                        <td>53</td>
-                        <td>1111</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <footer>
-        <p>© 2025 Library of Beans</p>
-    </footer>
-
-    <script src="loader.js"></script>
-    <script src="gematria.js"></script>
+        
+        </article>
+        <div class="ad-pillar"></div>
+    </div> 
+    <footer id="main-footer-placeholder"></footer>
 </body>
 </html>
+

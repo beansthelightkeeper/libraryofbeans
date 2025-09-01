@@ -16,9 +16,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <!-- Your configuration and main script. NOTE: Paths are corrected assuming files are in the same folder. -->
-    <script src="firebase-config.js" defer></script>
-    <script src="calculator.js" defer></script>
 </head>    
 <body>
     <header id="main-header-placeholder"></header>
@@ -45,13 +42,15 @@
             <div id="results-area">
                 <p>Enter a word above to see the Gematria calculation results.</p>
             </div>
-
-             <div id="stats-area" style="display: none; text-align: center; margin-top: 2rem; padding: 1rem; background-color: #f0f0f0; border-radius: 8px;"></div>
         
         </article>
         <div class="ad-pillar"></div>
     </div> 
     <footer id="main-footer-placeholder"></footer>
+
+    <!-- MOVED SCRIPTS HERE: Load scripts after the body content to prevent timing errors -->
+    <script src="../firebase-config.js"></script>
+    <script src="calculator.js"></script>
 </body>
 </html>
 
