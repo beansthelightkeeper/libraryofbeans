@@ -58,6 +58,18 @@
             <button id="theme-toggle" class="action-btn" title="Toggle Theme">◐</button>
         </div>
     </header>
+    
+    <!-- Custom Modal for Notes -->
+    <div id="note-modal-overlay" class="note-modal-overlay hidden">
+        <div id="note-modal" class="note-modal">
+            <h3>Annotation Note</h3>
+            <textarea id="note-modal-textarea" placeholder="Type your note here..."></textarea>
+            <div class="note-modal-actions">
+                <button id="note-modal-cancel">Cancel</button>
+                <button id="note-modal-save">Save</button>
+            </div>
+        </div>
+    </div>
 
     <div id="annotations-panel" class="annotations-panel">
         <div class="tabs">
@@ -91,6 +103,7 @@
                 <h2>Welcome to the Library</h2>
                 <p>Select a document from the sidebar to begin reading.</p>
             </div>
+            <canvas id="pdf-drawing-canvas"></canvas>
             <iframe id="content-frame" name="content-frame" title="Document Content"></iframe>
         </main>
     </div>
