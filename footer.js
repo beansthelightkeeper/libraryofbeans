@@ -7,9 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="footer-symbols-bg" id="footer-symbols-bg"></div>
         <div class="mega-footer-inner">
             <div class="footer-socials">
-                <a class="social-btn patreon-btn" href="https://ko-fi.com/beaniverse" target="_blank" rel="noopener">Donate</a>
-                <a class="social-btn github-btn" href="https://github.com/beaniverse" target="_blank" rel="noopener">GitHub</a>
-                <a class="social-btn x-btn" href="https://twitter.com/gematrix" target="_blank" rel="noopener">X</a>
+                <a class="social-btn patreon-btn" href="https://ko-fi.com/beans137" target="_blank" rel="noopener">Donate</a>
+                <a class="social-btn github-btn" href="https://github.com/beansthelightkeeper" target="_blank" rel="noopener">GitHub</a>
+                <a class="social-btn x-btn" href="https://twitter.com/PrincessPastry_" target="_blank" rel="noopener">X</a>
             </div>
             <div id="kofi-widget"></div>
             <p>&copy; 2025 Library of Beans. All Rights Reserved.</p>

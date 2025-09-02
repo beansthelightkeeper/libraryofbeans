@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <ul>
                         <li><a href="/gematriamain/calculator.html">Calculator</a></li>
                         <li><a href="/work/numerology.html">Numerology</a></li>
-                        <li><a href="/work/statistics.html">Statistics</a></li>
+                        <li><a href="/gematriamain/statistics.html">Statistics</a></li>
                         <li><a href="/library.html">Library</a></li>
                         <li><a href="/work.html">Work</a></li>
                         <li><a href="about.html">About</a></li>
