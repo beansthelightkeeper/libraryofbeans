@@ -75,11 +75,12 @@ const ELEMENTS_FOR_SEARCH = Object.keys(ELEMENT_PROPERTIES)
 const memo = new Map();
 
 function getMemoKey(lettersCounter) {
+    // Creates a stable, sorted string key from a Map, e.g., "A2B1C3"
     return Array.from(lettersCounter.entries())
         .filter(([, count]) => count > 0)
         .sort()
         .map(([char, count]) => `${char}${count}`)
-        .join(',');
+        .join('');
 }
 
 function findAllElementCombinations(lettersCounter) {
@@ -88,43 +89,43 @@ function findAllElementCombinations(lettersCounter) {
         return memo.get(memoKey);
     }
 
-    const solutions = [[]]; // Start with the "use no elements" option
+    const allCombinations = [[]]; // Start with the base case: using no elements
 
-    for (const { symbol, counter: elementLetters } of ELEMENTS_FOR_SEARCH) {
-        let canForm = true;
-        for (const [char, needed] of elementLetters.entries()) {
-            if ((lettersCounter.get(char) || 0) < needed) {
-                canForm = false;
-                break;
-            }
-        }
+    for (const { symbol, counter: elementLettersCounter } of ELEMENTS_FOR_SEARCH) {
+        // Check if the element can be formed from the available letters
+        const canFormElement = Array.from(elementLettersCounter.entries())
+            .every(([char, count]) => (lettersCounter.get(char) || 0) >= count);
 
-        if (canForm) {
-            const nextLettersCounter = new Map(lettersCounter);
-            for (const [char, needed] of elementLetters.entries()) {
-                nextLettersCounter.set(char, nextLettersCounter.get(char) - needed);
+        if (canFormElement) {
+            // If it can be formed, create a new letter pool with the element's letters removed
+            const newLettersCounter = new Map(lettersCounter);
+            for (const [char, count] of elementLettersCounter.entries()) {
+                newLettersCounter.set(char, newLettersCounter.get(char) - count);
             }
             
-            const subSolutions = findAllElementCombinations(nextLettersCounter);
+            // Recursively find all combinations from the *remaining* letters
+            const subCombinations = findAllElementCombinations(newLettersCounter);
             
-            for (const subSolution of subSolutions) {
-                solutions.push([symbol, ...subSolution]);
+            // For each sub-combination, add the current element to it
+            for (const subCombo of subCombinations) {
+                allCombinations.push([symbol, ...subCombo]);
             }
         }
     }
 
+    // Deduplicate the results to handle cases where elements can be found in different orders
     const uniqueKeys = new Set();
-    const uniqueSolutions = [];
-    for(const solution of solutions){
-        const sortedKey = solution.slice().sort().join(',');
+    const uniqueCombinations = [];
+    for(const combo of allCombinations){
+        const sortedKey = combo.slice().sort().join(',');
         if(!uniqueKeys.has(sortedKey)){
             uniqueKeys.add(sortedKey);
-            uniqueSolutions.push(solution);
+            uniqueCombinations.push(combo);
         }
     }
-    
-    memo.set(memoKey, uniqueSolutions);
-    return uniqueSolutions;
+
+    memo.set(memoKey, uniqueCombinations);
+    return uniqueCombinations;
 }
 
 function analyzeWord(textInput) {
@@ -146,35 +147,48 @@ function analyzeWord(textInput) {
     }
 
     const results = allCombos
-        .filter(combo => combo.length > 0) 
+        .filter(combo => combo.length > 0) // Ignore the empty base-case combo
         .map(combo => {
-            const lettersUsedStr = combo.join('');
-            const boilingPoints = combo.map(el => ELEMENT_PROPERTIES[el].boiling).filter(bp => bp !== null);
-            const avgBoilingPoint = boilingPoints.length > 0 ? boilingPoints.reduce((a, b) => a + b, 0) / boilingPoints.length : null;
+            // Create a counter of letters used in this specific combination
+            const comboLettersCounter = new Map();
+            for (const symbol of combo) {
+                for (const char of symbol.toUpperCase()) { // Ensure char is uppercase for matching
+                     comboLettersCounter.set(char, (comboLettersCounter.get(char) || 0) + 1);
+                }
+            }
             
-            const tempPool = new Map(initialLettersPool);
-            for(const char of lettersUsedStr) {
-                tempPool.set(char, tempPool.get(char) - 1);
+            // Create a fresh copy of the initial pool to subtract from
+            const remainingLettersPool = new Map(initialLettersPool);
+            for (const [char, count] of comboLettersCounter.entries()) {
+                if (remainingLettersPool.has(char)) {
+                    remainingLettersPool.set(char, remainingLettersPool.get(char) - count);
+                }
             }
 
+            // Build the string of unmatched letters from the final pool
             let remainingStr = '';
-            for(const [char, count] of Array.from(tempPool.entries()).sort()) {
+            for(const [char, count] of Array.from(remainingLettersPool.entries()).sort()) {
                 if (count > 0) { remainingStr += char.repeat(count); }
             }
+            
+            const boilingPoints = combo.map(el => ELEMENT_PROPERTIES[el].boiling).filter(bp => bp !== null);
+            const avgBoilingPoint = boilingPoints.length > 0 ? boilingPoints.reduce((a, b) => a + b, 0) / boilingPoints.length : null;
             
             return {
                 elements: combo,
                 atomic_sum: combo.reduce((sum, el) => sum + ELEMENT_PROPERTIES[el].atomic, 0),
                 avg_boiling_point: avgBoilingPoint,
-                letters_used: lettersUsedStr.length,
+                letters_used: combo.join('').length,
                 unmatched_letters: remainingStr
             };
         });
     
+    // Sort results to show the best matches first
     results.sort((a, b) => b.letters_used - a.letters_used || (b.avg_boiling_point || -1) - (a.avg_boiling_point || -1));
 
     return { results };
 }
+
 
 // --- 3. UI Interaction ---
 document.addEventListener('DOMContentLoaded', () => {
