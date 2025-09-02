@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Library Meta Generator</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; color: #1c1e21; padding: 20px; }
+        h1 { color: #333; }
+        input, button { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; }
+        button { background-color: #8a2be2; color: white; cursor: pointer; }
+        textarea { width: 90%; height: 400px; margin-top: 15px; font-family: monospace; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Library Metadata Generator</h1>
+        <p>Enter your GitHub details and click Generate. Then, copy the text and paste it into your <code>library_meta.json</code> file.</p>
+        <label>Username: <input id="username" type="text" value="beansthelightkeeper"></label>
+        <label>Repository: <input id="repo" type="text" value="libraryofbeans"></label>
+        <button id="generateBtn">Generate</button>
+        <p id="status"></p>
+        <textarea id="output" readonly placeholder="Generated JSON will appear here..."></textarea>
+    </div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const outputArea = document.getElementById('output');
+        const statusEl = document.getElementById('status');
+
+        generateBtn.addEventListener('click', async () => {
+            const username = document.getElementById('username').value;
+            const repo = document.getElementById('repo').value;
+            const apiUrl = `https://api.github.com/repos/${username}/${repo}/git/trees/main?recursive=1`;
+            
+            statusEl.textContent = 'Fetching from GitHub...';
+            outputArea.value = '';
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                
+                const data = await response.json();
+                const libraryRoot = 'content/';
+                
+                const files = data.tree
+                    .filter(item => item.type === 'blob' && item.path.startsWith(libraryRoot))
+                    .map(item => item.path);
+
+                if (files.length === 0) {
+                    statusEl.textContent = 'No files found in the "content" directory.';
+                    return;
+                }
+
+                const metaObject = {};
+                files.forEach(path => {
+                    const title = path
+                        .substring(libraryRoot.length)
+                        .replace(/\.(pdf|epub|html|txt)$/i, '')
+                        .replace(/_/g, ' ');
+                    
+                    metaObject[path] = {
+                        title: title,
+                        author: "",
+                        subjects: []
+                    };
+                });
+
+                outputArea.value = JSON.stringify(metaObject, null, 2);
+                statusEl.textContent = `Success! Found ${files.length} files.`;
+
+            } catch (error) {
+                statusEl.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

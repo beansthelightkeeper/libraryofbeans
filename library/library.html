@@ -5,22 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Library of Beans</title>
 
-    <!-- Google Fonts & Stylesheets -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="library-style.css">
 
-    <!-- PDF.js Library from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/epubjs@0.4.2/dist/epub.min.js"></script>
+
     <script type="module">
         try {
-            const pdfjsVersion = '4.4.168';
-            const pdfjsLib = await import(`https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.mjs`);
-            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.mjs`;
+            const { pdfjsLib } = globalThis;
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.mjs`;
             window.pdfjsLib = pdfjsLib;
         } catch (err) {
-            console.error("Failed to load PDF.js module:", err);
+            console.error("Failed to configure PDF.js:", err);
             window.pdfjsLib = null;
         }
     </script>
@@ -35,13 +41,21 @@
         </div>
 
         <div class="header-group rh-controls">
-            <div class="control" title="Font Size">
-                <span>Aa</span>
-                <input type="range" id="font-size-slider" min="12" max="28" value="16" step="1">
+            <div class="control" id="html-txt-controls">
+                <div class="control" title="Font Size">
+                    <span>Aa</span>
+                    <input type="range" id="font-size-slider" min="12" max="28" value="16" step="1">
+                </div>
+                <div class="control" title="Line Spacing">
+                    <span>☰</span>
+                    <input type="range" id="line-height-slider" min="1.5" max="3" value="1.7" step="0.1">
+                </div>
             </div>
-            <div class="control" title="Line Spacing">
-                <span>☰</span>
-                <input type="range" id="line-height-slider" min="1.5" max="3" value="1.7" step="0.1">
+            <div class="control hidden" id="pdf-controls">
+                <div class="control" title="Highlight Thickness">
+                    <span>⬍</span>
+                    <input type="range" id="highlight-thickness-slider" min="2" max="30" value="15" step="1">
+                </div>
             </div>
         </div>
 
@@ -59,7 +73,6 @@
         </div>
     </header>
     
-    <!-- Custom Modal for Notes -->
     <div id="note-modal-overlay" class="note-modal-overlay hidden">
         <div id="note-modal" class="note-modal">
             <h3>Annotation Note</h3>
@@ -91,6 +104,19 @@
             <nav class="library-nav">
                 <section class="sidebar-section">
                     <h2>Library Contents</h2>
+                    <div class="filter-controls">
+                        <input type="search" id="search-bar" placeholder="Search files, authors...">
+                        <div class="filter-options">
+                            <select id="filter-type">
+                                <option value="all">All Types</option>
+                                <option value="pdf">PDF</option>
+                                <option value="epub">EPUB</option>
+                                <option value="html">HTML</option>
+                                <option value="txt">TXT</option>
+                            </select>
+                            <label><input type="checkbox" id="hide-uncategorized"> Hide Uncategorized</label>
+                        </div>
+                    </div>
                     <div id="file-list-container" class="scrollable">
                         <p>Loading library...</p>
                     </div>
@@ -103,6 +129,11 @@
                 <h2>Welcome to the Library</h2>
                 <p>Select a document from the sidebar to begin reading.</p>
             </div>
+            <div id="epub-reader-area">
+                 <div id="epub-viewer"></div>
+                 <a id="epub-prev">‹</a>
+                 <a id="epub-next">›</a>
+            </div>
             <canvas id="pdf-drawing-canvas"></canvas>
             <iframe id="content-frame" name="content-frame" title="Document Content"></iframe>
         </main>
@@ -111,4 +142,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-

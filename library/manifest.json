@@ -1,0 +1,9 @@
+{
+  "name": "Library of Beans",
+  "short_name": "BeansLib",
+  "start_url": "library.html",
+  "display": "standalone",
+  "background_color": "#161618",
+  "theme_color": "#8a2be2",
+  "description": "A personal library and reader application."
+}
