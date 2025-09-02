@@ -52,7 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- App State ---
     const state = {
         currentFile: null,
-        currentBook: null, // For EPUB.js instance
+        currentBook: null, // For EPUB.js book instance
+        currentRendition: null, // For EPUB.js rendition instance
         isEraseModeActive: false,
         isDrawing: false,
         drawPoints: [],
@@ -108,8 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
         drawingCanvas.addEventListener('mouseup', endDrawing);
         drawingCanvas.addEventListener('mouseleave', endDrawing);
 
-        epubPrev.addEventListener('click', () => state.currentBook?.prev());
-        epubNext.addEventListener('click', () => state.currentBook?.next());
+        // Correctly calls next/prev on the rendition object
+        epubPrev.addEventListener('click', () => state.currentRendition?.prev());
+        epubNext.addEventListener('click', () => state.currentRendition?.next());
 
         searchBar.addEventListener('input', applyFilters);
         filterType.addEventListener('change', applyFilters);
@@ -172,16 +174,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 docHtml += `<div class="page-container" data-page-number="${i}"><canvas id="pdf-canvas-${i}"></canvas></div>`;
             }
             contentFrame.srcdoc = docHtml;
+
             contentFrame.onload = async () => {
+                // Waits a moment for the iframe's content to be ready
+                await new Promise(resolve => setTimeout(resolve, 0)); 
+                
                 const iframeDoc = contentFrame.contentDocument;
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const viewport = page.getViewport({ scale: 1.5 });
                     const canvas = iframeDoc.getElementById(`pdf-canvas-${i}`);
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+                    if (canvas) {
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        await page.render({ canvasContext: context, viewport: viewport }).promise;
+                    }
                 }
                 syncDrawingCanvasSize();
                 setupIframeListeners();
@@ -241,10 +249,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const computed = getComputedStyle(document.body);
             style.innerHTML = `body{font-size:${state.settings.fontSize}px;line-height:${state.settings.lineHeight};color:${computed.getPropertyValue('--text-primary')};background-color:${computed.getPropertyValue('--bg-primary')};font-family:'Arimo',sans-serif;padding:2rem;max-width:800px;margin:0 auto;}.pdf-highlight{background-color:var(--highlight-${state.settings.activeHighlightColor});cursor:pointer;}`;
         }
-        if (state.currentBook) {
+        if (state.currentRendition) {
             const theme = {'body': {'color': getComputedStyle(document.body).getPropertyValue('--text-primary'),'font-size':`${state.settings.fontSize}px !important`,'line-height':`${state.settings.lineHeight} !important`,'font-family':`'Arimo', sans-serif !important`}};
-            state.currentBook.themes.register("custom", theme);
-            state.currentBook.themes.select("custom");
+            state.currentRendition.themes.register("custom", theme);
+            state.currentRendition.themes.select("custom");
         }
     }
 
@@ -295,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.currentFile === fullPath) return;
         state.currentFile = fullPath;
         state.currentBook = null;
+        state.currentRendition = null;
         
         welcomeMessage.style.display = 'none';
         document.querySelectorAll('#file-list-container li.active').forEach(el => el.classList.remove('active'));
@@ -305,8 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
         epubReaderArea.style.display = 'none';
         drawingCanvas.classList.remove('active');
 
-        // Based on your GitHub, 'content' is in the same folder as 'library.html'
-        // So we use './' which means "current folder".
         const url = `./${fullPath}`;
         const fileType = fullPath.split('.').pop().toLowerCase();
 
@@ -321,7 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (fileType === 'epub') {
                 epubReaderArea.style.display = 'block';
                 state.currentBook = window.ePub(url);
-                await state.currentBook.renderTo(epubViewer, { width: "100%", height: "100%" });
+                state.currentRendition = state.currentBook.renderTo(epubViewer, { width: "100%", height: "100%" });
+                await state.currentRendition.display();
                 updateIframeStyles();
             } else if (fileType === 'txt') {
                 contentFrame.style.display = 'block';
@@ -394,7 +402,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.isEraseModeActive) return;
         const selection = contentFrame.contentWindow.getSelection();
         if (!selection || selection.isCollapsed) return;
-
         const range = selection.getRangeAt(0);
         const annotation = {
             id: `anno-${Date.now()}`, text: selection.toString(),
@@ -590,15 +597,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (minY >= page.offsetTop && minY <= page.offsetTop + page.offsetHeight) { targetPage = page; break; }
         }
         if (!targetPage) { drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height); return; }
-        const pageRect = targetPage.getBoundingClientRect();
-        const iframeRect = contentFrame.getBoundingClientRect();
         const normalizedPoints = state.drawPoints.map(p => ({ x: p.x - minX, y: p.y - minY }));
         const annotation = {
             id: `anno-${Date.now()}`, text: "[Freehand Annotation]",
             rangeData: {
                 type: 'pdf-freehand', page: targetPage.dataset.pageNumber,
                 thickness: state.settings.highlightThickness, points: normalizedPoints,
-                bounds: { x: minX - page.offsetLeft, y: minY - page.offsetTop, width: maxX - minX, height: maxY - minY }
+                bounds: { x: minX - targetPage.offsetLeft, y: minY - targetPage.offsetTop, width: maxX - minX, height: maxY - minY }
             },
             note: '', color: state.settings.activeHighlightColor
         };
@@ -653,8 +658,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const endNode = getNodeByPath(rangeData.endContainerPath, doc);
             if (!startNode || !endNode) return null;
             
-            const startContainer = startNode.childNodes.length > 0 ? startNode.childNodes[0] : startNode;
-            const endContainer = endNode.childNodes.length > 0 ? endNode.childNodes[0] : endNode;
+            const startContainer = startNode.hasChildNodes() ? startNode.childNodes[0] : startNode;
+            const endContainer = endNode.hasChildNodes() ? endNode.childNodes[0] : endNode;
 
             if (!startContainer || !endContainer) return null;
 
