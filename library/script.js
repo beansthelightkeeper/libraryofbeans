@@ -153,7 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
         epubReaderArea.style.display = 'none';
         drawingCanvas.classList.remove('active');
 
-        const url = `./${fullPath}`;
+        // THIS IS THE ONLY CHANGE
+        // Tells the script to look "up one folder" for the content
+        const url = `../${fullPath}`;
         const fileType = fullPath.split('.').pop().toLowerCase();
 
         htmlTxtControls.classList.toggle('hidden', fileType === 'pdf');
@@ -201,6 +203,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAllBookmarks();
     }
     
+    // ... all other functions are the same ...
+
     function applyFilters(){const e=searchBar.value.toLowerCase(),t=filterType.value,n=hideUncategorized.checked,o=state.allFiles.filter(o=>{const i=state.metadata[o.path]||{};if(n&&!state.metadata[o.path])return!1;const l=o.path.split(".").pop();if("all"!==t&&l!==t)return!1;const d=i.title||o.name,a=i.author||"",s=(i.subjects||[]).join(" ");return o.name.toLowerCase().includes(e)||d.toLowerCase().includes(e)||a.toLowerCase().includes(e)||s.toLowerCase().includes(e)});renderFileList(o)}
     function handleTabClick(e){const t=e.target,n=document.getElementById(t.dataset.tab);n&&(document.querySelectorAll(".annotations-panel .tab-link.active").forEach(e=>e.classList.remove("active")),document.querySelectorAll(".annotations-panel .tab-content.active").forEach(e=>e.classList.remove("active")),t.classList.add("active"),n.classList.add("active"))}
     async function renderPdfInIframe(e){if(!window.pdfjsLib)return void(contentFrame.src=e);try{const t=await window.pdfjsLib.getDocument({url:e}).promise;let n=`<style>body{margin:0;background:#525659;}.page-container{margin:1rem auto;box-shadow:0 0 10px rgba(0,0,0,0.5);position:relative;width:fit-content;}canvas{display:block;max-width:100%;height:auto;}.pdf-drawn-highlight{position:absolute;z-index:10;}</style>`;for(let e=1;e<=t.numPages;e++)n+=`<div class="page-container" data-page-number="${e}"><canvas id="pdf-canvas-${e}"></canvas></div>`;contentFrame.srcdoc=n,contentFrame.onload=async()=>{await new Promise(e=>setTimeout(e,1));const n=contentFrame.contentDocument;for(let e=1;e<=t.numPages;e++){const o=await t.getPage(e),i=o.getViewport({scale:1.5}),l=n.getElementById(`pdf-canvas-${e}`);if(l){const t=l.getContext("2d");l.height=i.height,l.width=i.width,await o.render({canvasContext:t,viewport:i}).promise}}syncDrawingCanvasSize(),setupIframeListeners(),applyAnnotationsForCurrentFile()}}catch(e){console.error("PDF Render Error:",e),contentFrame.srcdoc=`<h2>Failed to render PDF</h2><p>${e.message}</p>`}}
