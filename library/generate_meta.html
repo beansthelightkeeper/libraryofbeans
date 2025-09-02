@@ -41,7 +41,7 @@
                 if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
                 
                 const data = await response.json();
-                const libraryRoot = 'content/';
+                const libraryRoot = 'library/content/';
                 
                 const files = data.tree
                     .filter(item => item.type === 'blob' && item.path.startsWith(libraryRoot))

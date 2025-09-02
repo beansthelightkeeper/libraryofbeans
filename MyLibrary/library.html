@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library of Beans</title>
+    <link rel="stylesheet" href="library-style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
+    <script type="module">
+        try {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.mjs`;
+        } catch (err) { console.error("Failed to configure PDF.js:", err); }
+    </script>
+</head>
+<body>
+    <header class="reader-header"></header>
+    <div class="app-container">
+        <aside class="sidebar"></aside>
+        <main class="main-content"></main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

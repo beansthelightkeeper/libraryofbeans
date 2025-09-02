@@ -18,7 +18,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs" type="module"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/epubjs@0.4.2/dist/epub.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
 
     <script type="module">
         try {
@@ -35,9 +35,10 @@
 
     <header class="reader-header">
         <div class="header-group rh-nav">
-            <a href="../index.html" title="Home">⌂</a>
+            <button id="sidebar-toggle-btn" class="action-btn" title="Toggle Library">☰</button>
             <div class="nav-divider"></div>
-            <a href="../gematriamain/ciphermax.html" title="Calculator">∑</a>
+            <a href="index.html" title="Home">⌂</a>
+            <a href="#" title="Calculator">∑</a>
         </div>
 
         <div class="header-group rh-controls">
@@ -57,6 +58,10 @@
                     <input type="range" id="highlight-thickness-slider" min="2" max="30" value="15" step="1">
                 </div>
             </div>
+        </div>
+        
+        <div class="header-group rh-pagination hidden" id="epub-pagination">
+            <span>Page <span id="epub-current-page">1</span> of <span id="epub-total-pages">?</span></span>
         </div>
 
         <div class="header-group rh-actions">
@@ -98,8 +103,6 @@
     </div>
 
     <div class="app-container">
-        <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Toggle Library">‹</button>
-        
         <aside class="sidebar">
             <nav class="library-nav">
                 <section class="sidebar-section">
@@ -123,7 +126,7 @@
                 </section>
             </nav>
         </aside>
-
+        
         <main class="main-content">
             <div id="welcome-message">
                 <h2>Welcome to the Library</h2>
@@ -135,7 +138,7 @@
                  <a id="epub-next">›</a>
             </div>
             <canvas id="pdf-drawing-canvas"></canvas>
-            <iframe id="content-frame" name="content-frame" title="Document Content"></iframe>
+            <iframe id="content-frame" name="content-frame" title="Document Content" sandbox="allow-scripts allow-same-origin"></iframe>
         </main>
     </div>
 
