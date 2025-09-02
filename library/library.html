@@ -32,114 +32,16 @@
     </script>
 </head>
 <body>
-
-    <header class="reader-header">
-        <div class="header-group rh-nav">
-            <button id="sidebar-toggle-btn" class="action-btn" title="Toggle Library">☰</button>
-            <div class="nav-divider"></div>
-            <a href="index.html" title="Home">⌂</a>
-            <a href="#" title="Calculator">∑</a>
-        </div>
-
-        <div class="header-group rh-controls">
-            <div class="control" id="html-txt-controls">
-                <div class="control" title="Font Size">
-                    <span>Aa</span>
-                    <input type="range" id="font-size-slider" min="12" max="28" value="16" step="1">
-                </div>
-                <div class="control" title="Line Spacing">
-                    <span>☰</span>
-                    <input type="range" id="line-height-slider" min="1.5" max="3" value="1.7" step="0.1">
-                </div>
-            </div>
-            <div class="control hidden" id="pdf-controls">
-                <div class="control" title="Highlight Thickness">
-                    <span>⬍</span>
-                    <input type="range" id="highlight-thickness-slider" min="2" max="30" value="15" step="1">
-                </div>
-            </div>
-        </div>
-        
-        <div class="header-group rh-pagination hidden" id="epub-pagination">
-            <span>Page <span id="epub-current-page">1</span> of <span id="epub-total-pages">?</span></span>
-        </div>
-
-        <div class="header-group rh-actions">
-             <div class="color-swatch active" data-color="yellow" style="background:var(--highlight-yellow);" title="Yellow"></div>
-             <div class="color-swatch" data-color="pink" style="background:var(--highlight-pink);" title="Pink"></div>
-             <div class="color-swatch" data-color="green" style="background:var(--highlight-green);" title="Green"></div>
-             <div class="color-swatch" data-color="blue" style="background:var(--highlight-blue);" title="Blue"></div>
-             <div class="tool-divider"></div>
-             <button id="erase-mode-toggle" class="action-btn" title="Erase Highlight"> Eraser</button>
-             <div class="tool-divider"></div>
-            <button id="add-bookmark-btn" class="action-btn" title="Add Bookmark">⚑</button>
-            <button id="annotations-toggle" class="action-btn" title="Show Notes & Bookmarks">߷</button>
-            <button id="theme-toggle" class="action-btn" title="Toggle Theme">◐</button>
-        </div>
-    </header>
     
-    <div id="note-modal-overlay" class="note-modal-overlay hidden">
-        <div id="note-modal" class="note-modal">
-            <h3>Annotation Note</h3>
-            <textarea id="note-modal-textarea" placeholder="Type your note here..."></textarea>
-            <div class="note-modal-actions">
-                <button id="note-modal-cancel">Cancel</button>
-                <button id="note-modal-save">Save</button>
+    <div id="annotation-modal-overlay" class="annotation-modal-overlay hidden">
+        <div class="annotation-modal">
+            <h3>Add a Note</h3>
+            <textarea id="annotation-textarea" placeholder="Type your thoughts..."></textarea>
+            <div class="annotation-modal-actions">
+                <button id="annotation-cancel-btn" class="modal-btn-cancel">Cancel</button>
+                <button id="annotation-save-btn" class="modal-btn-save">Save</button>
             </div>
         </div>
-    </div>
-
-    <div id="annotations-panel" class="annotations-panel">
-        <div class="tabs">
-            <button class="tab-link active" data-tab="Annotations">Notes</button>
-            <button class="tab-link" data-tab="Bookmarks">Bookmarks</button>
-        </div>
-        <div id="Annotations" class="tab-content active scrollable">
-            <ul id="annotations-list"></ul>
-        </div>
-        <div id="Bookmarks" class="tab-content scrollable">
-            <ul id="bookmarks-list"></ul>
-        </div>
-    </div>
-
-    <div class="app-container">
-        <aside class="sidebar">
-            <nav class="library-nav">
-                <section class="sidebar-section">
-                    <h2>Library Contents</h2>
-                    <div class="filter-controls">
-                        <input type="search" id="search-bar" placeholder="Search files, authors...">
-                        <div class="filter-options">
-                            <select id="filter-type">
-                                <option value="all">All Types</option>
-                                <option value="pdf">PDF</option>
-                                <option value="epub">EPUB</option>
-                                <option value="html">HTML</option>
-                                <option value="txt">TXT</option>
-                            </select>
-                            <label><input type="checkbox" id="hide-uncategorized"> Hide Uncategorized</label>
-                        </div>
-                    </div>
-                    <div id="file-list-container" class="scrollable">
-                        <p>Loading library...</p>
-                    </div>
-                </section>
-            </nav>
-        </aside>
-        
-        <main class="main-content">
-            <div id="welcome-message">
-                <h2>Welcome to the Library</h2>
-                <p>Select a document from the sidebar to begin reading.</p>
-            </div>
-            <div id="epub-reader-area">
-                 <div id="epub-viewer"></div>
-                 <a id="epub-prev">‹</a>
-                 <a id="epub-next">›</a>
-            </div>
-            <canvas id="pdf-drawing-canvas"></canvas>
-            <iframe id="content-frame" name="content-frame" title="Document Content" sandbox="allow-scripts allow-same-origin"></iframe>
-        </main>
     </div>
 
     <script src="script.js"></script>

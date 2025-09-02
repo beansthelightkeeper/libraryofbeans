@@ -1,253 +1,319 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- USER CONFIGURATION ---
+    // --- APP SETUP ---
     const LIBRARY_ROOT = 'content/';
     const METADATA_FILE = 'library_meta.json';
+    const body = document.body;
 
-    // --- DOM Elements ---
-    const themeToggle = document.getElementById('theme-toggle');
-    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
-    const sidebar = document.querySelector('.sidebar');
-    const fileListContainer = document.getElementById('file-list-container');
-    const contentFrame = document.getElementById('content-frame');
-    const welcomeMessage = document.getElementById('welcome-message');
-    const drawingCanvas = document.getElementById('pdf-drawing-canvas');
-    const drawingCtx = drawingCanvas.getContext('2d');
-    const htmlTxtControls = document.getElementById('html-txt-controls');
-    const pdfControls = document.getElementById('pdf-controls');
-    const eraseModeToggle = document.getElementById('erase-mode-toggle');
-    const addBookmarkBtn = document.getElementById('add-bookmark-btn');
-    const annotationsToggle = document.getElementById('annotations-toggle');
-    const fontSizeSlider = document.getElementById('font-size-slider');
-    const lineHeightSlider = document.getElementById('line-height-slider');
-    const highlightThicknessSlider = document.getElementById('highlight-thickness-slider');
-    const colorSwatches = document.querySelectorAll('.rh-actions .color-swatch');
-    const annotationsPanel = document.getElementById('annotations-panel');
-    const annotationsList = document.getElementById('annotations-list');
-    const bookmarksList = document.getElementById('bookmarks-list');
-    const tabs = document.querySelectorAll('.annotations-panel .tab-link');
-    const noteModalOverlay = document.getElementById('note-modal-overlay');
-    const noteModalTextarea = document.getElementById('note-modal-textarea');
-    const noteModalSave = document.getElementById('note-modal-save');
-    const noteModalCancel = document.getElementById('note-modal-cancel');
-    const epubReaderArea = document.getElementById('epub-reader-area');
-    const epubViewer = document.getElementById('epub-viewer');
-    const epubPrev = document.getElementById('epub-prev');
-    const epubNext = document.getElementById('epub-next');
-    const epubPagination = document.getElementById('epub-pagination');
-    const epubCurrentPage = document.getElementById('epub-current-page');
-    const epubTotalPages = document.getElementById('epub-total-pages');
-    const searchBar = document.getElementById('search-bar');
-    const filterType = document.getElementById('filter-type');
-    const hideUncategorized = document.getElementById('hide-uncategorized');
+    function buildUI() {
+        const header = document.createElement('header');
+        header.className = 'reader-header';
+        header.innerHTML = `
+            <div class="header-group rh-nav">
+                <button id="sidebar-toggle-btn" class="action-btn" title="Toggle Library">☰</button>
+                <div class="nav-divider"></div><a href="index.html" title="Home">⌂</a>
+            </div>
+            <div class="header-group rh-controls">
+                <div class="control" id="html-txt-controls">
+                    <div title="Font Size"><span>Aa</span><input type="range" id="font-size-slider" min="12" max="28" value="16" step="1"></div>
+                    <div title="Line Spacing"><span>☰</span><input type="range" id="line-height-slider" min="1.5" max="3" value="1.7" step="0.1"></div>
+                </div>
+                <div class="control hidden" id="pdf-controls"><div title="Highlight Thickness"><span>⬍</span><input type="range" id="highlight-thickness-slider" min="2" max="30" value="15" step="1"></div></div>
+            </div>
+            <div class="header-group rh-pagination hidden" id="epub-pagination">
+                <button id="epub-flow-toggle" class="action-btn" title="Toggle Scroll/Page Mode">📜</button>
+                <span>Page <span id="epub-current-page">1</span> of <span id="epub-total-pages">?</span></span>
+            </div>
+            <div class="header-group rh-actions">
+                <div class="color-swatch active" data-color="yellow" style="background:var(--highlight-yellow);" title="Yellow"></div><div class="color-swatch" data-color="pink" style="background:var(--highlight-pink);" title="Pink"></div>
+                <div class="color-swatch" data-color="green" style="background:var(--highlight-green);" title="Green"></div><div class="color-swatch" data-color="blue" style="background:var(--highlight-blue);" title="Blue"></div>
+                <div class="tool-divider"></div><button id="erase-mode-toggle" class="action-btn" title="Erase Highlight">Eraser</button>
+                <div class="tool-divider"></div><button id="add-bookmark-btn" class="action-btn" title="Add Bookmark">⚑</button>
+                <button id="annotations-toggle" class="action-btn" title="Show Notes & Bookmarks">߷</button>
+                <button id="theme-toggle" class="action-btn" title="Toggle Theme">◐</button>
+            </div>`;
 
-    // --- App State ---
+        const appContainer = document.createElement('div');
+        appContainer.className = 'app-container';
+        appContainer.innerHTML = `
+            <aside class="sidebar"><nav class="library-nav"><section class="sidebar-section"><h2>Library Contents</h2><div class="filter-controls"><input type="search" id="search-bar" placeholder="Search..."><select id="filter-type"><option value="all">All Types</option><option value="pdf">PDF</option><option value="epub">EPUB</option><option value="html">HTML</option><option value="txt">TXT</option></select></div><div id="file-list-container" class="scrollable"><p>Loading library...</p></div></section></nav></aside>
+            <main class="main-content">
+                <div id="welcome-message"><h2>Welcome</h2><p>Select a document to begin.</p></div>
+                <div id="pdf-viewer-area"></div>
+                <div id="epub-reader-area"><div id="epub-viewer"></div><a id="epub-prev">‹</a><a id="epub-next">›</a></div>
+                <iframe id="content-frame" name="content-frame" title="Document Content" sandbox="allow-same-origin"></iframe>
+            </main>`;
+        
+        body.prepend(appContainer);
+        body.prepend(header);
+    }
+    
+    buildUI();
+
+    const dom = {
+        themeToggle: document.getElementById('theme-toggle'), sidebarToggleBtn: document.getElementById('sidebar-toggle-btn'), sidebar: document.querySelector('.sidebar'), fileListContainer: document.getElementById('file-list-container'),
+        contentFrame: document.getElementById('content-frame'), welcomeMessage: document.getElementById('welcome-message'), 
+        pdfViewerArea: document.getElementById('pdf-viewer-area'),
+        htmlTxtControls: document.getElementById('html-txt-controls'), pdfControls: document.getElementById('pdf-controls'), eraseModeToggle: document.getElementById('erase-mode-toggle'),
+        addBookmarkBtn: document.getElementById('add-bookmark-btn'), annotationsToggle: document.getElementById('annotations-toggle'), fontSizeSlider: document.getElementById('font-size-slider'),
+        lineHeightSlider: document.getElementById('line-height-slider'), highlightThicknessSlider: document.getElementById('highlight-thickness-slider'),
+        colorSwatches: document.querySelectorAll('.rh-actions .color-swatch'),
+        epubReaderArea: document.getElementById('epub-reader-area'), epubViewer: document.getElementById('epub-viewer'), epubPrev: document.getElementById('epub-prev'), epubNext: document.getElementById('epub-next'),
+        epubPagination: document.getElementById('epub-pagination'), epubCurrentPage: document.getElementById('epub-current-page'), epubTotalPages: document.getElementById('epub-total-pages'),
+        epubFlowToggle: document.getElementById('epub-flow-toggle'), searchBar: document.getElementById('search-bar'), filterType: document.getElementById('filter-type'),
+        annotationModalOverlay: document.getElementById('annotation-modal-overlay'),
+        annotationTextarea: document.getElementById('annotation-textarea'),
+        annotationSaveBtn: document.getElementById('annotation-save-btn'),
+        annotationCancelBtn: document.getElementById('annotation-cancel-btn'),
+    };
+
     const state = {
         currentFile: null, currentBook: null, currentRendition: null,
-        isEraseModeActive: false, isDrawing: false, drawPoints: [],
-        currentNoteCallback: null, allFiles: [], metadata: {},
-        settings: {
-            theme: 'dark', fontSize: 16, lineHeight: 1.7, highlightThickness: 15,
-            sidebarMinimized: false, activeHighlightColor: 'yellow',
-        },
-        annotations: {}, bookmarks: {},
+        isEraseModeActive: false, currentCfi: null,
+        allFiles: [], metadata: {},
+        settings: { theme: 'dark', fontSize: 16, lineHeight: 1.7, highlightThickness: 15, sidebarMinimized: false, activeHighlightColor: 'yellow', epubFlow: 'paginated' },
+        annotations: {},
     };
-    
-    const ICONS = { sun: '☀', moon: '☾' };
 
     async function initialize() {
         loadSettings();
         loadAnnotations();
-        loadBookmarks();
         await fetchAndOrganizeFiles();
-        applySettings();
+        applySettings(); 
         setupEventListeners();
-        renderAllBookmarks();
         toggleReaderTools(false);
     }
 
     async function fetchAndOrganizeFiles() {
         try {
-            fileListContainer.innerHTML = '<p>Loading library...</p>';
+            dom.fileListContainer.innerHTML = '<p>Loading library...</p>';
             const response = await fetch(`./${METADATA_FILE}`);
-            if (!response.ok) throw new Error(`Could not load ${METADATA_FILE}`);
+            if (!response.ok) throw new Error(`Could not find ${METADATA_FILE}`);
             const metaObject = await response.json();
             state.metadata = metaObject;
-            const filePaths = Object.keys(metaObject);
-            state.allFiles = filePaths
-                .map(path => ({
-                    name: path.substring(LIBRARY_ROOT.length).replace(/\.(html|pdf|epub|txt)$/i, '').replace(/_/g, ' '),
-                    path: path
-                }))
+            state.allFiles = Object.keys(metaObject)
+                .map(path => ({ name: path.substring(LIBRARY_ROOT.length).replace(/\.(html|pdf|epub|txt)$/i, '').replace(/_/g, ' '), path }))
                 .sort((a, b) => a.name.localeCompare(b.name));
             renderFileList(state.allFiles);
         } catch (error) {
-            console.error("Failed to load library from metadata:", error);
-            fileListContainer.innerHTML = `<p style="padding:10px;color:red;">Error: Could not load library. Please check your 'library_meta.json' file.</p>`;
+            console.error("Failed to load library:", error);
+            dom.fileListContainer.innerHTML = `<p style="padding:10px;color:red;">Error: ${error.message}. Check your 'library_meta.json' file.</p>`;
         }
     }
-    
+
     function renderFileList(files) {
-        const ul = document.createElement('ul');
+        let listHtml = '';
         if (files.length > 0) {
             const icons = ['☤', '☥', '☧', '☩', '♁', '⚚', '⚛'];
             files.forEach((file, i) => {
                 const meta = state.metadata[file.path] || {};
-                const displayName = meta.title || file.name;
-                const displayAuthor = meta.author ? `<div class="file-author">${meta.author}</div>` : '';
-                const li = document.createElement('li');
-                const a = document.createElement('a');
-                a.href = '#';
-                a.dataset.path = file.path;
-                a.innerHTML = `<span class="file-icon">${icons[i % icons.length]}</span><div><span class="file-name">${displayName}</span>${displayAuthor}</div>`;
-                a.onclick = (e) => { e.preventDefault(); loadFile(file.path); };
-                li.appendChild(a);
-                ul.appendChild(li);
+                const authorHtml = meta.author ? `<div class="file-author">${meta.author}</div>` : '';
+                listHtml += `<li><a href="#" data-path="${file.path}"><span class="file-icon">${icons[i % icons.length]}</span><div><span class="file-name">${meta.title || file.name}</span>${authorHtml}</div></a></li>`;
             });
+            dom.fileListContainer.innerHTML = `<ul>${listHtml}</ul>`;
+            dom.fileListContainer.querySelectorAll('a').forEach(a => a.onclick = (e) => { e.preventDefault(); loadFile(a.dataset.path); });
         } else {
-             ul.innerHTML = '<li>No matching files found.</li>';
+            dom.fileListContainer.innerHTML = '<ul><li>No files found.</li></ul>';
         }
-        fileListContainer.innerHTML = ''; 
-        fileListContainer.appendChild(ul);
     }
 
     function setupEventListeners() {
-        themeToggle.addEventListener('click', toggleTheme);
-        sidebarToggleBtn.addEventListener('click', toggleSidebarMinimize);
-        eraseModeToggle.addEventListener('click', toggleEraseMode);
-        addBookmarkBtn.addEventListener('click', addBookmark);
-        annotationsToggle.addEventListener('click', () => annotationsPanel.classList.toggle('open'));
-        fontSizeSlider.addEventListener('input', e => updateSetting('fontSize', e.target.value, updateIframeStyles));
-        lineHeightSlider.addEventListener('input', e => updateSetting('lineHeight', e.target.value, updateIframeStyles));
-        highlightThicknessSlider.addEventListener('input', e => updateSetting('highlightThickness', e.target.value));
-        contentFrame.addEventListener('load', onIframeLoad);
-        colorSwatches.forEach(swatch => swatch.addEventListener('click', handleColorChange));
-        tabs.forEach(tab => tab.addEventListener('click', handleTabClick));
-        noteModalSave.addEventListener('click', () => {
-            if (state.currentNoteCallback) state.currentNoteCallback(noteModalTextarea.value);
-            hideNoteModal();
+        dom.themeToggle.addEventListener('click', () => updateSetting('theme', state.settings.theme === 'dark' ? 'light' : 'dark', applySettings));
+        dom.sidebarToggleBtn.addEventListener('click', () => updateSetting('sidebarMinimized', !state.settings.sidebarMinimized, applySettings));
+        dom.eraseModeToggle.addEventListener('click', () => {
+            state.isEraseModeActive = !state.isEraseModeActive;
+            applySettings();
         });
-        noteModalCancel.addEventListener('click', hideNoteModal);
-        drawingCanvas.addEventListener('mousedown', startDrawing);
-        drawingCanvas.addEventListener('mousemove', draw);
-        drawingCanvas.addEventListener('mouseup', endDrawing);
-        drawingCanvas.addEventListener('mouseleave', endDrawing);
-        epubPrev.addEventListener('click', () => state.currentRendition?.prev());
-        epubNext.addEventListener('click', () => state.currentRendition?.next());
-        searchBar.addEventListener('input', applyFilters);
-        filterType.addEventListener('change', applyFilters);
-        hideUncategorized.addEventListener('change', applyFilters);
+        dom.colorSwatches.forEach(swatch => swatch.addEventListener('click', e => {
+            state.isEraseModeActive = false;
+            updateSetting('activeHighlightColor', e.target.dataset.color, applySettings);
+        }));
+        dom.fontSizeSlider.addEventListener('input', e => updateSetting('fontSize', e.target.value, updateReaderStyles));
+        dom.lineHeightSlider.addEventListener('input', e => updateSetting('lineHeight', e.target.value, updateReaderStyles));
+        dom.contentFrame.addEventListener('load', () => updateReaderStyles());
+        dom.epubPrev.addEventListener('click', () => state.currentRendition?.prev());
+        dom.epubNext.addEventListener('click', () => state.currentRendition?.next());
+        dom.epubFlowToggle.addEventListener('click', () => {
+            const newFlow = state.settings.epubFlow === 'paginated' ? 'scrolled-doc' : 'paginated';
+            updateSetting('epubFlow', newFlow, () => {
+                if (state.currentFile) loadFile(state.currentFile);
+            });
+        });
+        dom.searchBar.addEventListener('input', applyFilters);
+        dom.filterType.addEventListener('change', applyFilters);
+        dom.annotationCancelBtn.addEventListener('click', () => dom.annotationModalOverlay.classList.add('hidden'));
+        dom.annotationSaveBtn.addEventListener('click', saveAnnotation);
     }
 
     async function loadFile(fullPath) {
-        if (state.currentFile === fullPath) return;
+        if (!fullPath) return;
         state.currentFile = fullPath;
-        state.currentBook = null;
-        state.currentRendition = null;
+        dom.welcomeMessage.style.display = 'none';
         
-        welcomeMessage.style.display = 'none';
-        document.querySelectorAll('#file-list-container li.active').forEach(el => el.classList.remove('active'));
-        const activeLink = document.querySelector(`#file-list-container a[data-path="${fullPath}"]`);
-        if (activeLink) activeLink.parentElement.classList.add('active');
+        dom.contentFrame.style.display = 'none';
+        dom.epubReaderArea.style.display = 'none';
+        dom.pdfViewerArea.style.display = 'none';
         
-        contentFrame.style.display = 'none';
-        epubReaderArea.style.display = 'none';
-        drawingCanvas.classList.remove('active');
-
-        // THIS IS THE ONLY CHANGE
-        // Tells the script to look "up one folder" for the content
-        const url = `../${fullPath}`;
         const fileType = fullPath.split('.').pop().toLowerCase();
 
-        htmlTxtControls.classList.toggle('hidden', fileType === 'pdf');
-        pdfControls.classList.toggle('hidden', fileType !== 'pdf');
+        dom.htmlTxtControls.classList.toggle('hidden', fileType !== 'html' && fileType !== 'txt');
+        dom.pdfControls.classList.toggle('hidden', fileType !== 'pdf');
+        dom.epubPagination.classList.toggle('hidden', fileType !== 'epub');
+        dom.epubReaderArea.classList.toggle('scrolled-epub', fileType === 'epub' && state.settings.epubFlow !== 'paginated');
         
-        epubPagination.classList.add('hidden'); 
-        epubPrev.style.display = 'none';
-        epubNext.style.display = 'none';
-
         try {
             if (fileType === 'pdf') {
-                contentFrame.style.display = 'block';
-                contentFrame.srcdoc = '<p style="text-align:center;padding:2rem;">Loading PDF...</p>';
-                await renderPdfInIframe(url);
+                dom.pdfViewerArea.style.display = 'block';
+                const url = new URL(`../${fullPath}`, window.location.href).href;
+                await renderPdf(url);
             } else if (fileType === 'epub') {
-                epubReaderArea.style.display = 'block';
-                state.currentBook = window.ePub(url);
-                state.currentRendition = state.currentBook.renderTo(epubViewer, { 
-                    flow: "scrolled-doc",
-                    width: "100%", 
-                    height: "100%" 
-                });
-                await state.currentRendition.display();
-                updateIframeStyles();
-            } else if (fileType === 'txt') {
-                contentFrame.style.display = 'block';
+                dom.epubReaderArea.style.display = 'block';
+                await renderEpub(fullPath);
+            } else { 
+                dom.contentFrame.style.display = 'block';
+                const url = new URL(`../${fullPath}`, window.location.href).href;
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-                const text = await response.text();
-                const htmlContent = text.split(/\n\s*\n/).map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
-                contentFrame.srcdoc = `<html><head></head><body>${htmlContent}</body></html>`;
-            } else { // HTML
-                contentFrame.style.display = 'block';
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-                contentFrame.srcdoc = await response.text();
+                let content = await response.text();
+                if (fileType === 'txt') content = `<pre style="white-space:pre-wrap;font-family:inherit;">${content}</pre>`;
+                dom.contentFrame.srcdoc = `<html><head></head><body>${content}</body></html>`;
             }
             toggleReaderTools(true);
         } catch (error) { 
             console.error("Error loading file:", error);
-            contentFrame.style.display = 'block';
-            contentFrame.srcdoc = `<h2>Error loading file</h2><p>Could not load ${fullPath}</p><p>${error.message}</p>`; 
+            dom.welcomeMessage.style.display = 'block';
+            dom.welcomeMessage.innerHTML = `<h2>Error loading file</h2><p>${error.message}</p>`; 
         }
-        renderAnnotationsForCurrentFile();
-        renderAllBookmarks();
+    }
+
+    async function renderPdf(url) {
+        if (!window.pdfjsLib) throw new Error("PDF.js is not loaded.");
+        
+        dom.pdfViewerArea.innerHTML = '<p style="color:white;padding:2rem;">Loading PDF...</p>';
+        const pdf = await window.pdfjsLib.getDocument(url).promise;
+        dom.pdfViewerArea.innerHTML = '';
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const viewport = page.getViewport({ scale: 1.5 });
+            const canvas = document.createElement('canvas');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            dom.pdfViewerArea.appendChild(canvas);
+            // THIS IS THE PDF FIX: It was 'd' instead of '2d'
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
+        }
     }
     
-    // ... all other functions are the same ...
+    async function renderEpub(fullPath) {
+        if (state.currentRendition) state.currentRendition.destroy();
+        state.currentBook = null;
+        state.currentRendition = null;
+        dom.epubViewer.innerHTML = '';
 
-    function applyFilters(){const e=searchBar.value.toLowerCase(),t=filterType.value,n=hideUncategorized.checked,o=state.allFiles.filter(o=>{const i=state.metadata[o.path]||{};if(n&&!state.metadata[o.path])return!1;const l=o.path.split(".").pop();if("all"!==t&&l!==t)return!1;const d=i.title||o.name,a=i.author||"",s=(i.subjects||[]).join(" ");return o.name.toLowerCase().includes(e)||d.toLowerCase().includes(e)||a.toLowerCase().includes(e)||s.toLowerCase().includes(e)});renderFileList(o)}
-    function handleTabClick(e){const t=e.target,n=document.getElementById(t.dataset.tab);n&&(document.querySelectorAll(".annotations-panel .tab-link.active").forEach(e=>e.classList.remove("active")),document.querySelectorAll(".annotations-panel .tab-content.active").forEach(e=>e.classList.remove("active")),t.classList.add("active"),n.classList.add("active"))}
-    async function renderPdfInIframe(e){if(!window.pdfjsLib)return void(contentFrame.src=e);try{const t=await window.pdfjsLib.getDocument({url:e}).promise;let n=`<style>body{margin:0;background:#525659;}.page-container{margin:1rem auto;box-shadow:0 0 10px rgba(0,0,0,0.5);position:relative;width:fit-content;}canvas{display:block;max-width:100%;height:auto;}.pdf-drawn-highlight{position:absolute;z-index:10;}</style>`;for(let e=1;e<=t.numPages;e++)n+=`<div class="page-container" data-page-number="${e}"><canvas id="pdf-canvas-${e}"></canvas></div>`;contentFrame.srcdoc=n,contentFrame.onload=async()=>{await new Promise(e=>setTimeout(e,1));const n=contentFrame.contentDocument;for(let e=1;e<=t.numPages;e++){const o=await t.getPage(e),i=o.getViewport({scale:1.5}),l=n.getElementById(`pdf-canvas-${e}`);if(l){const t=l.getContext("2d");l.height=i.height,l.width=i.width,await o.render({canvasContext:t,viewport:i}).promise}}syncDrawingCanvasSize(),setupIframeListeners(),applyAnnotationsForCurrentFile()}}catch(e){console.error("PDF Render Error:",e),contentFrame.srcdoc=`<h2>Failed to render PDF</h2><p>${e.message}</p>`}}
-    function onIframeLoad(){contentFrame.src&&contentFrame.src.startsWith("blob:")||state.currentFile&&(state.currentFile.endsWith(".html")||state.currentFile.endsWith(".txt"))&&(updateIframeStyles(),setupIframeListeners(),applyAnnotationsForCurrentFile())}
-    function setupIframeListeners(){const e=contentFrame.contentDocument;e&&(e.addEventListener("mouseup",createAnnotationFromSelection),e.addEventListener("click",handleIframeInteraction))}
-    function applySettings(){document.body.classList.toggle("dark-mode","dark"===state.settings.theme),themeToggle.textContent="dark"===state.settings.theme?ICONS.sun:ICONS.moon,fontSizeSlider.value=state.settings.fontSize,lineHeightSlider.value=state.settings.lineHeight,highlightThicknessSlider.value=state.settings.highlightThickness,sidebar.classList.toggle("minimized",state.settings.sidebarMinimized),eraseModeToggle.classList.toggle("active",state.isEraseModeActive),colorSwatches.forEach(e=>e.classList.toggle("active",!state.isEraseModeActive&&e.dataset.color===state.settings.activeHighlightColor)),updateIframeStyles()}
-    function toggleTheme(){updateSetting("theme","dark"===state.settings.theme?"light":"dark",applySettings)}
-    function toggleSidebarMinimize(){updateSetting("sidebarMinimized",!state.settings.sidebarMinimized,applySettings)}
-    function handleColorChange(e){state.isEraseModeActive&&toggleEraseMode(),updateSetting("activeHighlightColor",e.target.dataset.color,applySettings)}
-    function updateIframeStyles(){const e=contentFrame.contentDocument;if(e&&e.head){let t=e.getElementById("dynamic-reader-styles");t||(t=e.createElement("style"),t.id="dynamic-reader-styles",e.head.appendChild(t));const n=getComputedStyle(document.body);t.innerHTML=`body{font-size:${state.settings.fontSize}px;line-height:${state.settings.lineHeight};color:${n.getPropertyValue("--text-primary")};background-color:${n.getPropertyValue("--bg-primary")};font-family:'Arimo',sans-serif;padding:2rem;max-width:800px;margin:0 auto;}.pdf-highlight{background-color:var(--highlight-${state.settings.activeHighlightColor});cursor:pointer;}`}
-    if(state.currentRendition){const e={body:{color:getComputedStyle(document.body).getPropertyValue("--text-primary"),"font-size":`${state.settings.fontSize}px !important`,"line-height":`${state.settings.lineHeight} !important`,"font-family":"'Arimo', sans-serif !important"}};state.currentRendition.themes.register("custom",e),state.currentRendition.themes.select("custom")}}
-    function toggleReaderTools(e){document.querySelectorAll(".rh-actions button, .rh-actions .color-swatch, .rh-controls .control").forEach(t=>{t.style.opacity=e?"1":"0.5",t.style.pointerEvents=e?"auto":"none"})}
-    function toggleEraseMode(){state.isEraseModeActive=!state.isEraseModeActive,applySettings()}
-    function showNoteModal(e="",t){noteModalTextarea.value=e,state.currentNoteCallback=t,noteModalOverlay.classList.remove("hidden"),noteModalTextarea.focus()}
-    function hideNoteModal(){noteModalOverlay.classList.add("hidden"),state.currentNoteCallback=null}
-    function handleIframeInteraction(e){const t=e.target.closest('[id^="anno-"]');t&&(state.isEraseModeActive?eraseAnnotation(t):editAnnotationNote(t.id))}
-    function editAnnotationNote(e){const t=findAnnotation(e);t&&showNoteModal(t.note,e=>{t.note=e,saveAndApplyAnnotation(t)})}
-    function createAnnotationFromSelection(){if(state.isEraseModeActive)return;const e=contentFrame.contentWindow.getSelection();if(!e||e.isCollapsed)return;const t=e.getRangeAt(0),n={id:`anno-${Date.now()}`,text:e.toString(),rangeData:serializeHtmlRange(t,contentFrame.contentDocument),note:"",color:state.settings.activeHighlightColor};e.removeAllRanges(),showNoteModal("",e=>{n.note=e,saveAndApplyAnnotation(n)})}
-    function saveAndApplyAnnotation(e){state.annotations[state.currentFile]||(state.annotations[state.currentFile]=[]);const t=state.annotations[state.currentFile].findIndex(t=>t.id===e.id);t>-1?state.annotations[state.currentFile][t]=e:state.annotations[state.currentFile].push(e),saveAnnotations(),renderAnnotationsForCurrentFile()}
-    function eraseAnnotation(e){const t=e.id;state.annotations[state.currentFile]&&(state.annotations[state.currentFile]=state.annotations[state.currentFile].filter(e=>e.id!==t),saveAnnotations(),renderAnnotationsForCurrentFile())}
-    function applyAnnotationsForCurrentFile(){if(!state.currentFile)return;(state.annotations[state.currentFile]||[]).forEach(applyAnnotationToDOM)}
-    function addBookmark(){if(!state.currentFile||!contentFrame.contentWindow)return;const e=contentFrame.contentWindow;let t="Top of page";if(e.document&&e.document.body){t=(Array.from(e.document.body.querySelectorAll("p, h1, h2, h3, .page-container")).find(e=>e.getBoundingClientRect().top>0)||{textContent:"Top of page"}).textContent.trim().substring(0,100)+"..."}const n={file:state.currentFile,snippet:t,scrollY:e.scrollY,timestamp:Date.now()};state.bookmarks[state.currentFile]||(state.bookmarks[state.currentFile]=[]),state.bookmarks[state.currentFile].push(n),saveBookmarks(),renderAllBookmarks()}
-    function renderAllBookmarks(){bookmarksList.innerHTML="";const e=Object.values(state.bookmarks).flat().sort((e,t)=>t.timestamp-e.timestamp);if(0===e.length)return void(bookmarksList.innerHTML="<li>No bookmarks yet.</li>");e.forEach(e=>{const t=state.metadata[e.file]||{},n=t.title||e.file.substring(LIBRARY_ROOT.length).replace(/\.(html|pdf|epub|txt)$/i,""),o=t.author?`<div class="bookmark-author">${t.author}</div>`:"",i=document.createElement("li");i.innerHTML=`<div class="bookmark-title">${n}</div>${o}<div class="bookmark-snippet">${e.snippet}</div>`,i.onclick=()=>{state.currentFile!==e.file?(contentFrame.onload=()=>{contentFrame.contentWindow.scrollTo({top:e.scrollY,behavior:"smooth"}),contentFrame.onload=onIframeLoad},loadFile(e.file)):contentFrame.contentWindow.scrollTo({top:e.scrollY,behavior:"smooth"})},bookmarksList.appendChild(i)})}
-    function syncDrawingCanvasSize(){const e=contentFrame.contentDocument;e&&e.body&&(drawingCanvas.width=e.body.scrollWidth,drawingCanvas.height=e.body.scrollHeight)}
-    function startDrawing(e){if(!state.currentFile||!state.currentFile.toLowerCase().endsWith(".pdf")||state.isEraseModeActive)return;state.isDrawing=!0,drawingCanvas.classList.add("active"),drawingCtx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height),drawingCtx.strokeStyle=getComputedStyle(document.body).getPropertyValue(`--highlight-${state.settings.activeHighlightColor}`),drawingCtx.lineWidth=state.settings.highlightThickness,drawingCtx.lineCap="round",drawingCtx.lineJoin="round";const t=drawingCanvas.getBoundingClientRect(),n={x:e.clientX-t.left+contentFrame.contentWindow.scrollX,y:e.clientY-t.top+contentFrame.contentWindow.scrollY};state.drawPoints=[n],drawingCtx.beginPath(),drawingCtx.moveTo(n.x,n.y)}
-    function draw(e){if(!state.isDrawing)return;const t=drawingCanvas.getBoundingClientRect(),n={x:e.clientX-t.left+contentFrame.contentWindow.scrollX,y:e.clientY-t.top+contentFrame.contentWindow.scrollY};state.drawPoints.push(n),drawingCtx.lineTo(n.x,n.y),drawingCtx.stroke()}
-    function endDrawing(){if(!state.isDrawing)return;state.isDrawing=!1,drawingCanvas.classList.remove("active");if(state.drawPoints.length<2)return void drawingCtx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height);const e=contentFrame.contentDocument;let t=1/0,n=1/0,o=-1/0,i=-1/0;state.drawPoints.forEach(e=>{t=Math.min(t,e.x),n=Math.min(n,e.y),o=Math.max(o,e.x),i=Math.max(i,e.y)});let l=null;for(const t of e.querySelectorAll(".page-container"))if(n>=t.offsetTop&&n<=t.offsetTop+t.offsetHeight){l=t;break}if(!l)return void drawingCtx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height);const d=state.drawPoints.map(e=>({x:e.x-t,y:e.y-n})),a={id:`anno-${Date.now()}`,text:"[Freehand Annotation]",rangeData:{type:"pdf-freehand",page:l.dataset.pageNumber,thickness:state.settings.highlightThickness,points:d,bounds:{x:t-l.offsetLeft,y:n-l.offsetTop,width:o-t,height:i-n}},note:"",color:state.settings.activeHighlightColor};showNoteModal("",e=>{a.note=e,saveAndApplyAnnotation(a),drawingCtx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height)})}
-    function updateSetting(e,t,n){state.settings[e]=t,saveSettings(),n&&n()}
-    function findAnnotation(e){return(state.annotations[state.currentFile]||[]).find(t=>t.id===e)}
-    function saveData(e,t){localStorage.setItem(e,JSON.stringify(t))}
-    function loadData(e){return JSON.parse(localStorage.getItem(e)||"{}")}
-    function saveSettings(){saveData("beansReaderSettings_v9",state.settings)}
-    function loadSettings(){Object.assign(state.settings,loadData("beansReaderSettings_v9"))}
-    function saveAnnotations(){saveData("beansReaderAnnotations_v9",state.annotations)}
-    function loadAnnotations(){Object.assign(state.annotations,loadData("beansReaderAnnotations_v9"))}
-    function saveBookmarks(){saveData("beansReaderBookmarks_v9",state.bookmarks)}
-    function loadBookmarks(){Object.assign(state.bookmarks,loadData("beansReaderBookmarks_v9"))}
-    function getPathTo(e,t){if(e.nodeType===Node.TEXT_NODE&&(e=e.parentNode),!e||e===t.body)return"BODY";let n="";for(;e&&e!==t.body;){let t=Array.from(e.parentNode.childNodes).filter(t=>t.nodeName===e.nodeName).indexOf(e);n=`${e.tagName}:nth-of-type(${t+1})>${n}`,e=e.parentNode}return`BODY>${n.slice(0,-1)}`}
-    function getNodeByPath(e,t){try{return t.querySelector(e)}catch(n){return console.error("Could not find node by path:",e,n),null}}
-    function serializeHtmlRange(e,t){return{type:"html",startContainerPath:getPathTo(e.startContainer,t),startOffset:e.startOffset,endContainerPath:getPathTo(e.endContainer,t),endOffset:e.endOffset}}
-    function deserializeHtmlRange(e,t){try{const n=getNodeByPath(e.startContainerPath,t),o=getNodeByPath(e.endContainerPath,t);if(!n||!o)return null;const i=n.hasChildNodes()?n.childNodes[0]:n,l=o.hasChildNodes()?o.childNodes[0]:o;if(!i||!l)return null;const d=t.createRange();return d.setStart(i,e.startOffset),d.setEnd(l,e.endOffset),d}catch(e){return console.error("Failed to deserialize range:",e),null}}
-    function renderAnnotationsForCurrentFile(){const e=contentFrame.contentDocument;if(!e||!e.body)return;e.querySelectorAll('[id^="anno-"]').forEach(e=>{const t=e.parentNode;for(;e.firstChild;)t.insertBefore(e.firstChild,e);t.removeChild(e),t.normalize()}),state.currentFile&&state.annotations[state.currentFile]&&applyAnnotationsForCurrentFile(),annotationsList.innerHTML="";const t=state.annotations[state.currentFile]||[];if(0===t.length)return void(annotationsList.innerHTML="<li>No notes for this document.</li>");t.forEach(e=>{const t=document.createElement("li");t.innerHTML=`<div class="annotation-note">${e.note||"<em>No note added...</em>"}</div><div class="annotation-text">${e.text}</div>`,annotationsList.appendChild(t)})}
-    function applyAnnotationToDOM(e){const t=contentFrame.contentDocument;if(!t)return;if("pdf-freehand"===e.rangeData.type){const n=t.querySelector(`.page-container[data-page-number="${e.rangeData.page}"]`);if(!n)return;const o=t.createElement("canvas");o.id=e.id,o.className="pdf-drawn-highlight",o.style.cssText=`position:absolute;left:${e.rangeData.bounds.x}px;top:${e.rangeData.bounds.y}px;pointer-events:all;cursor:pointer;opacity:0.7;`,o.width=e.rangeData.bounds.width,o.height=e.rangeData.bounds.height,o.title=e.note||"Click to add a note",n.appendChild(o);const i=o.getContext("2d");if(i.strokeStyle=getComputedStyle(document.body).getPropertyValue(`--highlight-${e.color}`),i.lineWidth=e.rangeData.thickness,i.lineCap="round",i.lineJoin="round",i.beginPath(),e.rangeData.points&&e.rangeData.points.length>0){i.moveTo(e.rangeData.points[0].x,e.rangeData.points[0].y);for(let t=1;t<e.rangeData.points.length;t++)i.lineTo(e.rangeData.points[t].x,e.rangeData.points[t].y);i.stroke()}}else if("html"===e.rangeData.type){const n=deserializeHtmlRange(e.rangeData,t);if(!n)return;const o=t.createElement("span");o.id=e.id,o.className="pdf-highlight",o.style.backgroundColor=`var(--highlight-${e.color})`,o.title=e.note||"Click to add a note";const i=n.extractContents();o.appendChild(i),n.insertNode(o)}}
+        // --- THIS IS THE EPUB FIX ---
+        // We revert to the simple, relative path which is more robust.
+        const bookUrl = `../${fullPath}`;
+        state.currentBook = window.ePub(bookUrl);
+        
+        await state.currentBook.ready;
+        
+        const renditionOptions = {
+            manager: state.settings.epubFlow === 'scrolled-doc' ? 'continuous' : 'default',
+            flow: state.settings.epubFlow,
+        };
 
+        if (state.settings.epubFlow === 'paginated') {
+            renditionOptions.width = "100%";
+            renditionOptions.height = "100%";
+        }
+
+        state.currentRendition = state.currentBook.renderTo(dom.epubViewer, renditionOptions);
+
+        const handleHighlightClick = (cfiRange) => {
+            if (state.isEraseModeActive) {
+                state.currentRendition.annotations.remove(cfiRange, "highlight");
+                state.annotations[state.currentFile] = state.annotations[state.currentFile].filter(a => a.cfi !== cfiRange);
+                saveAnnotations();
+            } else {
+                showAnnotationModal(cfiRange);
+            }
+        };
+
+        state.currentRendition.on("selected", (cfiRange, contents) => {
+            const color = state.settings.activeHighlightColor;
+            state.currentRendition.annotations.add("highlight", cfiRange, {}, handleHighlightClick, "hl", { "fill": color, "fill-opacity": "0.5", "mix-blend-mode": "multiply" });
+            contents.window.getSelection().removeAllRanges();
+            
+            if (!state.annotations[state.currentFile]) state.annotations[state.currentFile] = [];
+            state.annotations[state.currentFile].push({ cfi: cfiRange, color: color, note: "" });
+            saveAnnotations();
+        });
+
+        await state.currentRendition.display();
+
+        (state.annotations[state.currentFile] || []).forEach(anno => {
+            state.currentRendition.annotations.add("highlight", anno.cfi, {}, handleHighlightClick, "hl", { "fill": anno.color, "fill-opacity": "0.5", "mix-blend-mode": "multiply" });
+        });
+
+        const isPaginated = state.settings.epubFlow === 'paginated';
+        dom.epubPrev.style.display = isPaginated ? 'flex' : 'none';
+        dom.epubNext.style.display = isPaginated ? 'flex' : 'none';
+        dom.epubPagination.querySelector('span').style.visibility = isPaginated ? 'visible' : 'hidden';
+
+        if (isPaginated) {
+            await state.currentBook.locations.generate(1650);
+            dom.epubTotalPages.textContent = state.currentBook.locations.total;
+            state.currentRendition.on("relocated", location => {
+                dom.epubCurrentPage.textContent = state.currentBook.locations.locationFromCfi(location.start.cfi);
+            });
+        }
+        updateReaderStyles();
+    }
+
+    function showAnnotationModal(cfi) {
+        state.currentCfi = cfi;
+        const existingAnnotation = (state.annotations[state.currentFile] || []).find(a => a.cfi === cfi);
+        dom.annotationTextarea.value = existingAnnotation?.note || "";
+        dom.annotationModalOverlay.classList.remove('hidden');
+        dom.annotationTextarea.focus();
+    }
+
+    function saveAnnotation() {
+        const annotation = (state.annotations[state.currentFile] || []).find(a => a.cfi === state.currentCfi);
+        if (annotation) {
+            annotation.note = dom.annotationTextarea.value;
+            saveAnnotations();
+        }
+        dom.annotationModalOverlay.classList.add('hidden');
+        state.currentCfi = null;
+    }
+
+    function applySettings() {
+        body.classList.toggle("dark-mode", state.settings.theme === 'dark');
+        dom.sidebar.classList.toggle("minimized", state.settings.sidebarMinimized);
+        dom.epubFlowToggle.textContent = state.settings.epubFlow === 'paginated' ? '📜' : '📖';
+        dom.epubFlowToggle.title = state.settings.epubFlow === 'paginated' ? 'Switch to Scroll Mode' : 'Switch to Page Mode';
+        
+        dom.eraseModeToggle.classList.toggle('active', state.isEraseModeActive);
+        dom.colorSwatches.forEach(s => s.classList.toggle('active', !state.isEraseModeActive && s.dataset.color === state.settings.activeHighlightColor));
+        updateReaderStyles();
+    }
+    
+    function updateReaderStyles() {
+        if (state.currentRendition) {
+            const theme = { body: { "color": getComputedStyle(body).getPropertyValue("--text-primary"), "font-size": `${state.settings.fontSize}px !important`, "line-height": `${state.settings.lineHeight} !important` } };
+            state.currentRendition.themes.register("custom", theme);
+            state.currentRendition.themes.select("custom");
+        }
+    }
+    
+    function applyFilters(){const e=dom.searchBar.value.toLowerCase(),t=dom.filterType.value;renderFileList(state.allFiles.filter(n=>{const o=state.metadata[n.path]||{};if("all"!==t&&n.path.split(".").pop()!==t)return!1;return(o.title||n.name).toLowerCase().includes(e)||(o.author||"").toLowerCase().includes(e)||(o.subjects||[]).join(" ").toLowerCase().includes(e)}))}
+    function toggleReaderTools(e){document.querySelectorAll(".rh-actions button, .rh-actions .color-swatch, .rh-controls .control").forEach(t=>{t.style.opacity=e?"1":".5";t.style.pointerEvents=e?"auto":"none"})}
+    function updateSetting(key, value, callback) { state.settings[key] = value; saveSettings(); if(callback) callback(); }
+    function loadSettings() { Object.assign(state.settings, JSON.parse(localStorage.getItem('beansReaderSettings_v10') || '{}')); }
+    function saveSettings() { localStorage.setItem('beansReaderSettings_v10', JSON.stringify(state.settings)); }
+    function loadAnnotations() { Object.assign(state.annotations, JSON.parse(localStorage.getItem('beansReaderAnnotations_v10') || '{}')); }
+    function saveAnnotations() { localStorage.setItem('beansReaderAnnotations_v10', JSON.stringify(state.annotations)); }
+    
     initialize();
 });
