@@ -53,17 +53,28 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
+    // --- THIS IS THE UPDATED FUNCTION ---
     function createBreakdownHtml(word, cipherName, totalValue) {
         const cipherMap = ciphers[cipherName];
-        let lettersHtml = '', numbersHtml = '';
+        let pairsHtml = ''; // To hold our new letter-pair divs
+        
+        // Loop through each character to create a "card" for it
         for (const char of word.toLowerCase().replace(/[^a-z]/g, '')) {
             if (cipherMap[char]) {
-                lettersHtml += `<td>${char}</td>`;
-                numbersHtml += `<td>${cipherMap[char]}</td>`;
+                pairsHtml += `<div class="letter-pair">
+                                <span class="letter">${char}</span>
+                                <span class="number">${cipherMap[char]}</span>
+                              </div>`;
             }
         }
+
         const title = cipherName.charAt(0).toUpperCase() + cipherName.slice(1);
-        return `<div class="breakdown-item"><p><strong>"${word}"</strong> in <strong>${title} Gematria</strong> equals <strong>${totalValue}</strong>:</p><table class="breakdown-table"><tbody><tr class="breakdown-letters">${lettersHtml}</tr><tr class="breakdown-numbers">${numbersHtml}</tr></tbody></table></div>`;
+
+        // The main container now uses a div with the class "breakdown-flex-container"
+        return `<div class="breakdown-item">
+                    <p><strong>"${word}"</strong> in <strong>${title} Gematria</strong> equals <strong>${totalValue}</strong>:</p>
+                    <div class="breakdown-flex-container">${pairsHtml}</div>
+                </div>`;
     }
     
     function createResultsTable(title, matches, searchedWord = '') {
@@ -103,9 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         resultsArea.innerHTML = tablesHtml;
     }
-
-    // --- THE FIX IS HERE ---
-    // Added a new parameter 'incrementCount' which defaults to true
+    
     async function performCalculation(word, incrementCount = true) {
         if (!word || !word.trim()) {
             wordDisplay.textContent = '...';
@@ -123,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isNumericSearch) {
             displayNumericResults(parseFloat(cleanWord));
         } else {
-            // This is the part that updates the count. It only runs if incrementCount is true.
             if (incrementCount) {
                 const wordData = findWordInDatabase(cleanWord);
                 if (wordData) {
@@ -167,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const newEntry = {
                 word: wordToSave,
                 ...calculatedValues,
-                searchCount: 1, // Start with a count of 1
+                searchCount: 1,
                 createdAt: new Date().toISOString(),
                 lastSearched: new Date().toISOString()
             };
@@ -184,8 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 saveStatus.textContent = `Saved "${wordToSave}" to Firebase!`;
                 saveStatus.style.color = 'lightgreen';
             }
-            // --- THE OTHER PART OF THE FIX ---
-            // Call performCalculation but tell it NOT to increment the count
             performCalculation(wordToSave, false); 
         }
         setTimeout(() => { saveStatus.textContent = ''; }, 4000);
@@ -216,4 +222,3 @@ document.addEventListener('DOMContentLoaded', () => {
     const initialWord = initialUrlParams.get('word');
     performCalculation(initialWord);
 });
-

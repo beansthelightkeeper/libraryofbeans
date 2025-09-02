@@ -236,6 +236,83 @@ function buildGematriaCiphers() {
     };
     Object.assign(ciphers, thematicCiphers);
 
+    // --- CORE THEMATIC & POSITIONAL CIPHERS (from Plan) ---
+    const coreCiphers = {
+        "Doubling Cipher": createTotalOnlyCipher(text => {
+            let value = 2;
+            for (let i = 0; i < 3; i++) { value = value * 2 + 6.1; }
+            return Math.round(value * text.toLowerCase().replace(/[^a-z]/g, '').length);
+        }, "Starts with 2, doubles and adds 6.1 three times, then multiplies by letter count.", "Thematic & Positional"),
+
+        "Law of 6 Doubling": createTotalOnlyCipher(text => {
+            return 762 * text.toLowerCase().replace(/[^a-z]/g, '').length;
+        }, "A base value is put through a doubling sequence six times (result: 762), then multiplied by letter count.", "Thematic & Positional"),
+
+        "Tiferet Balance": createTotalOnlyCipher(text => {
+            const vowels = 'aeiou';
+            const cleaned = text.toLowerCase().replace(/[^a-z]/g, '');
+            let vowelSum = cleaned.split('').filter(c => vowels.includes(c)).reduce((sum, c) => sum + (simpleMap[c] || 0), 0);
+            let consonantSum = cleaned.split('').filter(c => !vowels.includes(c)).reduce((sum, c) => sum + (simpleMap[c] || 0), 0);
+            
+            let total = (vowelSum * 2 + 6) + consonantSum;
+            for (let i = 0; i < 6; i++) { total *= 2; }
+            return total;
+        }, "Vowel sum is doubled + 6, added to consonant sum, then the total is doubled six times.", "Thematic & Positional"),
+
+        "Thelemic 6": createTotalOnlyCipher(text => {
+            let value = ciphers["Latin (Jewish)"].calculate(text).total;
+            for (let i = 0; i < 6; i++) { value = value * 2 + 6; }
+            return value;
+        }, "ALW Cipher value is doubled and has 6 added, six times.", "Thematic & Positional"),
+
+        "Vav Connection": createTotalOnlyCipher(text => {
+            const cleaned = text.toLowerCase().replace(/[^a-z]/g, '').split('');
+            if (cleaned.length < 2) return 0;
+            let sum = 0;
+            for (let i = 0; i < cleaned.length - 1; i++) {
+                sum += ((simpleMap[cleaned[i]] || 0) + (simpleMap[cleaned[i+1]] || 0)) * 2 + 6;
+            }
+            for (let i = 0; i < 6; i++) { sum *= 2; }
+            return sum;
+        }, "Value for each adjacent letter pair is (pair sum * 2 + 6). Total sum is then doubled six times.", "Thematic & Positional"),
+
+        "Hexagram": createTotalOnlyCipher(text => {
+            const cleaned = text.toLowerCase().replace(/[^a-z]/g, '').split('');
+            const rays = [[], [], [], [], [], []];
+            cleaned.forEach((c, i) => rays[i % 6].push(simpleMap[c] || 0));
+            return rays.reduce((sum, ray) => {
+                let raySum = ray.reduce((s, val) => s + val, 0);
+                return sum + (raySum * 2 + 6);
+            }, 0);
+        }, "Letters are split into 6 'rays'. Each ray's sum is doubled + 6. Final value is sum of all rays.", "Thematic & Positional"),
+
+        "Doubling Vortex": createTotalOnlyCipher(text => {
+            const cleaned = text.toLowerCase().replace(/[^a-z]/g, '');
+            let value = 6;
+            cleaned.split('').forEach(() => { value = value * 2 * PHI + 6; });
+            return Math.round(value);
+        }, "Starts with 6. For each letter, the total is multiplied by 2φ and 6 is added.", "Thematic & Positional"),
+
+        "Six Numbers Emergence": createTotalOnlyCipher(text => {
+            let value = ciphers["English Ordinal"].calculate(text).total;
+            let allDigits = [];
+            for (let i = 0; i < 6; i++) {
+                value *= 2;
+                allDigits.push(...String(value).split('').map(Number));
+            }
+            return allDigits.reduce((sum, n) => sum + n, 0);
+        }, "Ordinal value is doubled 6 times; the final value is the sum of all digits from all steps.", "Thematic & Positional"),
+
+        "Qabalah Doubling Bridge": createTotalOnlyCipher(text => {
+            const ordinal = ciphers["English Ordinal"].calculate(text).total;
+            const alw = ciphers["Latin (Jewish)"].calculate(text).total;
+            let value = (ordinal + alw) / 2;
+            for (let i = 0; i < 6; i++) { value = value * 2 + 6; }
+            return Math.round(value);
+        }, "The average of Ordinal and ALW is doubled and has 6 added, six times.", "Thematic & Positional"),
+    };
+    Object.assign(ciphers, coreCiphers);
+
     // --- CUSTOM LOGIC & FINAL ASSEMBLY ---
     ciphers["Satanic"].calculate = (text) => {
         const cleanedText = text.toLowerCase().replace(/[^a-z]/g, '');

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library of Beans</title>
+
+    <!-- Google Fonts & Stylesheets -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="library-style.css">
+
+    <!-- PDF.js Library from CDN -->
+    <script type="module">
+        try {
+            const pdfjsVersion = '4.4.168';
+            const pdfjsLib = await import(`https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.mjs`);
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.mjs`;
+            window.pdfjsLib = pdfjsLib;
+        } catch (err) {
+            console.error("Failed to load PDF.js module:", err);
+            window.pdfjsLib = null;
+        }
+    </script>
+</head>
+<body>
+
+    <header class="reader-header">
+        <div class="header-group rh-nav">
+            <a href="../index.html" title="Home">⌂</a>
+            <div class="nav-divider"></div>
+            <a href="../gematriamain/ciphermax.html" title="Calculator">∑</a>
+        </div>
+
+        <div class="header-group rh-controls">
+            <div class="control" title="Font Size">
+                <span>Aa</span>
+                <input type="range" id="font-size-slider" min="12" max="28" value="16" step="1">
+            </div>
+            <div class="control" title="Line Spacing">
+                <span>☰</span>
+                <input type="range" id="line-height-slider" min="1.5" max="3" value="1.7" step="0.1">
+            </div>
+        </div>
+
+        <div class="header-group rh-actions">
+             <div class="color-swatch active" data-color="yellow" style="background:var(--highlight-yellow);" title="Yellow"></div>
+             <div class="color-swatch" data-color="pink" style="background:var(--highlight-pink);" title="Pink"></div>
+             <div class="color-swatch" data-color="green" style="background:var(--highlight-green);" title="Green"></div>
+             <div class="color-swatch" data-color="blue" style="background:var(--highlight-blue);" title="Blue"></div>
+             <div class="tool-divider"></div>
+             <button id="erase-mode-toggle" class="action-btn" title="Erase Highlight"> Eraser</button>
+             <div class="tool-divider"></div>
+            <button id="add-bookmark-btn" class="action-btn" title="Add Bookmark">⚑</button>
+            <button id="annotations-toggle" class="action-btn" title="Show Notes & Bookmarks">߷</button>
+            <button id="theme-toggle" class="action-btn" title="Toggle Theme">◐</button>
+        </div>
+    </header>
+
+    <div id="annotations-panel" class="annotations-panel">
+        <div class="tabs">
+            <button class="tab-link active" data-tab="Annotations">Notes</button>
+            <button class="tab-link" data-tab="Bookmarks">Bookmarks</button>
+        </div>
+        <div id="Annotations" class="tab-content active scrollable">
+            <ul id="annotations-list"></ul>
+        </div>
+        <div id="Bookmarks" class="tab-content scrollable">
+            <ul id="bookmarks-list"></ul>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Toggle Library">‹</button>
+        
+        <aside class="sidebar">
+            <nav class="library-nav">
+                <section class="sidebar-section">
+                    <h2>Library Contents</h2>
+                    <div id="file-list-container" class="scrollable">
+                        <p>Loading library...</p>
+                    </div>
+                </section>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div id="welcome-message">
+                <h2>Welcome to the Library</h2>
+                <p>Select a document from the sidebar to begin reading.</p>
+            </div>
+            <iframe id="content-frame" name="content-frame" title="Document Content"></iframe>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

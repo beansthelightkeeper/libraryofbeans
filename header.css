@@ -134,12 +134,18 @@ body.dark-mode .mega-footer {
 
 /* This class targets page headings to make them rainbow */
 body.rainbow-headings h1,
-body.rainbow-headings h2 {
+body.rainbow-headings h2,
+body.rainbow-headings .header-col h4 {
     background: linear-gradient(to right, #ff7b7b, #ffdd7b, #b5ff7b, #7bffb5, #7bffff, #7b7bff, #b57bff, #ff7bb5, #ff7b7b);
     background-size: 200% auto;
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: rainbow-text-scroll 4s linear infinite;
+}
+
+/* Add this new rule to make the logo image rainbow */
+body.rainbow-headings .seal-image {
+    animation: rainbow-text-animation 3s linear infinite;
 }
 

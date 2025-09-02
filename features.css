@@ -1,0 +1,65 @@
+/* --- Styles for New Features --- */
+
+/* Button for minimizing cipher menu */
+.control-btn-local {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: 1.5rem;
+    transition: background-color 0.2s;
+}
+.control-btn-local:hover {
+    background-color: #e0e0e0;
+}
+
+/* Minimized State for Cipher List Container */
+#cipher-list-container {
+    /* Smooth transition for minimizing */
+    transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out, margin 0.5s ease-in-out, opacity 0.3s ease-in-out;
+    overflow: hidden;
+    max-height: 2000px; /* A large enough value for the open state */
+    opacity: 1;
+}
+
+#cipher-list-container.minimized {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-width: 0;
+    opacity: 0;
+}
+
+/* --- Highlight Styles for Numbers --- */
+.total[class*="highlight-"] {
+    display: inline-block;
+    padding: 0.2em 0.4em;
+    border-radius: 8px;
+    color: #111; /* Dark text for readability on bright backgrounds */
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    transition: transform 0.2s ease;
+}
+
+/* Individual highlight colors */
+.total.highlight-prime { background-color: #ffdd00; }      /* Bright Yellow */
+.total.highlight-composite { background-color: #4de471; }   /* Bright Green */
+.total.highlight-palindrome { background-color: #ff69b4; }  /* Bright Pink */
+.total.highlight-square { background-color: #ff9900; }       /* Bright Orange */
+.total.highlight-repeating { background-color: #00ffff; }    /* Bright Cyan */
+
+/* Flashing animation for numbers with multiple highlights */
+.total.highlight-multiple {
+    animation: flash-rainbow-colors 3s linear infinite;
+}
+
+@keyframes flash-rainbow-colors {
+    0%, 100% { background-color: #ffdd00; transform: scale(1.05); } /* Prime */
+    20% { background-color: #4de471; transform: scale(1); }      /* Composite */
+    40% { background-color: #ff69b4; transform: scale(1.05); }  /* Palindrome */
+    60% { background-color: #ff9900; transform: scale(1); }      /* Square */
+    80% { background-color: #00ffff; transform: scale(1.05); }  /* Repeating */
+}

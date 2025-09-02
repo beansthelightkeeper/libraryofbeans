@@ -1,4 +1,50 @@
-/* General Centering for Controls */
+/* --- General Page Structure & Font (from gematria.css) --- */
+body {
+    /* This was the missing font declaration */
+    font-family: 'Arimo', 'Noto Sans Symbols', sans-serif;
+    color: #4d465a;
+}
+
+button,
+input,
+textarea,
+select {
+    /* This ensures form elements get the right font */
+    font-family: inherit;
+}
+
+.container {
+    display: flex;
+    flex-direction: column; /* Stacks controls and results vertically */
+    align-items: center;   /* Centers them horizontally */
+    width: 100%;
+    flex-grow: 1;
+    background-color: #ffffff; 
+}
+
+body[data-theme='dark'] .container {
+    background-color: #1d1d1d;
+}
+
+.content {
+    max-width: 1200px; /* Kept the wider, centered layout */
+    width: 100%;
+    padding: 20px;
+}
+
+.main-title {
+    font-size: 24px;
+    color: #8a2be2;
+    text-shadow: 1px 1px 1px #d3d3d3;
+    margin: 5px 0;
+}
+body[data-theme='dark'] .main-title {
+    color: #c8a2c8;
+    text-shadow: none;
+}
+
+
+/* --- General Centering for Controls --- */
 #controls-container, .main-title, #cipher-list-container {
     text-align: center;
     margin-left: auto;
@@ -12,15 +58,33 @@
     align-items: center;
     justify-content: center;
     gap: 1.5rem;
+    flex-wrap: wrap; /* Allows buttons to wrap on smaller screens */
 }
 
+#word-input-adv {
+    width: 80%;
+    max-width: 400px;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 1rem;
+}
+body[data-theme='dark'] #word-input-adv {
+    background-color: #2c2c2c;
+    border-color: #555;
+    color: #f0f0f0;
+}
+
+
 #cipher-list-container {
-    max-width: 900px;
+    /* max-width was removed from here to fix centering */
     margin-bottom: 2rem;
 }
 
 /* Select All Buttons Styling */
-#select-all-btn {
+#select-all-btn, .category-select-btn {
     padding: 0.5rem 1rem;
     border: 1px solid #ccc;
     background-color: #f0f0f0;
@@ -29,9 +93,26 @@
     font-size: 0.9rem;
 }
 
-#select-all-btn:hover {
+#select-all-btn:hover, .category-select-btn:hover {
     background-color: #e0e0e0;
 }
+.category-select-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    background-color: #f7f7f7;
+}
+
+body[data-theme='dark'] #select-all-btn,
+body[data-theme='dark'] .category-select-btn {
+    background-color: #333;
+    border-color: #555;
+    color: #f0f0f0;
+}
+body[data-theme='dark'] #select-all-btn:hover,
+body[data-theme='dark'] .category-select-btn:hover {
+    background-color: #444;
+}
+
 
 .category-header {
     display: flex;
@@ -41,24 +122,16 @@
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
 }
+body[data-theme='dark'] .category-header {
+    border-bottom-color: #444;
+}
 
 .category-header h3 {
     margin: 0;
     color: #333;
 }
-
-.category-select-btn {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.8rem;
-    border: 1px solid #ddd;
-    background-color: #f7f7f7;
-    border-radius: 4px;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.category-select-btn:hover {
-    background-color: #eee;
+body[data-theme='dark'] .category-header h3 {
+    color: #ddd;
 }
 
 
@@ -70,6 +143,11 @@
     padding: 1rem;
     background-color: #fdfdfd;
 }
+body[data-theme='dark'] .cipher-category {
+    background-color: #2a2a2a;
+    border-color: #444;
+}
+
 
 .cipher-checkbox-list {
     display: grid;
@@ -84,12 +162,21 @@
     font-size: 0.9rem;
     color: #333;
 }
+body[data-theme='dark'] .cipher-checkbox-list label {
+    color: #ccc;
+}
 
 /* --- Detailed View Styles --- */
 #results-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 1.5rem;
+    justify-content: center; /* This centers the grid items */
+    /* Make sure grid takes up the same space as the content above */
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 20px 20px 20px;
+    box-sizing: border-box;
 }
 
 .result-card {
@@ -102,11 +189,18 @@
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
+body[data-theme='dark'] .result-card {
+    background-color: #2a2a2a;
+    border-color: #444;
+}
 
 .result-card h4 {
     margin: 0 0 0.5rem 0;
     color: #8a4ca5;
     font-size: 1.1rem;
+}
+body[data-theme='dark'] .result-card h4 {
+    color: #c8a2c8;
 }
 
 .result-card .total {
@@ -115,6 +209,9 @@
     color: #111;
     margin-bottom: 1rem;
 }
+body[data-theme='dark'] .result-card .total {
+    color: #f0f0f0;
+}
 
 .result-card .cipher-description {
     font-size: 0.85rem;
@@ -122,12 +219,19 @@
     font-style: italic;
     margin: -0.5rem 0 1rem 0;
 }
+body[data-theme='dark'] .result-card .cipher-description {
+    color: #aaa;
+}
 
 .result-card .breakdown {
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px solid #eee;
 }
+body[data-theme='dark'] .result-card .breakdown {
+    border-top-color: #444;
+}
+
 
 .breakdown-card-container {
     display: flex;
@@ -149,7 +253,10 @@
     padding: 4px;
     min-width: 28px;
     text-align: center;
-    font-family: monospace;
+}
+body[data-theme='dark'] .breakdown-letter-card {
+    background-color: #333;
+    border-color: #555;
 }
 
 .breakdown-letter-card .letter {
@@ -158,13 +265,18 @@
     color: #111;
     display: block;
 }
+body[data-theme='dark'] .breakdown-letter-card .letter {
+    color: #f0f0f0;
+}
 
 .breakdown-letter-card .value {
     font-size: 0.9em;
     color: #555;
     display: block;
 }
-
+body[data-theme='dark'] .breakdown-letter-card .value {
+    color: #aaa;
+}
 
 /* --- Condensed View Styles --- */
 #results-grid.condensed-view {
@@ -184,16 +296,26 @@
     text-align: center;
     box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
+body[data-theme='dark'] .result-card-condensed {
+    background-color: #2a2a2a;
+    border-color: #444;
+}
 
 .result-card-condensed .cipher-name {
     font-size: 0.8rem;
     color: #555;
     font-weight: 600;
 }
+body[data-theme='dark'] .result-card-condensed .cipher-name {
+    color: #aaa;
+}
 
 .result-card-condensed .total {
     font-size: 1.4rem;
     font-weight: bold;
     color: #111;
+}
+body[data-theme='dark'] .result-card-condensed .total {
+    color: #f0f0f0;
 }
 

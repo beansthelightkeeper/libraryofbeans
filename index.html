@@ -9,10 +9,12 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     
+    <!-- Corrected Paths -->
     <link rel="stylesheet" href="header.css">
     <link rel="stylesheet" href="homepage.css">
+    
 </head>
 <body data-theme="dark">
 
@@ -41,7 +43,7 @@
     <div class="container">
         <header class="main-header">
             <div class="seal-container">
-                <img src="https://placehold.co/150x150/1a1a1a/c8a2c8?text=LoB" alt="Library of Beans Seal" class="seal-image"/>
+                <img src="https://placehold.co/150x150/120c18/c8a2c8?text=LoB&font=arimo" alt="Library of Beans Seal" class="seal-image"/>
             </div>
             <h1>The Library of Beans</h1>
             <p class="subtitle">An Archive of Esoteric Knowledge & Gematric Sciences</p>
@@ -51,15 +53,22 @@
             <a href="gematriamain/calculator.html" class="portal-card">
                 <div class="portal-icon"><h3>אבג</h3></div>
                 <div class="portal-content">
-                    <h2>Gematria Calculator</h2>
-                    <p>Unlock the numerical mysteries of words and phrases. Explore the core principles of sacred mathematics.</p>
+                    <h2>Simple Calculator</h2>
+                    <p>Analyze words and phrases with core ciphers. A quick and easy entry into the world of gematria.</p>
                 </div>
             </a>
-            <a href="library.html" class="portal-card">
+            <a href="gematriamain/ciphermax.html" class="portal-card">
+                <div class="portal-icon"><h3>Σ</h3></div>
+                <div class="portal-content">
+                    <h2>Advanced Calculator</h2>
+                    <p>A powerful tool with a vast array of ciphers, breakdowns, and analytical features for deep research.</p>
+                </div>
+            </a>
+            <a href="library/library.html" class="portal-card">
                 <div class="portal-icon"><h3>☨</h3></div>
                 <div class="portal-content">
                     <h2>Digital Athenaeum</h2>
-                    <p>Enter the library to peruse your personal collection of texts, manuscripts, and esoteric works.</p>
+                    <p>Peruse a curated collection of texts, manuscripts, and esoteric works in the main library.</p>
                 </div>
             </a>
             <a href="tools/tools.html" class="portal-card">
@@ -69,21 +78,12 @@
                     <p>Access a suite of tools for textual analysis, pattern recognition, and symbolic exploration.</p>
                 </div>
             </a>
-            <a href="localdb.html" class="portal-card">
-                <div class="portal-icon"><h3>⚿</h3></div>
-                <div class="portal-content">
-                    <h2>Personal Grimoire</h2>
-                    <p>Upload and manage your own collection of texts, creating a private, searchable database.</p>
-                </div>
-            </a>
         </main>
     </div>
 
-    <!-- Set the path prefix for the root directory -->
-    <script>
-        window.pathPrefix = '.';
-    </script>
+    <!-- Corrected Path -->
     <script src="header.js"></script>
 
 </body>
 </html>
+

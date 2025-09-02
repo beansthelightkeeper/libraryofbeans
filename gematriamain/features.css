@@ -1,0 +1,107 @@
+/* --- Styles for New Features --- */
+
+/* Button for minimizing cipher menu */
+.control-btn-local {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+.control-btn-local:hover {
+    background-color: #e0e0e0;
+}
+
+/* Minimized State for Cipher List Container */
+#cipher-list-container {
+    transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out, margin 0.5s ease-in-out, opacity 0.3s ease-in-out;
+    overflow: hidden;
+    max-height: 2000px;
+    opacity: 1;
+}
+#cipher-list-container.minimized {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-width: 0;
+    opacity: 0;
+}
+
+/* --- Highlight Legend Styles --- */
+#highlight-legend-container {
+    position: relative;
+}
+.legend-toggle-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.legend-panel {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    z-index: 10;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: none; /* Hidden by default */
+    width: 220px;
+    text-align: left;
+}
+.legend-panel.visible {
+    display: block;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.legend-item:last-child {
+    margin-bottom: 0;
+}
+.legend-color-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    margin-right: 10px;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+.legend-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    flex-grow: 1;
+}
+.legend-label input {
+    margin-right: 8px;
+}
+
+
+/* --- Highlight Styles for Number TEXT --- */
+.total.highlight-prime { color: #D6A100; }      /* Gold */
+.total.highlight-composite { color: #2E8B57; }   /* Sea Green */
+.total.highlight-palindrome { color: #FF1493; }  /* Deep Pink */
+.total.highlight-square { color: #FF4500; }       /* Orange Red */
+.total.highlight-repeating { color: #1E90FF; }    /* Dodger Blue */
+
+/* Flashing animation for numbers with multiple highlights */
+.total.highlight-multiple {
+    animation: flash-rainbow-text 3s linear infinite;
+}
+
+@keyframes flash-rainbow-text {
+    0%, 100% { color: #D6A100; } /* Prime */
+    20% { color: #FF4500; }      /* Square */
+    40% { color: #FF1493; }  /* Palindrome */
+    60% { color: #1E90FF; }      /* Repeating */
+    80% { color: #2E8B57; }  /* Composite */
+}
+

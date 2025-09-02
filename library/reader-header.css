@@ -1,0 +1,98 @@
+/* === Library Reader Header Styles === */
+
+:root {
+    --reader-header-height: 55px;
+}
+
+.reader-header {
+    height: var(--reader-header-height);
+    width: 100%;
+    background-color: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 1001; /* Higher than sidebar */
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.reader-header .header-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Left Group: Navigation */
+.rh-nav a {
+    text-decoration: none;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+.rh-nav a:hover {
+    background-color: var(--bg-secondary);
+}
+.rh-nav .nav-divider {
+    height: 20px;
+    width: 1px;
+    background-color: var(--border-color);
+}
+
+/* Center Group: Text Controls */
+.rh-controls .control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+.rh-controls input[type="range"] {
+    width: 100px;
+}
+.rh-controls button {
+    background: none;
+    border: 1px solid transparent;
+    padding: 6px;
+    border-radius: 5px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+.rh-controls button:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+.rh-controls button.active {
+    background-color: var(--accent-light);
+    color: var(--accent);
+}
+
+/* Right Group: Action Buttons */
+.rh-actions .action-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.5rem; /* For emoji icons */
+    padding: 5px;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+.rh-actions .action-btn:hover {
+    opacity: 1;
+}
+.rh-actions .action-btn.active {
+    color: var(--accent);
+}
+
+/* Adjust app container to account for new header */
+.app-container {
+    height: calc(100vh - var(--reader-header-height));
+}
