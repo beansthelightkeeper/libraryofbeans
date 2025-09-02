@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alchemical Gematria Calculator</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="alcgem.css">
+    <link rel="stylesheet" href="../header.css">
+    <link rel="stylesheet" href="../footer.css">
+</head>
+<body>
+
+    <header id="main-header-placeholder"></header>
+
+    <div class="container">
+        <!-- Header Section -->
+        <header class="text-center">
+            <h1 class="title-font">Alchemical Gematria</h1>
+            <p class="subtitle">Deconstruct words into their elemental forms.</p>
+        </header>
+
+        <!-- Input Section -->
+        <div class="search-area">
+            <form id="gematria-form">
+                <input type="text" name="word" id="word-input" placeholder="Enter a word or phrase..." maxlength="200">
+                <button type="submit" id="calculate-btn">Calculate</button>
+            </form>
+        </div>
+
+        <!-- Results Area -->
+        <div id="results-area">
+             <div id="initial-message">
+                <p>Enter a word to begin the transmutation.</p>
+            </div>
+            
+            <!-- Container for the main result -->
+            <div id="primary-result-container" class="hidden">
+                <div id="atomic-sum-display"></div>
+                <div id="main-display-area">
+                    <div id="elements-container"></div>
+                    <div id="unmatched-letters-container"></div>
+                </div>
+                <div id="info-container"></div>
+            </div>
+
+            <!-- Container for other possibilities -->
+            <div id="alternatives-container" class="hidden"></div>
+
+            <div id="error-message" class="hidden"></div>
+        </div>
+    </div>
+
+    <footer id="main-footer-placeholder"></footer>
+
+    <!-- Scripts -->
+    <script src="../header.js" defer></script> 
+    <script src="../footer.js" defer></script> 
+    <script src="alcgem.js"></script>
+</body>
+</html>
+

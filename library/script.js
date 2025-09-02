@@ -41,6 +41,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div id="pdf-viewer-area"></div>
                 <div id="epub-reader-area"><div id="epub-viewer"></div><a id="epub-prev">‹</a><a id="epub-next">›</a></div>
                 <iframe id="content-frame" name="content-frame" title="Document Content" sandbox="allow-same-origin"></iframe>
+                <div id="annotations-panel" class="annotations-panel">
+                    <div class="tabs">
+                        <button class="tab-link active" data-tab="notes-content">Notes</button>
+                        <button class="tab-link" data-tab="bookmarks-content">Bookmarks</button>
+                    </div>
+                    <div id="notes-content" class="tab-content active">
+                        <ul class="annotations-list" id="notes-list"><li>No notes for this document.</li></ul>
+                    </div>
+                    <div id="bookmarks-content" class="tab-content">
+                        <ul class="annotations-list" id="bookmarks-list"><li>No bookmarks for this document.</li></ul>
+                    </div>
+                </div>
             </main>`;
         
         body.prepend(appContainer);
@@ -64,6 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
         annotationTextarea: document.getElementById('annotation-textarea'),
         annotationSaveBtn: document.getElementById('annotation-save-btn'),
         annotationCancelBtn: document.getElementById('annotation-cancel-btn'),
+        annotationsPanel: document.getElementById('annotations-panel'),
+        notesList: document.getElementById('notes-list'),
+        bookmarksList: document.getElementById('bookmarks-list'),
+        tabLinks: document.querySelectorAll('.annotations-panel .tab-link'),
+        tabContents: document.querySelectorAll('.annotations-panel .tab-content'),
     };
 
     const state = {
@@ -142,6 +159,19 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.filterType.addEventListener('change', applyFilters);
         dom.annotationCancelBtn.addEventListener('click', () => dom.annotationModalOverlay.classList.add('hidden'));
         dom.annotationSaveBtn.addEventListener('click', saveAnnotation);
+        
+        dom.annotationsToggle.addEventListener('click', () => {
+            dom.annotationsPanel.classList.toggle('open');
+        });
+        dom.tabLinks.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.dataset.tab;
+                dom.tabLinks.forEach(btn => btn.classList.remove('active'));
+                dom.tabContents.forEach(content => content.classList.remove('active'));
+                button.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
     }
 
     async function loadFile(fullPath) {
@@ -155,7 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const fileType = fullPath.split('.').pop().toLowerCase();
 
-        dom.htmlTxtControls.classList.toggle('hidden', fileType !== 'html' && fileType !== 'txt');
+        const showTextControls = ['html', 'txt', 'epub'].includes(fileType);
+        dom.htmlTxtControls.classList.toggle('hidden', !showTextControls);
         dom.pdfControls.classList.toggle('hidden', fileType !== 'pdf');
         dom.epubPagination.classList.toggle('hidden', fileType !== 'epub');
         dom.epubReaderArea.classList.toggle('scrolled-epub', fileType === 'epub' && state.settings.epubFlow !== 'paginated');
@@ -178,6 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom.contentFrame.srcdoc = `<html><head></head><body>${content}</body></html>`;
             }
             toggleReaderTools(true);
+            renderAnnotationsPanel();
         } catch (error) { 
             console.error("Error loading file:", error);
             dom.welcomeMessage.style.display = 'block';
@@ -187,11 +219,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderPdf(url) {
         if (!window.pdfjsLib) throw new Error("PDF.js is not loaded.");
-        
         dom.pdfViewerArea.innerHTML = '<p style="color:white;padding:2rem;">Loading PDF...</p>';
         const pdf = await window.pdfjsLib.getDocument(url).promise;
         dom.pdfViewerArea.innerHTML = '';
-        
         for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const viewport = page.getViewport({ scale: 1.5 });
@@ -199,7 +229,6 @@ document.addEventListener('DOMContentLoaded', () => {
             canvas.height = viewport.height;
             canvas.width = viewport.width;
             dom.pdfViewerArea.appendChild(canvas);
-            // THIS IS THE PDF FIX: It was 'd' instead of '2d'
             await page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
         }
     }
@@ -210,9 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
         state.currentRendition = null;
         dom.epubViewer.innerHTML = '';
 
-        // --- THIS IS THE EPUB FIX ---
-        // We revert to the simple, relative path which is more robust.
-        const bookUrl = `../${fullPath}`;
+        // --- THE DEFINITIVE FIX ---
+        // This combination of a full URL and the manager options is the most robust.
+        const bookUrl = new URL(`../${fullPath}`, window.location.href).href;
         state.currentBook = window.ePub(bookUrl);
         
         await state.currentBook.ready;
@@ -232,8 +261,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const handleHighlightClick = (cfiRange) => {
             if (state.isEraseModeActive) {
                 state.currentRendition.annotations.remove(cfiRange, "highlight");
-                state.annotations[state.currentFile] = state.annotations[state.currentFile].filter(a => a.cfi !== cfiRange);
+                state.annotations[state.currentFile] = (state.annotations[state.currentFile] || []).filter(a => a.cfi !== cfiRange);
                 saveAnnotations();
+                renderAnnotationsPanel();
             } else {
                 showAnnotationModal(cfiRange);
             }
@@ -241,18 +271,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.currentRendition.on("selected", (cfiRange, contents) => {
             const color = state.settings.activeHighlightColor;
-            state.currentRendition.annotations.add("highlight", cfiRange, {}, handleHighlightClick, "hl", { "fill": color, "fill-opacity": "0.5", "mix-blend-mode": "multiply" });
+            state.currentRendition.annotations.add("highlight", cfiRange, {}, (e) => handleHighlightClick(cfiRange), "hl", { "fill": color, "fill-opacity": "0.5", "mix-blend-mode": "multiply" });
             contents.window.getSelection().removeAllRanges();
-            
             if (!state.annotations[state.currentFile]) state.annotations[state.currentFile] = [];
             state.annotations[state.currentFile].push({ cfi: cfiRange, color: color, note: "" });
             saveAnnotations();
+            renderAnnotationsPanel();
         });
 
         await state.currentRendition.display();
 
         (state.annotations[state.currentFile] || []).forEach(anno => {
-            state.currentRendition.annotations.add("highlight", anno.cfi, {}, handleHighlightClick, "hl", { "fill": anno.color, "fill-opacity": "0.5", "mix-blend-mode": "multiply" });
+            state.currentRendition.annotations.add("highlight", anno.cfi, {}, (e) => handleHighlightClick(anno.cfi), "hl", { "fill": anno.color, "fill-opacity": "0.5", "mix-blend-mode": "multiply" });
         });
 
         const isPaginated = state.settings.epubFlow === 'paginated';
@@ -270,6 +300,43 @@ document.addEventListener('DOMContentLoaded', () => {
         updateReaderStyles();
     }
 
+    async function renderAnnotationsPanel() {
+        if (!state.currentBook || !state.currentBook.ready) {
+            dom.notesList.innerHTML = '<li>Load a book to see notes.</li>';
+            dom.bookmarksList.innerHTML = '<li>Load a book to see bookmarks.</li>';
+            return;
+        }
+    
+        const currentAnnos = state.annotations[state.currentFile] || [];
+        const notes = [];
+        const bookmarks = [];
+    
+        await Promise.all(currentAnnos.map(async (anno) => {
+            try {
+                const range = await state.currentBook.getRange(anno.cfi);
+                const text = range.toString().trim();
+                const item = { ...anno, text: text.substring(0, 100) };
+                if (anno.note) {
+                    notes.push(item);
+                } else {
+                    bookmarks.push(item);
+                }
+            } catch (e) {
+                console.warn("Could not find text for CFI:", anno.cfi);
+            }
+        }));
+    
+        dom.notesList.innerHTML = notes.length ? notes.map(n => `<li data-cfi="${n.cfi}"><div class="annotation-note">${n.note}</div><div class="annotation-text">“...${n.text}...”</div></li>`).join('') : '<li>No notes for this document.</li>';
+        dom.bookmarksList.innerHTML = bookmarks.length ? bookmarks.map(b => `<li data-cfi="${b.cfi}"><div class="annotation-text">“...${b.text}...”</div></li>`).join('') : '<li>No bookmarks for this document.</li>';
+    
+        document.querySelectorAll('.annotations-list li[data-cfi]').forEach(item => {
+            item.addEventListener('click', () => {
+                state.currentRendition.display(item.dataset.cfi);
+                dom.annotationsPanel.classList.remove('open');
+            });
+        });
+    }
+
     function showAnnotationModal(cfi) {
         state.currentCfi = cfi;
         const existingAnnotation = (state.annotations[state.currentFile] || []).find(a => a.cfi === cfi);
@@ -283,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (annotation) {
             annotation.note = dom.annotationTextarea.value;
             saveAnnotations();
+            renderAnnotationsPanel();
         }
         dom.annotationModalOverlay.classList.add('hidden');
         state.currentCfi = null;
@@ -293,17 +361,25 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.sidebar.classList.toggle("minimized", state.settings.sidebarMinimized);
         dom.epubFlowToggle.textContent = state.settings.epubFlow === 'paginated' ? '📜' : '📖';
         dom.epubFlowToggle.title = state.settings.epubFlow === 'paginated' ? 'Switch to Scroll Mode' : 'Switch to Page Mode';
-        
         dom.eraseModeToggle.classList.toggle('active', state.isEraseModeActive);
         dom.colorSwatches.forEach(s => s.classList.toggle('active', !state.isEraseModeActive && s.dataset.color === state.settings.activeHighlightColor));
         updateReaderStyles();
     }
     
     function updateReaderStyles() {
+        const fontSize = state.settings.fontSize;
+        const lineHeight = state.settings.lineHeight;
         if (state.currentRendition) {
-            const theme = { body: { "color": getComputedStyle(body).getPropertyValue("--text-primary"), "font-size": `${state.settings.fontSize}px !important`, "line-height": `${state.settings.lineHeight} !important` } };
+            const theme = { body: { "color": getComputedStyle(body).getPropertyValue("--text-primary"), "font-size": `${fontSize}px !important`, "line-height": `${lineHeight} !important` } };
             state.currentRendition.themes.register("custom", theme);
             state.currentRendition.themes.select("custom");
+        }
+        const doc = dom.contentFrame.contentDocument;
+        if (doc?.head) {
+            let style = doc.getElementById('dynamic-reader-styles');
+            if (!style) { style = doc.createElement('style'); style.id = 'dynamic-reader-styles'; doc.head.appendChild(style); }
+            const computed = getComputedStyle(body);
+            style.innerHTML = `body{font-size:${fontSize}px;line-height:${lineHeight};color:${computed.getPropertyValue("--text-primary")};background-color:${computed.getPropertyValue("--bg-primary")};padding:2rem;max-width:800px;margin:0 auto;}`;
         }
     }
     

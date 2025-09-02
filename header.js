@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <li><a href="/tools/scanner.html">Scanner</a></li>
                         <li><a href="/tools/toolsexp.html">Tools Exp</a></li>
                         <li><a href="/tools/unfold.html">Unfold</a></li>
+                        <li><a href="/tools/alcgem.html">Alchemical Gematria</a></li>
                     </ul>
                 </div>
                 <div class="header-col">
