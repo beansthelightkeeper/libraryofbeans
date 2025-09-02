@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function loadFirebaseData() {
         try {
+            // This now correctly uses the Realtime Database SDK
             const snapshot = await firebase.database().ref('words').once('value');
             const data = snapshot.val();
 
@@ -46,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 1. Most Searched (by searchCount)
             const mostSearched = wordsArray.slice().sort((a, b) => (b.searchCount || 0) - (a.searchCount || 0));
-            renderTable(mostSearchedBody, mostSearched, 'No searches recorded yet.');
+            renderTable(mostSearchedBody, mostSearched, 'No words have been searched yet.');
 
             // 2. Most Recently Searched (by lastSearched timestamp)
             const recentSearches = wordsArray.slice().sort((a, b) => new Date(b.lastSearched || 0) - new Date(a.lastSearched || 0));
@@ -70,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function loadLocalData() {
         const data = localStorage.getItem('wordDatabase');
-        // Local storage data is an object now, so we need Object.values
         const wordsArray = data ? Object.values(JSON.parse(data)) : [];
 
         const mostSearched = wordsArray.slice().sort((a, b) => (b.searchCount || 0) - (a.searchCount || 0));

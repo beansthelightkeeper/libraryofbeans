@@ -10,9 +10,13 @@
     <script src="../header.js" defer></script>
     <script src="../footer.js" defer></script>
     
-    <!-- Firebase SDKs (matching the calculator) -->
+    <!-- Firebase v8 SDKs (to match the calculator) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <!-- Your configuration and main script -->
+    <script src="../firebase-config.js" defer></script>
+    <script src="statistics.js" defer></script>
 </head>
 <body>
     <div id="main-header-placeholder"></div>
@@ -23,7 +27,7 @@
             
             <div class="search-area">
                 <h1 class="main-title">Database Statistics</h1>
-                <p class="subtitle">An overview of all words in the database, sorted by the most popular.</p>
+                <p class="subtitle">An overview of search activity and database entries.</p>
                 <div style="text-align: center; margin-top: 1rem;">
                     <label for="use-localstorage" style="cursor: pointer;">
                         <input type="checkbox" id="use-localstorage" name="use-localstorage">
@@ -32,9 +36,8 @@
                 </div>
             </div>
 
-            <!-- Chart 1: Most Popular Words -->
-            <div id="popularity-section" class="results-section">
-                <h2 class="results-header">Word Popularity</h2>
+            <div id="most-searched-section" class="results-section">
+                <h2 class="results-header">Most Popular Words</h2>
                 <table class="results-table">
                     <thead>
                         <tr>
@@ -45,17 +48,14 @@
                             <th>Search Count</th>
                         </tr>
                     </thead>
-                    <tbody id="popularity-body">
-                        <!-- Data will be loaded here -->
-                    </tbody>
+                    <tbody id="most-searched-body"></tbody>
                 </table>
             </div>
 
-            <!-- Chart 2: Most Recently Searched -->
             <div id="recent-searches-section" class="results-section" style="margin-top: 3rem;">
                 <h2 class="results-header">Most Recently Searched</h2>
                 <table class="results-table">
-                    <thead>
+                     <thead>
                         <tr>
                             <th>Word</th>
                             <th>Jewish</th>
@@ -64,16 +64,13 @@
                             <th>Search Count</th>
                         </tr>
                     </thead>
-                    <tbody id="recent-searches-body">
-                        <!-- Data will be loaded here -->
-                    </tbody>
+                    <tbody id="recent-searches-body"></tbody>
                 </table>
             </div>
 
-            <!-- Chart 3: Most Recently Added -->
             <div id="recent-additions-section" class="results-section" style="margin-top: 3rem;">
                 <h2 class="results-header">Most Recently Added</h2>
-                <table class="results-table">
+                 <table class="results-table">
                     <thead>
                         <tr>
                             <th>Word</th>
@@ -83,9 +80,7 @@
                             <th>Search Count</th>
                         </tr>
                     </thead>
-                    <tbody id="recent-additions-body">
-                        <!-- Data will be loaded here -->
-                    </tbody>
+                    <tbody id="recent-additions-body"></tbody>
                 </table>
             </div>
 
@@ -93,10 +88,6 @@
         <div class="ad-pillar"></div>
     </div>
     <footer id="main-footer-placeholder"></footer>
-
-    <!-- Load scripts at the end of the body -->
-    <script src="../firebase-config.js"></script>
-    <script src="statistics.js"></script>
 </body>
 </html>
 
