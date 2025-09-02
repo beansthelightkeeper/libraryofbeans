@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Gematria Calculator</title>
+    <link rel="stylesheet" href="../header.css">
+    <link rel="stylesheet" href="../footer.css">
+    <link rel="stylesheet" href="cards.css">
+    <script src="../header.js" defer></script>
+    <script src="../footer.js" defer></script>
+    
+    <!-- Cipher Libraries and Page Logic -->
+    <script src="ciphers.js" defer></script>
+    <script src="advanced-ciphers.js" defer></script>
+</head>
+<body>
+    <div id="main-header-placeholder"></div>
+    <div class="container">
+        <article class="content" id="controls-container">
+            <h1 class="main-title">Advanced Cipher Calculator</h1>
+            
+            <div class="view-toggle-container">
+                <label>
+                    <input type="checkbox" id="view-toggle">
+                    Condensed View
+                </label>
+                <button type="button" id="select-all-btn">Select All</button>
+            </div>
+
+            <input type="text" id="word-input-adv" placeholder="Enter a word or phrase...">
+
+            <div id="cipher-list-container">
+                <!-- Checkboxes will be dynamically inserted here -->
+            </div>
+        </article>
+        
+        <div id="results-grid">
+            <!-- Result cards will be dynamically inserted here -->
+        </div>
+    </div>
+    <footer id="main-footer-placeholder"></footer>
+</body>
+</html>
+

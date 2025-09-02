@@ -1,0 +1,199 @@
+/* General Centering for Controls */
+#controls-container, .main-title, #cipher-list-container {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.view-toggle-container {
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+#cipher-list-container {
+    max-width: 900px;
+    margin-bottom: 2rem;
+}
+
+/* Select All Buttons Styling */
+#select-all-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+#select-all-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+.category-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.category-select-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    border: 1px solid #ddd;
+    background-color: #f7f7f7;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.category-select-btn:hover {
+    background-color: #eee;
+}
+
+
+/* Cipher Category Styling */
+.cipher-category {
+    margin-bottom: 1.5rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: #fdfdfd;
+}
+
+.cipher-checkbox-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.5rem;
+    text-align: left;
+}
+
+.cipher-checkbox-list label {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+/* --- Detailed View Styles --- */
+#results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.result-card {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.result-card h4 {
+    margin: 0 0 0.5rem 0;
+    color: #8a4ca5;
+    font-size: 1.1rem;
+}
+
+.result-card .total {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #111;
+    margin-bottom: 1rem;
+}
+
+.result-card .cipher-description {
+    font-size: 0.85rem;
+    color: #555;
+    font-style: italic;
+    margin: -0.5rem 0 1rem 0;
+}
+
+.result-card .breakdown {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.breakdown-card-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; 
+}
+
+.word-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+}
+
+.breakdown-letter-card {
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 4px;
+    min-width: 28px;
+    text-align: center;
+    font-family: monospace;
+}
+
+.breakdown-letter-card .letter {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #111;
+    display: block;
+}
+
+.breakdown-letter-card .value {
+    font-size: 0.9em;
+    color: #555;
+    display: block;
+}
+
+
+/* --- Condensed View Styles --- */
+#results-grid.condensed-view {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.5rem;
+}
+
+.result-card-condensed {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.result-card-condensed .cipher-name {
+    font-size: 0.8rem;
+    color: #555;
+    font-weight: 600;
+}
+
+.result-card-condensed .total {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #111;
+}
+

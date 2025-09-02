@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h4>Library of Beans</h4>
                     <ul>
                         <li><a href="/gematriamain/calculator.html">Calculator</a></li>
+                        <li><a href="/gematriamain/ciphermax.html">Advanced Calculator</a></li>
                         <li><a href="/work/numerology.html">Numerology</a></li>
                         <li><a href="/gematriamain/statistics.html">Statistics</a></li>
                         <li><a href="/library.html">Library</a></li>
