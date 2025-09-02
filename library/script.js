@@ -298,60 +298,60 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- UPDATED: Load File (handles all file types) ---
-    async function loadFile(fullPath) {
-        if (state.currentFile === fullPath) return;
-        state.currentFile = fullPath;
-        state.currentBook = null;
-        
-        // UI updates
-        welcomeMessage.style.display = 'none';
-        document.querySelectorAll('#file-list-container li.active').forEach(el => el.classList.remove('active'));
-        document.querySelector(`#file-list-container a[data-path="${fullPath}"]`)?.parentElement.classList.add('active');
-        
-        // Hide all content viewers initially
-        contentFrame.style.display = 'none';
-        epubReaderArea.style.display = 'none';
-        drawingCanvas.classList.remove('active');
+        async function loadFile(fullPath) {
+            if (state.currentFile === fullPath) return;
+            state.currentFile = fullPath;
+            state.currentBook = null;
+            
+            // UI updates
+            welcomeMessage.style.display = 'none';
+            document.querySelectorAll('#file-list-container li.active').forEach(el => el.classList.remove('active'));
+            document.querySelector(`#file-list-container a[data-path="${fullPath}"]`)?.parentElement.classList.add('active');
+            
+            // Hide all content viewers initially
+            contentFrame.style.display = 'none';
+            epubReaderArea.style.display = 'none';
+            drawingCanvas.classList.remove('active');
 
-        const url = `./${fullPath}`;
-        const fileType = fullPath.split('.').pop().toLowerCase();
+            const url = `./${fullPath}`;
+            const fileType = fullPath.split('.').pop().toLowerCase();
 
-        // Show/hide correct controls
-        htmlTxtControls.classList.toggle('hidden', fileType === 'pdf' || fileType === 'epub');
-        pdfControls.classList.toggle('hidden', fileType !== 'pdf');
+            // Show/hide correct controls
+            htmlTxtControls.classList.toggle('hidden', fileType === 'pdf' || fileType === 'epub');
+            pdfControls.classList.toggle('hidden', fileType !== 'pdf');
 
-        try {
-            if (fileType === 'pdf') {
+            try {
+                if (fileType === 'pdf') {
+                    contentFrame.style.display = 'block';
+                    contentFrame.srcdoc = '<p style="text-align:center;padding:2rem;">Loading PDF...</p>';
+                    await renderPdfInIframe(url);
+                } else if (fileType === 'epub') {
+                    epubReaderArea.style.display = 'block';
+                    state.currentBook = window.ePub(url);
+                    await state.currentBook.renderTo(epubViewer, { width: "100%", height: "100%" });
+                    updateIframeStyles(); // Apply custom theme
+                } else if (fileType === 'txt') {
+                    contentFrame.style.display = 'block';
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                    const text = await response.text();
+                    // Format TXT by wrapping paragraphs in <p> tags
+                    const htmlContent = text.split(/\n\s*\n/).map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+                    contentFrame.srcdoc = `<html><head></head><body>${htmlContent}</body></html>`;
+                } else { // HTML
+                    contentFrame.style.display = 'block';
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                    contentFrame.srcdoc = await response.text();
+                }
+                toggleReaderTools(true);
+            } catch (error) { 
                 contentFrame.style.display = 'block';
-                contentFrame.srcdoc = '<p style="text-align:center;padding:2rem;">Loading PDF...</p>';
-                await renderPdfInIframe(url);
-            } else if (fileType === 'epub') {
-                epubReaderArea.style.display = 'block';
-                state.currentBook = window.ePub(url);
-                await state.currentBook.renderTo(epubViewer, { width: "100%", height: "100%" });
-                updateIframeStyles(); // Apply custom theme
-            } else if (fileType === 'txt') {
-                contentFrame.style.display = 'block';
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-                const text = await response.text();
-                // Format TXT by wrapping paragraphs in <p> tags
-                const htmlContent = text.split(/\n\s*\n/).map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
-                contentFrame.srcdoc = `<html><head></head><body>${htmlContent}</body></html>`;
-            } else { // HTML
-                contentFrame.style.display = 'block';
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-                contentFrame.srcdoc = await response.text();
+                contentFrame.srcdoc = `<h2>Error</h2><p>${error.message}</p>`; 
             }
-            toggleReaderTools(true);
-        } catch (error) { 
-            contentFrame.style.display = 'block';
-            contentFrame.srcdoc = `<h2>Error</h2><p>${error.message}</p>`; 
+            renderAnnotationsForCurrentFile();
+            renderAllBookmarks();
         }
-        renderAnnotationsForCurrentFile();
-        renderAllBookmarks();
-    }
     
     function toggleReaderTools(enabled) {
         // ... (no changes)
