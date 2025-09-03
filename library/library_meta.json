@@ -964,6 +964,16 @@
     "author": "",
     "subjects": []
   },
+  "library/content/a-e-thierens_general-book-of-the-tarot.epub": {
+    "title": "a-e-thierens general-book-of-the-tarot",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/a-h-noe_witches-dream-book-and-fortune-teller.epub": {
+    "title": "a-h-noe witches-dream-book-and-fortune-teller",
+    "author": "",
+    "subjects": []
+  },
   "library/content/adolphe-franck_kabbalah.epub": {
     "title": "adolphe-franck kabbalah",
     "author": "",
@@ -971,6 +981,11 @@
   },
   "library/content/al-ghazzali_alchemy-of-happiness.epub": {
     "title": "al-ghazzali alchemy-of-happiness",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/albert-pike_morals-and-dogma.epub": {
+    "title": "albert-pike morals-and-dogma",
     "author": "",
     "subjects": []
   },
@@ -989,6 +1004,16 @@
     "author": "",
     "subjects": []
   },
+  "library/content/alfred-percy-sinnett_collected-fruits-of-occult-teaching.epub": {
+    "title": "alfred-percy-sinnett collected-fruits-of-occult-teaching",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/alfred-thompson_magic-and-mystery-popular-history.epub": {
+    "title": "alfred-thompson magic-and-mystery-popular-history",
+    "author": "",
+    "subjects": []
+  },
   "library/content/angelus-silesius_alexandrines-from-the-cherubinic-pilgrim.epub": {
     "title": "angelus-silesius alexandrines-from-the-cherubinic-pilgrim",
     "author": "",
@@ -999,8 +1024,18 @@
     "author": "",
     "subjects": []
   },
+  "library/content/anna-kingsford_edward-maitland_virgin-of-the-world-of-hermes (1).epub": {
+    "title": "anna-kingsford edward-maitland virgin-of-the-world-of-hermes (1)",
+    "author": "",
+    "subjects": []
+  },
   "library/content/anna-kingsford_edward-maitland_virgin-of-the-world-of-hermes.epub": {
     "title": "anna-kingsford edward-maitland virgin-of-the-world-of-hermes",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/annie-besant_ancient-wisdom.epub": {
+    "title": "annie-besant ancient-wisdom",
     "author": "",
     "subjects": []
   },
@@ -1009,8 +1044,38 @@
     "author": "",
     "subjects": []
   },
+  "library/content/archibald-cockren_alchemy-rediscovered-and-restored.epub": {
+    "title": "archibald-cockren alchemy-rediscovered-and-restored",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/arthur-edward-waite_book-of-ceremonial-magic.epub": {
+    "title": "arthur-edward-waite book-of-ceremonial-magic",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/arthur-edward-waite_lives-of-alchemystical-philosophers.epub": {
+    "title": "arthur-edward-waite lives-of-alchemystical-philosophers",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/arthur-edward-waite_real-history-of-the-rosicrucians.epub": {
+    "title": "arthur-edward-waite real-history-of-the-rosicrucians",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/benedictus-figulus_golden-and-blessed-casket-of-natures-marvels.epub": {
+    "title": "benedictus-figulus golden-and-blessed-casket-of-natures-marvels",
+    "author": "",
+    "subjects": []
+  },
   "library/content/bernhard-pick_cabala.epub": {
     "title": "bernhard-pick cabala",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/black-pullet.epub": {
+    "title": "black-pullet",
     "author": "",
     "subjects": []
   },
@@ -1074,13 +1139,68 @@
     "author": "",
     "subjects": []
   },
+  "library/content/c-h-vail_ancient-mysteries-and-modern-masonry.epub": {
+    "title": "c-h-vail ancient-mysteries-and-modern-masonry",
+    "author": "",
+    "subjects": []
+  },
   "library/content/c-w-king_gnostics-and-their-remains.epub": {
     "title": "c-w-king gnostics-and-their-remains",
     "author": "",
     "subjects": []
   },
+  "library/content/charles-webster-leadbeater_clairvoyance.epub": {
+    "title": "charles-webster-leadbeater clairvoyance",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/collectanea-chemica.epub": {
+    "title": "collectanea-chemica",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/dion-fortune_applied-magic.epub": {
+    "title": "dion-fortune applied-magic",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/dion-fortune_aspects-of-occultism.epub": {
+    "title": "dion-fortune aspects-of-occultism",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/dion-fortune_sane-occultism.epub": {
+    "title": "dion-fortune sane-occultism",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/dion-fortune_through-the-gates-of-death.epub": {
+    "title": "dion-fortune through-the-gates-of-death",
+    "author": "",
+    "subjects": []
+  },
   "library/content/divine-love.epub": {
     "title": "divine-love",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/dogma-et-rituel-de-la-haute-magie-part-i.epub": {
+    "title": "dogma-et-rituel-de-la-haute-magie-part-i",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/dogma-et-rituel-de-la-haute-magie-part-ii.epub": {
+    "title": "dogma-et-rituel-de-la-haute-magie-part-ii",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/duncans-masonic-ritual-and-monitor.epub": {
+    "title": "duncans-masonic-ritual-and-monitor",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/eliphas-levi_history-of-magic.epub": {
+    "title": "eliphas-levi history-of-magic",
     "author": "",
     "subjects": []
   },
@@ -1094,6 +1214,11 @@
     "author": "",
     "subjects": []
   },
+  "library/content/emerald-tablet-of-hermes.epub": {
+    "title": "emerald-tablet-of-hermes",
+    "author": "",
+    "subjects": []
+  },
   "library/content/esoteric-christianity.epub": {
     "title": "esoteric-christianity",
     "author": "",
@@ -1104,8 +1229,18 @@
     "author": "",
     "subjects": []
   },
+  "library/content/f-de-p-castells_apocalypse-of-freemasonry.epub": {
+    "title": "f-de-p-castells apocalypse-of-freemasonry",
+    "author": "",
+    "subjects": []
+  },
   "library/content/fragments-of-a-faith-forgotten.epub": {
     "title": "fragments-of-a-faith-forgotten",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/francis-barret_magus-book-1.epub": {
+    "title": "francis-barret magus-book-1",
     "author": "",
     "subjects": []
   },
@@ -1116,6 +1251,21 @@
   },
   "library/content/frater-achad_anatomy-of-the-body-of-god.epub": {
     "title": "frater-achad anatomy-of-the-body-of-god",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/frater-achad_crystal-vision-through-crystal-gazing.epub": {
+    "title": "frater-achad crystal-vision-through-crystal-gazing",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/gardnerian-book-of-shadows.epub": {
+    "title": "gardnerian-book-of-shadows",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/general-ahiman-rezon.epub": {
+    "title": "general-ahiman-rezon",
     "author": "",
     "subjects": []
   },
@@ -1149,8 +1299,73 @@
     "author": "",
     "subjects": []
   },
+  "library/content/glimpses-of-masonic-history.epub": {
+    "title": "glimpses-of-masonic-history",
+    "author": "",
+    "subjects": []
+  },
   "library/content/goal-of-life.epub": {
     "title": "goal-of-life",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/gottfried-de-purucker_masters-and-the-path-of-occultism.epub": {
+    "title": "gottfried-de-purucker masters-and-the-path-of-occultism",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/grand-grimoire-with-great-clavicle-of-solomon.epub": {
+    "title": "grand-grimoire-with-great-clavicle-of-solomon",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/great-art.epub": {
+    "title": "great-art",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/helena-blavatsky_studies-in-occultism.epub": {
+    "title": "helena-blavatsky studies-in-occultism",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/helena-blavatsky_voice-of-the-silence.epub": {
+    "title": "helena-blavatsky voice-of-the-silence",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/henri-de-montfaucon-de-villars_comte-de-gabalis.epub": {
+    "title": "henri-de-montfaucon-de-villars comte-de-gabalis",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/hermetic-and-alchemical-essays.epub": {
+    "title": "hermetic-and-alchemical-essays",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/hermetic-arcanum.epub": {
+    "title": "hermetic-arcanum",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/hermetic-museum.epub": {
+    "title": "hermetic-museum",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/hidden-life-in-freemasonry.epub": {
+    "title": "hidden-life-in-freemasonry",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/hidden-side-of-things.epub": {
+    "title": "hidden-side-of-things",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/highland-seer_tea-cup-reading-and-the-art-of-fortune-telling.epub": {
+    "title": "highland-seer tea-cup-reading-and-the-art-of-fortune-telling",
     "author": "",
     "subjects": []
   },
@@ -1159,8 +1374,48 @@
     "author": "",
     "subjects": []
   },
+  "library/content/infinite-perspectus.epub": {
+    "title": "infinite-perspectus",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/initiates-of-the-flame.epub": {
+    "title": "initiates-of-the-flame",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/inner-life.epub": {
+    "title": "inner-life",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/instructions-respecting-the-art-of-transmuting.epub": {
+    "title": "instructions-respecting-the-art-of-transmuting",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/isabel-cooper-oakley_comte-de-saint-germain.epub": {
+    "title": "isabel-cooper-oakley comte-de-saint-germain",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/isabel-cooper-oakley_traces-of-a-hidden-tradition.epub": {
+    "title": "isabel-cooper-oakley traces-of-a-hidden-tradition",
+    "author": "",
+    "subjects": []
+  },
   "library/content/j-abelson_jewish-mysticism.epub": {
     "title": "j-abelson jewish-mysticism",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/j-h-hill_astral-worship.epub": {
+    "title": "j-h-hill astral-worship",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/j-j-morse_practical-occultism.epub": {
+    "title": "j-j-morse practical-occultism",
     "author": "",
     "subjects": []
   },
@@ -1179,8 +1434,18 @@
     "author": "",
     "subjects": []
   },
+  "library/content/johann-valentin-andreae_chymical-wedding.epub": {
+    "title": "johann-valentin-andreae chymical-wedding",
+    "author": "",
+    "subjects": []
+  },
   "library/content/john-ballou-newbrough_oahspe.epub": {
     "title": "john-ballou-newbrough oahspe",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/john-french_art-of-distillation.epub": {
+    "title": "john-french art-of-distillation",
     "author": "",
     "subjects": []
   },
@@ -1189,8 +1454,18 @@
     "author": "",
     "subjects": []
   },
+  "library/content/john-yarker_arcane-schools.epub": {
+    "title": "john-yarker arcane-schools",
+    "author": "",
+    "subjects": []
+  },
   "library/content/johnkeelyfrequenciesinteratomicatomicintermolecularmolecularinterethericandetheric.pdf": {
     "title": "johnkeelyfrequenciesinteratomicatomicintermolecularmolecularinterethericandetheric",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/joseph-fort-newton_builders.epub": {
+    "title": "joseph-fort-newton builders",
     "author": "",
     "subjects": []
   },
@@ -1204,13 +1479,33 @@
     "author": "",
     "subjects": []
   },
+  "library/content/key-of-solomon-the-king.epub": {
+    "title": "key-of-solomon-the-king",
+    "author": "",
+    "subjects": []
+  },
   "library/content/kjv.html": {
     "title": "kjv",
     "author": "",
     "subjects": []
   },
+  "library/content/knowledge-of-the-higher-worlds-and-its-attainment.epub": {
+    "title": "knowledge-of-the-higher-worlds-and-its-attainment",
+    "author": "",
+    "subjects": []
+  },
   "library/content/kolbrin.epub": {
     "title": "kolbrin",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/kybalion.epub": {
+    "title": "kybalion",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/l-w-de-laurence_illustrated-key-to-the-tarot.epub": {
+    "title": "l-w-de-laurence illustrated-key-to-the-tarot",
     "author": "",
     "subjects": []
   },
@@ -1224,13 +1519,43 @@
     "author": "",
     "subjects": []
   },
+  "library/content/lily-adams-beck_way-of-power-studies-in-the-occult.epub": {
+    "title": "lily-adams-beck way-of-power-studies-in-the-occult",
+    "author": "",
+    "subjects": []
+  },
   "library/content/logos-mantram-theurgy.epub": {
     "title": "logos-mantram-theurgy",
     "author": "",
     "subjects": []
   },
+  "library/content/magus-a-complete-system-of-occult-philosophy-book-2.epub": {
+    "title": "magus-a-complete-system-of-occult-philosophy-book-2",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/man-visible-and-invisible.epub": {
+    "title": "man-visible-and-invisible",
+    "author": "",
+    "subjects": []
+  },
   "library/content/manin.pdf": {
     "title": "manin",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/manly-p-hall_lost-keys-of-masonry.epub": {
+    "title": "manly-p-hall lost-keys-of-masonry",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/manly-p-hall_secret-teachings-of-all-ages.epub": {
+    "title": "manly-p-hall secret-teachings-of-all-ages",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/master-masons-handbook.epub": {
+    "title": "master-masons-handbook",
     "author": "",
     "subjects": []
   },
@@ -1241,6 +1566,26 @@
   },
   "library/content/max-heindel_gleanings-of-a-mystic.epub": {
     "title": "max-heindel gleanings-of-a-mystic",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/max-heindel_rosicrucian-christianity-lectures.epub": {
+    "title": "max-heindel rosicrucian-christianity-lectures",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/max-heindel_rosicrucian-mysteries.epub": {
+    "title": "max-heindel rosicrucian-mysteries",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/max-heindel_teachings-of-an-initiate.epub": {
+    "title": "max-heindel teachings-of-an-initiate",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/meaning-of-masonry.epub": {
+    "title": "meaning-of-masonry",
     "author": "",
     "subjects": []
   },
@@ -1259,13 +1604,63 @@
     "author": "",
     "subjects": []
   },
+  "library/content/mysticism-of-masonry.epub": {
+    "title": "mysticism-of-masonry",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/new-model-of-the-universe.epub": {
+    "title": "new-model-of-the-universe",
+    "author": "",
+    "subjects": []
+  },
   "library/content/nicolas-notovitch_unknown-life-of-jesus-christ.epub": {
     "title": "nicolas-notovitch unknown-life-of-jesus-christ",
     "author": "",
     "subjects": []
   },
+  "library/content/northcote-w-thomas_crystal-gazing.epub": {
+    "title": "northcote-w-thomas crystal-gazing",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/numbers-their-occult-power-and-mystic-virtues (1).epub": {
+    "title": "numbers-their-occult-power-and-mystic-virtues (1)",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/numbers-their-occult-power-and-mystic-virtues.epub": {
+    "title": "numbers-their-occult-power-and-mystic-virtues",
+    "author": "",
+    "subjects": []
+  },
   "library/content/nurho-de-manhar_sepher-ha-zohar-or-the-book-of-light.epub": {
     "title": "nurho-de-manhar sepher-ha-zohar-or-the-book-of-light",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/occult-principles-of-health-and-healing.epub": {
+    "title": "occult-principles-of-health-and-healing",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/ocean-of-theosophy.epub": {
+    "title": "ocean-of-theosophy",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/open-entrance-to-the-closed-palace-of-the-king.epub": {
+    "title": "open-entrance-to-the-closed-palace-of-the-king",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/outline-of-occult-science.epub": {
+    "title": "outline-of-occult-science",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/p-d-ouspensky_in-search-of-the-miraculous.epub": {
+    "title": "p-d-ouspensky in-search-of-the-miraculous",
     "author": "",
     "subjects": []
   },
@@ -1279,8 +1674,33 @@
     "author": "",
     "subjects": []
   },
+  "library/content/paracelsus_aurora-of-the-philosophers (1).epub": {
+    "title": "paracelsus aurora-of-the-philosophers (1)",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/paracelsus_aurora-of-the-philosophers.epub": {
+    "title": "paracelsus aurora-of-the-philosophers",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/paradoxes-of-the-highest-science.epub": {
+    "title": "paradoxes-of-the-highest-science",
+    "author": "",
+    "subjects": []
+  },
   "library/content/pdfcoffee.com_magic-and-alchemy-pdf-free.pdf": {
     "title": "pdfcoffee.com magic-and-alchemy-pdf-free",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/philosophy-of-natural-magic.epub": {
+    "title": "philosophy-of-natural-magic",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/pictorial-key-to-the-tarot.epub": {
+    "title": "pictorial-key-to-the-tarot",
     "author": "",
     "subjects": []
   },
@@ -1289,8 +1709,33 @@
     "author": "",
     "subjects": []
   },
+  "library/content/psychic-self-defense.epub": {
+    "title": "psychic-self-defense",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/psychology-of-mans-possible-evolution.epub": {
+    "title": "psychology-of-mans-possible-evolution",
+    "author": "",
+    "subjects": []
+  },
   "library/content/rarebooksoffreem00vibe.pdf": {
     "title": "rarebooksoffreem00vibe",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/robert-turner_arbatel-on-the-magic-of-the-ancients.epub": {
+    "title": "robert-turner arbatel-on-the-magic-of-the-ancients",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/rosicrucian-cosmo-conception.epub": {
+    "title": "rosicrucian-cosmo-conception",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/rudolf-steiner_way-of-initiation.epub": {
+    "title": "rudolf-steiner way-of-initiation",
     "author": "",
     "subjects": []
   },
@@ -1309,8 +1754,18 @@
     "author": "",
     "subjects": []
   },
+  "library/content/samuel-liddell-macgregor-mathers_sacred-magic-of-abramelin-the-mage.epub": {
+    "title": "samuel-liddell-macgregor-mathers sacred-magic-of-abramelin-the-mage",
+    "author": "",
+    "subjects": []
+  },
   "library/content/signature-of-all-things.epub": {
     "title": "signature-of-all-things",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/some-glimpses-of-occultism-ancient-and-modern.epub": {
+    "title": "some-glimpses-of-occultism-ancient-and-modern",
     "author": "",
     "subjects": []
   },
@@ -1329,6 +1784,46 @@
     "author": "",
     "subjects": []
   },
+  "library/content/symbolical-masonry.epub": {
+    "title": "symbolical-masonry",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/symbolism-of-freemasonry.epub": {
+    "title": "symbolism-of-freemasonry",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/symbolism-of-the-tarot.epub": {
+    "title": "symbolism-of-the-tarot",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/tertium-organum.epub": {
+    "title": "tertium-organum",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/textbook-of-theosophy.epub": {
+    "title": "textbook-of-theosophy",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/thaumaturgia.epub": {
+    "title": "thaumaturgia",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/theosophy-besant.epub": {
+    "title": "theosophy-besant",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/theosophy.epub": {
+    "title": "theosophy",
+    "author": "",
+    "subjects": []
+  },
   "library/content/thrice-greatest-hermes-1.epub": {
     "title": "thrice-greatest-hermes-1",
     "author": "",
@@ -1344,6 +1839,26 @@
     "author": "",
     "subjects": []
   },
+  "library/content/treatise-of-the-three-principles-of-metals.epub": {
+    "title": "treatise-of-the-three-principles-of-metals",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/turba-philosophorum.epub": {
+    "title": "turba-philosophorum",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/twelve-keys.epub": {
+    "title": "twelve-keys",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/unknown_alchemical-catechism.epub": {
+    "title": "unknown alchemical-catechism",
+    "author": "",
+    "subjects": []
+  },
   "library/content/untoldstory.html": {
     "title": "untoldstory",
     "author": "",
@@ -1354,8 +1869,33 @@
     "author": "",
     "subjects": []
   },
+  "library/content/w-h-davenport-adams_witch-warlock-and-magician.epub": {
+    "title": "w-h-davenport-adams witch-warlock-and-magician",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/william-lilly_introduction-to-astrology.epub": {
+    "title": "william-lilly introduction-to-astrology",
+    "author": "",
+    "subjects": []
+  },
   "library/content/william-ralph-inge_christian-mysticism.epub": {
     "title": "william-ralph-inge christian-mysticism",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/william-walker-atkinson_clairvoyance-and-occult-powers.epub": {
+    "title": "william-walker-atkinson clairvoyance-and-occult-powers",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/william-walker-atkinson_practical-psychomancy-and-crystal-gazing.epub": {
+    "title": "william-walker-atkinson practical-psychomancy-and-crystal-gazing",
+    "author": "",
+    "subjects": []
+  },
+  "library/content/william-walker-atkinson_secret-doctrine-of-the-rosicrucians.epub": {
+    "title": "william-walker-atkinson secret-doctrine-of-the-rosicrucians",
     "author": "",
     "subjects": []
   },

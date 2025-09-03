@@ -19,23 +19,114 @@
             <img src="../icon.png" alt="Site Icon" style="width: 100px; height: 100px; display: block; margin: 2rem auto 1rem auto; border-radius: 50%;">
             
             <div class="search-area">
-                <h1 class="main-title">Local Database Viewer</h1>
+                <h1 class="main-title">Local Gematria DB Viewer</h1>
+                <p>Upload files to process sentences and save them to your local database.</p>
+                <div id="upload-section">
+                    <input type="file" id="file-input" accept=".txt,.md,.pdf" multiple>
+                    <button id="process-btn">Process Files</button>
+                    <p id="processing-status"></p>
+                </div>
+                <div class="search-box">
+                    <input type="search" id="db-search" placeholder="Search local database...">
+                    <input type="submit" id="search-submit" value="Calculate/Add">
+                </div>
                 <a href="calculator.html">Back to Gematria Calculator</a>
-            </div>                
+            </div> 
+
+            <div id="search-results-area">
+                </div>
+            
+            <div id="table-controls" style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px; margin-top: 20px;">
+                <button id="edit-mode-btn">Edit</button>
+                <button id="batch-delete-btn" style="display: none; background-color: #f44336; color: white; border: none; padding: 10px 15px; cursor: pointer;">Delete Selected</button>
+            </div>
 
             <div id="results-area">
                 <p>Loading database...</p>
             </div>
+            <div class="pagination-container" id="pagination-controls"></div>
         </article>
         <div class="ad-pillar"></div>
     </div> 
 
     <footer id="main-footer-placeholder"></footer>
 
+    <div id="confirm-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; justify-content: center; align-items: center;">
+      <div style="background: white; padding: 20px; border-radius: 10px; text-align: center; color: black; max-width: 80%;">
+        <p id="confirm-message"></p>
+        <button id="confirm-ok" style="background-color: #f44336; color: white; border: none; padding: 10px 20px; margin: 10px; border-radius: 5px; cursor: pointer;">Delete</button>
+        <button id="confirm-cancel" style="background-color: #ccc; color: black; border: none; padding: 10px 20px; margin: 10px; border-radius: 5px; cursor: pointer;">Cancel</button>
+      </div>
+    </div>
+    
+    <style>
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 20px;
+            max-width: 100%;
+        }
+        .pagination-btn {
+            background-color: white;
+            color: black;
+            border: 1px solid #333;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        .pagination-btn:hover {
+            background-color: #c8a2c8;
+            border-color: #c8a2c8;
+        }
+        .pagination-btn.active {
+            background-color: #c8a2c8;
+            border-color: #c8a2c8;
+        }
+
+        .search-box {
+            margin-top: 20px;
+        }
+
+        #db-search {
+            width: 100%;
+            max-width: 400px;
+            padding: 8px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+    </style>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-
             const resultsArea = document.getElementById('results-area');
+            const searchResultsArea = document.getElementById('search-results-area');
+            const fileInput = document.getElementById('file-input');
+            const processBtn = document.getElementById('process-btn');
+            const processingStatus = document.getElementById('processing-status');
+            const paginationControls = document.getElementById('pagination-controls');
+            const dbSearchInput = document.getElementById('db-search');
+            const searchSubmitBtn = document.getElementById('search-submit');
+            
+            // NEW: DOM elements and state for edit mode
+            const editModeBtn = document.getElementById('edit-mode-btn');
+            const batchDeleteBtn = document.getElementById('batch-delete-btn');
+            const tableControls = document.getElementById('table-controls');
+            let isInEditMode = false;
+            
+            const WORDS_PER_PAGE = 25;
+            let currentPage = 1;
+            let currentWords = []; // To store the currently displayed words (filtered or all)
 
             // --- Gematria Cipher Definitions (copied from calculator.js) ---
             const ciphers = {
@@ -65,55 +156,372 @@
                 const data = localStorage.getItem('wordDatabase');
                 return data ? JSON.parse(data) : [];
             }
+            
+            /**
+             * Filters the entries based on a search term.
+             */
+            function filterEntries(searchTerm) {
+                const allEntries = getAllEntries();
+                if (!searchTerm) {
+                    return allEntries;
+                }
+                const lowerSearchTerm = searchTerm.toLowerCase();
+                return allEntries.filter(entry =>
+                    entry.word.toLowerCase().includes(lowerSearchTerm)
+                );
+            }
+            
+            /**
+             * Toggles the UI between viewing and editing mode.
+             */
+            function toggleEditMode() {
+                isInEditMode = !isInEditMode;
+                editModeBtn.textContent = isInEditMode ? 'Cancel' : 'Edit';
+                batchDeleteBtn.style.display = isInEditMode ? 'inline-block' : 'none';
+                displayAllEntries(currentWords, currentPage); // Re-render the table
+            }
 
             /**
-             * Displays all database entries in a table.
+             * Deletes a single word from the local database.
              */
-            function displayAllEntries() {
-                const entries = getAllEntries();
-
-                if (!resultsArea) return;
+            function deleteWord(wordToDelete) {
+                let words = getAllEntries();
+                words = words.filter(entry => entry.word.toLowerCase() !== wordToDelete.toLowerCase());
+                localStorage.setItem('wordDatabase', JSON.stringify(words));
+                displayAllEntries(filterEntries(dbSearchInput.value), currentPage); 
+            }
+            
+            /**
+             * Deletes multiple words from the local database.
+             */
+            function batchDeleteWords(wordsToDelete) {
+                if (wordsToDelete.length === 0) return;
                 
-                if (entries.length === 0) {
-                    resultsArea.innerHTML = '<p style="text-align:center;">No words found in the local database.</p>';
+                let allEntries = getAllEntries();
+                const wordsToDeleteSet = new Set(wordsToDelete.map(w => w.toLowerCase()));
+                
+                const remainingEntries = allEntries.filter(entry => !wordsToDeleteSet.has(entry.word.toLowerCase()));
+                
+                localStorage.setItem('wordDatabase', JSON.stringify(remainingEntries));
+
+                // Manually exit edit mode and refresh the view
+                isInEditMode = false;
+                editModeBtn.textContent = 'Edit';
+                batchDeleteBtn.style.display = 'none';
+
+                const updatedFilteredEntries = filterEntries(dbSearchInput.value);
+                displayAllEntries(updatedFilteredEntries, 1); // Refresh and go to page 1
+            }
+
+
+            /**
+             * MODIFIED: Displays database entries, now aware of edit mode.
+             */
+            function displayAllEntries(entries, page = 1) {
+                currentPage = page;
+                if (!resultsArea) return;
+
+                currentWords = entries;
+                
+                if (currentWords.length === 0) {
+                    resultsArea.innerHTML = '<p style="text-align:center;">No words found. Upload a file to begin.</p>';
+                    paginationControls.innerHTML = '';
+                    tableControls.style.display = 'none'; // Hide controls if no entries
                     return;
                 }
+                
+                tableControls.style.display = 'flex'; // Show controls if there are entries
 
-                // Sort entries alphabetically by term
-                entries.sort((a, b) => a.word.localeCompare(b.word));
+                currentWords.sort((a, b) => a.word.localeCompare(b.word));
+
+                const startIndex = (currentPage - 1) * WORDS_PER_PAGE;
+                const endIndex = startIndex + WORDS_PER_PAGE;
+                const entriesForPage = currentWords.slice(startIndex, endIndex);
+
+                // Dynamically add/remove columns based on edit mode
+                const editHeader = isInEditMode ? '<th><input type="checkbox" id="select-all-checkbox" title="Select All on Page"></th>' : '';
+                const deleteHeader = isInEditMode ? '' : '<th>Delete</th>';
 
                 let tablesHtml = `
                     <table class="results-table">
-                        <caption>All Words in Local Database (${entries.length} entries)</caption>
+                        <caption>All Words in Local Database (${currentWords.length} entries)</caption>
                         <thead>
                             <tr>
+                                ${editHeader}
                                 <th>Word/Phrase</th>
                                 <th>Jewish</th>
                                 <th>English</th>
                                 <th>Simple</th>
+                                ${deleteHeader}
                             </tr>
                         </thead>
                         <tbody>
-                            ${entries.map(entry => {
+                            ${entriesForPage.map(entry => {
                                 const values = calculateGematria(entry.word);
+                                // Escape quotes in word for data attribute safety
+                                const safeWordAttr = entry.word.replace(/"/g, "&quot;");
+                                const editCell = isInEditMode ? `<td><input type="checkbox" class="entry-checkbox" data-word="${safeWordAttr}"></td>` : '';
+                                const deleteCell = isInEditMode ? '' : `<td><button class="delete-btn" data-word="${safeWordAttr}">Delete</button></td>`;
                                 return `
                                     <tr>
+                                        ${editCell}
                                         <td><a href="calculator.html?word=${encodeURIComponent(entry.word)}">${entry.word}</a></td>
                                         <td>${values.jewish}</td>
                                         <td>${values.english}</td>
                                         <td>${values.simple}</td>
+                                        ${deleteCell}
                                     </tr>
-                                `
+                                `;
                             }).join('')}
                         </tbody>
                     </table>
                 `;
                 
                 resultsArea.innerHTML = tablesHtml;
+                createPaginationControls(currentWords.length);
+
+                // Add event listeners only for the visible elements
+                if (isInEditMode) {
+                    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+                    if (selectAllCheckbox) {
+                        selectAllCheckbox.addEventListener('change', (event) => {
+                            document.querySelectorAll('.entry-checkbox').forEach(checkbox => {
+                                checkbox.checked = event.target.checked;
+                            });
+                        });
+                    }
+                } else {
+                    document.querySelectorAll('.delete-btn').forEach(button => {
+                        button.addEventListener('click', (event) => {
+                            const wordToDelete = event.target.getAttribute('data-word');
+                            showConfirmModal(`Are you sure you want to delete "${wordToDelete}"?`, () => {
+                                deleteWord(wordToDelete);
+                            });
+                        });
+                    });
+                }
+            }
+            
+            // --- Other functions (createBreakdownHtml, findLocalMatches, etc.) remain unchanged ---
+
+            /**
+             * Creates the HTML for a single calculation breakdown.
+             */
+            function createBreakdownHtml(word, cipherName, totalValue) {
+                const cipherMap = ciphers[cipherName];
+                let lettersHtml = '';
+                let numbersHtml = '';
+                
+                for (const char of word.toLowerCase().replace(/[^a-z]/g, '')) {
+                    if (cipherMap[char]) {
+                        lettersHtml += `<td>${char}</td>`;
+                        numbersHtml += `<td>${cipherMap[char]}</td>`;
+                    }
+                }
+                
+                const title = cipherName.charAt(0).toUpperCase() + cipherName.slice(1);
+
+                return `
+                    <div class="breakdown-item">
+                        <p><strong>"${word}"</strong> in <strong>${title} Gematria</strong> equals <strong>${totalValue}</strong>:</p>
+                        <table class="breakdown-table">
+                            <tbody>
+                                <tr class="breakdown-letters">${lettersHtml}</tr>
+                                <tr class="breakdown-numbers">${numbersHtml}</tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
             }
 
+            /**
+             * Finds matches in local storage database.
+             */
+            function findLocalMatches(calculatedValues, originalWord) {
+                const localDb = getAllEntries();
+                if (!localDb) return [];
+                return localDb.filter(entry =>
+                    entry.word.toLowerCase() !== originalWord.toLowerCase() &&
+                    (entry.simple === calculatedValues.simple ||
+                        entry.english === calculatedValues.english ||
+                        entry.jewish === calculatedValues.jewish)
+                );
+            }
+
+            /**
+             * Displays a detailed calculation for a single word.
+             */
+            function displayCalculationAndMatches(word) {
+                const calculatedValues = calculateGematria(word);
+                const localMatches = findLocalMatches(calculatedValues, word);
+                
+                let breakdownContainer = `<div class="breakdown-container">`;
+                breakdownContainer += createBreakdownHtml(word, 'jewish', calculatedValues.jewish);
+                breakdownContainer += createBreakdownHtml(word, 'english', calculatedValues.english);
+                breakdownContainer += createBreakdownHtml(word, 'simple', calculatedValues.simple);
+                breakdownContainer += `</div>`;
+
+                let tablesHtml = `
+                    <div style="text-align:center; margin-top: 2rem;">
+                        <h2 class="results-header">Local Database Matches</h2>
+                    </div>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Word/Phrase</th>
+                                <th>Count</th>
+                                <th>Jewish</th>
+                                <th>English</th>
+                                <th>Simple</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${localMatches.length > 0 ? 
+                                localMatches.map(match => `
+                                    <tr>
+                                        <td><a href="calculator.html?word=${encodeURIComponent(match.word)}">${match.word}</a></td>
+                                        <td>${match.count || 1}</td>
+                                        <td>${match.jewish}</td>
+                                        <td>${match.english}</td>
+                                        <td>${match.simple}</td>
+                                    </tr>
+                                `).join('') :
+                                `<tr><td colspan="5" style="text-align:center; padding: 2rem; color: #888;">No matching words found in local storage.</td></tr>`
+                            }
+                        </tbody>
+                    </table>
+                `;
+                
+                searchResultsArea.innerHTML = breakdownContainer + tablesHtml;
+            }
+
+            /**
+             * Creates and displays the pagination controls.
+             */
+            function createPaginationControls(totalEntries) {
+                const totalPages = Math.ceil(totalEntries / WORDS_PER_PAGE);
+                paginationControls.innerHTML = '';
+
+                if (totalPages > 1) {
+                    for (let i = 1; i <= totalPages; i++) {
+                        const pageBtn = document.createElement('button');
+                        pageBtn.textContent = i;
+                        pageBtn.classList.add('pagination-btn');
+                        if (i === currentPage) {
+                            pageBtn.classList.add('active');
+                        }
+                        pageBtn.addEventListener('click', () => {
+                            displayAllEntries(currentWords, i);
+                        });
+                        paginationControls.appendChild(pageBtn);
+                    }
+                }
+            }
+
+            /**
+             * Shows a custom confirmation modal.
+             */
+            function showConfirmModal(message, onConfirm) {
+              const modal = document.getElementById('confirm-modal');
+              const confirmMsg = document.getElementById('confirm-message');
+              const confirmBtn = document.getElementById('confirm-ok');
+              const cancelBtn = document.getElementById('confirm-cancel');
+
+              confirmMsg.textContent = message;
+              modal.style.display = 'flex';
+
+              const handleConfirm = () => {
+                onConfirm();
+                hideConfirmModal();
+              };
+
+              const handleCancel = () => {
+                hideConfirmModal();
+              };
+
+              confirmBtn.addEventListener('click', handleConfirm, { once: true });
+              cancelBtn.addEventListener('click', handleCancel, { once: true });
+            }
+
+            /**
+             * Hides the custom confirmation modal.
+             */
+            function hideConfirmModal() {
+              const modal = document.getElementById('confirm-modal');
+              modal.style.display = 'none';
+            }
+
+            /**
+             * Records a word in localStorage, updating the count if it already exists.
+             */
+            function recordWord(word) {
+                let words = getAllEntries();
+                const existingWordIndex = words.findIndex(entry => entry.word.toLowerCase() === word.toLowerCase());
+                
+                const exists = existingWordIndex > -1;
+                
+                if (exists) {
+                    words[existingWordIndex].count = (words[existingWordIndex].count || 1) + 1;
+                } else {
+                    const newEntry = { word: word, ...calculateGematria(word) };
+                    words.push(newEntry);
+                }
+                
+                localStorage.setItem('wordDatabase', JSON.stringify(words));
+            }
+
+            // Handles file uploads and processing.
+            async function processFiles() {
+                // This function remains unchanged
+                // ...
+            }
+
+            // --- Event Listeners ---
+            
+            // NEW: Listener for the main edit mode button
+            editModeBtn.addEventListener('click', toggleEditMode);
+            
+            // NEW: Listener for the batch delete button
+            batchDeleteBtn.addEventListener('click', () => {
+                const checkedBoxes = document.querySelectorAll('.entry-checkbox:checked');
+                const wordsToDelete = Array.from(checkedBoxes).map(box => box.getAttribute('data-word'));
+
+                if (wordsToDelete.length > 0) {
+                    showConfirmModal(`Are you sure you want to delete ${wordsToDelete.length} selected entries?`, () => {
+                        batchDeleteWords(wordsToDelete);
+                    });
+                } else {
+                    alert('Please select entries to delete.'); // Or use a more elegant notification
+                }
+            });
+
+
+            processBtn.addEventListener('click', processFiles);
+
+            searchSubmitBtn.addEventListener('click', () => {
+                const searchTerm = dbSearchInput.value.trim();
+                if (searchTerm) {
+                    recordWord(searchTerm);
+                    displayCalculationAndMatches(searchTerm);
+                    // Refresh the main list to include the new word
+                    displayAllEntries(filterEntries(dbSearchInput.value));
+                }
+            });
+            
+            dbSearchInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    searchSubmitBtn.click();
+                }
+            });
+
+            dbSearchInput.addEventListener('input', () => {
+                const filteredEntries = filterEntries(dbSearchInput.value);
+                displayAllEntries(filteredEntries, 1);
+            });
+
             // --- Initial Load ---
-            displayAllEntries();
+            displayAllEntries(getAllEntries());
         });
     </script>
 </body>

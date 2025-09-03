@@ -38,13 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="header-col">
                     <h4>Beans Gematria</h4>
                     <ul>
-                        <li><a href="/work/ciphers.html#jewish-gematria">Jewish Gematria</a></li>
-                        <li><a href="/work/ciphers.html#english-gematria">English Gematria</a></li>
-                        <li><a href="/work/ciphers.html#simple-gematria">Simple Gematria</a></li>
-                        <li><a href="/work/ciphers.html#latin-gematria">Latin Gematria</a></li>
-                        <li><a href="/work/ciphers.html#chaldean-gematria">Chaldean</a></li>
-                        <li><a href="/work/ciphers.html#greek-isopsephy">Greek Isopsephy</a></li>
-                        <li><a href="/work/ciphers.html#hebrew-gematria">Traditional Hebrew</a></li>
+                        <li><a href="/work/beansciphers.html">Beans Ciphers</a></li>
                     </ul>
                 </div>
                 <div class="header-col">
